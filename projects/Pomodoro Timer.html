@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Braun Focus Console // Pomodoro Timer</title>
+    
+    <link rel="stylesheet" href="css/rel-core.css">
+
+    <style>
+        body {
+            background: radial-gradient(circle at 50% 15%, #2a150c 0%, #160a05 50%, #090302 100%);
+            min-height: 100vh;
+            color: #fff5eb;
+        }
+
+        .pomodoro-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - var(--rel-hud-height));
+            padding: 30px 20px;
+        }
+
+        /* --- Mid-Century Braun Sci-Fi Chassis --- */
+        .app-card {
+            background: linear-gradient(160deg, #1c0e08 0%, #110704 60%, #080302 100%);
+            padding: 38px 44px;
+            border-radius: 26px;
+            box-shadow: 
+                0 0 0 1px rgba(255, 99, 72, 0.3),
+                0 0 45px rgba(255, 99, 72, 0.15),
+                0 25px 60px rgba(0, 0, 0, 0.9);
+            border: 2px solid #3d1c10;
+            width: 100%;
+            max-width: 530px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+            position: relative;
+        }
+
+        /* Top tangerine accent bar */
+        .app-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 30px;
+            right: 30px;
+            height: 3px;
+            background: linear-gradient(90deg, #ff6348, #ffa502, #2ed573, #ff6348);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 0 16px rgba(255, 99, 72, 0.8);
+        }
+
+        /* Brand Header */
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 16px; 
+            border-bottom: 1.5px solid rgba(255, 99, 72, 0.25);
+            padding-bottom: 20px;
+            width: 100%;
+        }
+
+        .brand-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            border: 1.5px solid #ff6348;
+            box-shadow: 0 0 16px rgba(255, 99, 72, 0.4);
+            object-fit: cover;
+            background: #000;
+        }
+
+        .brand-text-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .focus-badge {
+            display: inline-block;
+            align-self: flex-start;
+            font-family: var(--rel-font-mono);
+            font-size: 0.62rem;
+            color: #ff6348;
+            background: rgba(255, 99, 72, 0.15);
+            padding: 2px 7px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            border: 1px solid rgba(255, 99, 72, 0.35);
+        }
+
+        .brand-title {
+            color: #ffffff;
+            font-family: var(--rel-font-display);
+            font-size: 1.45rem; 
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0;
+            line-height: 1.1;
+        }
+
+        .brand-subtitle {
+            color: #ff6348; 
+            font-family: var(--rel-font-mono);
+            font-size: 0.8rem; 
+            margin-top: 3px;
+            letter-spacing: 0.6px;
+            font-weight: 600;
+        }
+
+        /* Settings Panel */
+        .settings {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            width: 100%;
+            background-color: #0c0503;
+            padding: 16px;
+            border-radius: 14px;
+            border: 1.5px solid #2b130a;
+            box-sizing: border-box;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
+        }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .setting-group label {
+            font-family: var(--rel-font-mono);
+            font-size: 0.72rem;
+            color: #fdba74;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            font-weight: 700;
+        }
+
+        .setting-group input {
+            width: 100%;
+            text-align: center;
+            padding: 10px;
+            background-color: #050201;
+            border: 1.5px solid #3d1b0f;
+            border-radius: 8px;
+            color: #ff6348;
+            font-family: var(--rel-font-mono);
+            font-size: 1.15rem;
+            font-weight: 800;
+            outline: none;
+            box-sizing: border-box;
+            transition: all 0.2s;
+        }
+
+        .setting-group input:focus {
+            border-color: #ff6348;
+            box-shadow: 0 0 14px rgba(255, 99, 72, 0.4);
+        }
+
+        .setting-group input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Timer Display */
+        .timer-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            padding: 24px 20px;
+            background: radial-gradient(circle at 50% 50%, #150904 0%, #070301 100%);
+            border: 2px solid #36170c;
+            border-radius: 20px;
+            width: 100%;
+            box-sizing: border-box;
+            box-shadow: inset 0 4px 16px rgba(0,0,0,0.9);
+        }
+
+        .mode-label {
+            font-family: var(--rel-font-display);
+            font-size: 1.15rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #ff6348;
+            margin-bottom: 4px;
+            text-shadow: 0 0 14px rgba(255, 99, 72, 0.5);
+        }
+
+        .time {
+            font-family: var(--rel-font-mono);
+            font-size: 5.2rem;
+            font-weight: 900;
+            margin: 0;
+            color: #ffffff;
+            text-shadow: 0 0 25px rgba(255, 99, 72, 0.4);
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 2px;
+            line-height: 1;
+        }
+
+        .session-tracker {
+            font-family: var(--rel-font-mono);
+            font-size: 0.82rem;
+            color: #fdba74;
+            letter-spacing: 1px;
+            margin-top: 10px;
+            font-weight: 700;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 14px;
+            width: 100%;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px;
+            background: #140905;
+            color: #ffffff;
+            border: 1.5px solid #3d1c10;
+            border-radius: 12px;
+            font-family: var(--rel-font-display);
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            outline: none;
+        }
+
+        button:hover { 
+            border-color: #ff6348; 
+            box-shadow: 0 0 20px rgba(255, 99, 72, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        #btn-start {
+            background: linear-gradient(180deg, #1b6338 0%, #0d381e 100%);
+            color: #2ed573;
+            border-color: rgba(46, 213, 115, 0.5);
+            box-shadow: 0 0 20px rgba(46, 213, 115, 0.25);
+        }
+        #btn-start:hover { 
+            background: #2ed573; 
+            color: #030805;
+            box-shadow: 0 0 28px rgba(46, 213, 115, 0.7); 
+        }
+
+        #btn-stop {
+            background: linear-gradient(180deg, #59161e 0%, #300a0f 100%);
+            color: #ff4757;
+            border-color: rgba(255, 71, 87, 0.5);
+            box-shadow: 0 0 20px rgba(255, 71, 87, 0.25);
+        }
+        #btn-stop:hover { 
+            background: #ff4757; 
+            color: #ffffff;
+            box-shadow: 0 0 28px rgba(255, 71, 87, 0.7); 
+        }
+
+        #btn-reset {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="pomodoro-wrapper">
+        <div class="app-card rel-tactile-surface">
+            
+            <div class="brand-header">
+                <img src="logo.png" alt="The Rel Works Logo" class="brand-logo" onerror="this.style.display='none'">
+                <div class="brand-text-container">
+                    <span class="focus-badge">BRAUN MID-CENTURY CONSOLE</span>
+                    <div class="brand-title">CHRONO-FOCUS CONSOLE</div>
+                    <div class="brand-subtitle">THE REL WORKS // TACTILE POMODORO WORKSTATION</div>
+                </div>
+            </div>
+
+            <div class="settings">
+                <div class="setting-group">
+                    <label for="work-min">Focus (Min)</label>
+                    <input type="number" id="work-min" value="25" min="1" max="90">
+                </div>
+                <div class="setting-group">
+                    <label for="short-min">Short Break</label>
+                    <input type="number" id="short-min" value="5" min="1" max="30">
+                </div>
+                <div class="setting-group">
+                    <label for="long-min">Long Break</label>
+                    <input type="number" id="long-min" value="10" min="1" max="60">
+                </div>
+            </div>
+
+            <div class="timer-display">
+                <div class="mode-label" id="mode-label">Work Session</div>
+                <div class="time" id="time-display">25:00</div>
+                <div class="session-tracker" id="session-tracker">COMPLETED CYCLES: 0</div>
+            </div>
+
+            <div class="controls">
+                <button id="btn-start">Start</button>
+                <button id="btn-stop">Stop</button>
+                <button id="btn-reset">Reset</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/rel-audio.js"></script>
+    <script src="js/rel-hud.js"></script>
+    <script>
+        const displayTime = document.getElementById('time-display');
+        const displayMode = document.getElementById('mode-label');
+        const displayTracker = document.getElementById('session-tracker');
+        
+        const inputWork = document.getElementById('work-min');
+        const inputShort = document.getElementById('short-min');
+        const inputLong = document.getElementById('long-min');
+        
+        const btnStart = document.getElementById('btn-start');
+        const btnStop = document.getElementById('btn-stop');
+        const btnReset = document.getElementById('btn-reset');
+
+        let timerId = null;
+        let timeLeft = 25 * 60;
+        let isRunning = false;
+        let currentMode = 'work';
+        let completedSessions = 0;
+
+        function playAlarm() {
+            if (window.RelAudio) {
+                window.RelAudio.alarm(3);
+            }
+        }
+
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        function updateDisplay() {
+            displayTime.innerText = formatTime(timeLeft);
+            displayTracker.innerText = `COMPLETED CYCLES: ${completedSessions}`;
+            
+            if (currentMode === 'work') {
+                displayMode.innerText = "FOCUS SESSION";
+                displayMode.style.color = "#ff6348";
+            } else if (currentMode === 'shortBreak') {
+                displayMode.innerText = "SHORT BIO-BREAK";
+                displayMode.style.color = "#00d2d3";
+            } else {
+                displayMode.innerText = "LONG RECOVERY BREAK";
+                displayMode.style.color = "#2ed573";
+            }
+        }
+
+        function getDurationForMode(mode) {
+            if (mode === 'work') return parseInt(inputWork.value) * 60 || 25 * 60;
+            if (mode === 'shortBreak') return parseInt(inputShort.value) * 60 || 5 * 60;
+            if (mode === 'longBreak') return parseInt(inputLong.value) * 60 || 10 * 60;
+        }
+
+        function switchMode() {
+            playAlarm();
+            
+            if (currentMode === 'work') {
+                completedSessions++;
+                if (completedSessions > 0 && completedSessions % 4 === 0) {
+                    currentMode = 'longBreak';
+                } else {
+                    currentMode = 'shortBreak';
+                }
+            } else {
+                currentMode = 'work';
+            }
+            
+            timeLeft = getDurationForMode(currentMode);
+            updateDisplay();
+        }
+
+        function tick() {
+            if (timeLeft > 0) {
+                timeLeft--;
+                updateDisplay();
+                // Subtle audio tick
+                if (window.RelAudio && timeLeft % 1 === 0) {
+                    window.RelAudio.tick();
+                }
+            } else {
+                switchMode();
+            }
+        }
+
+        function toggleTimer() {
+            if (isRunning) {
+                clearInterval(timerId);
+                isRunning = false;
+                btnStart.innerText = "Start";
+                toggleInputs(false);
+                if (window.RelAudio) window.RelAudio.click();
+            } else {
+                timerId = setInterval(tick, 1000);
+                isRunning = true;
+                btnStart.innerText = "Pause";
+                toggleInputs(true);
+                if (window.RelAudio) window.RelAudio.success();
+            }
+        }
+
+        function stopTimer() {
+            clearInterval(timerId);
+            isRunning = false;
+            btnStart.innerText = "Start";
+            timeLeft = getDurationForMode(currentMode);
+            updateDisplay();
+            toggleInputs(false);
+            if (window.RelAudio) window.RelAudio.snap();
+        }
+
+        function resetAll() {
+            clearInterval(timerId);
+            isRunning = false;
+            btnStart.innerText = "Start";
+            currentMode = 'work';
+            completedSessions = 0;
+            timeLeft = getDurationForMode('work');
+            updateDisplay();
+            toggleInputs(false);
+            if (window.RelAudio) window.RelAudio.snap();
+        }
+
+        function toggleInputs(disabled) {
+            inputWork.disabled = disabled;
+            inputShort.disabled = disabled;
+            inputLong.disabled = disabled;
+        }
+
+        btnStart.addEventListener('click', toggleTimer);
+        btnStop.addEventListener('click', stopTimer);
+        btnReset.addEventListener('click', resetAll);
+
+        const updateIfPaused = () => {
+            if (!isRunning) {
+                timeLeft = getDurationForMode(currentMode);
+                updateDisplay();
+            }
+        };
+
+        inputWork.addEventListener('change', updateIfPaused);
+        inputShort.addEventListener('change', updateIfPaused);
+        inputLong.addEventListener('change', updateIfPaused);
+
+        updateDisplay();
+    </script>
+</body>
+</html>

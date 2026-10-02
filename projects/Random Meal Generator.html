@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gourmet Neon Kitchen // Random Meal Generator</title>
+    
+    <link rel="stylesheet" href="css/rel-core.css">
+
+    <style>
+        :root {
+            --chili-red: #ff4757;
+            --saffron-gold: #ffa502;
+            --basil-green: #2ed573;
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 15%, #2a0f0d 0%, #150706 50%, #080302 100%);
+            min-height: 100vh;
+            color: #fff1f2;
+        }
+
+        .meal-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: calc(100vh - var(--rel-hud-height));
+            padding: 30px 20px;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 980px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        /* --- Gourmet Neon Kitchen Chassis --- */
+        .app-card {
+            background: linear-gradient(160deg, #1f0b09 0%, #110504 60%, #080202 100%);
+            padding: 36px 44px;
+            border-radius: 24px;
+            border: 2px solid #3d1512;
+            box-shadow: 
+                0 0 0 1px rgba(255, 71, 87, 0.3),
+                0 0 45px rgba(255, 71, 87, 0.15),
+                0 25px 60px rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            position: relative;
+        }
+
+        /* Chili flame top neon accent bar */
+        .app-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 30px;
+            right: 30px;
+            height: 3px;
+            background: linear-gradient(90deg, #ff4757, #ffa502, #2ed573, #ff4757);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 0 16px rgba(255, 71, 87, 0.8);
+        }
+
+        /* Brand Header */
+        .brand-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            border-bottom: 1.5px solid rgba(255, 71, 87, 0.25);
+            padding-bottom: 20px;
+        }
+
+        .brand-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .brand-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            border: 1.5px solid #ff4757;
+            box-shadow: 0 0 16px rgba(255, 71, 87, 0.4);
+            object-fit: cover;
+            background: #000;
+        }
+
+        .brand-text-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chef-badge {
+            display: inline-block;
+            align-self: flex-start;
+            font-family: var(--rel-font-mono);
+            font-size: 0.62rem;
+            color: #ffa502;
+            background: rgba(255, 165, 2, 0.15);
+            padding: 2px 7px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            border: 1px solid rgba(255, 165, 2, 0.35);
+        }
+
+        .brand-title {
+            color: #ffffff; 
+            font-family: var(--rel-font-display);
+            font-size: 1.45rem; 
+            font-weight: 900;
+            text-transform: uppercase;
+            margin: 0;
+            line-height: 1.1;
+            letter-spacing: 1px;
+        }
+
+        .brand-subtitle {
+            color: #ff4757; 
+            font-family: var(--rel-font-mono);
+            font-size: 0.8rem; 
+            font-weight: 600;
+            margin-top: 3px;
+            letter-spacing: 0.6px;
+        }
+
+        .btn-generate {
+            background: linear-gradient(180deg, #ff4757 0%, #c21b2b 100%);
+            color: #ffffff;
+            border: 1.5px solid rgba(255, 71, 87, 0.6);
+            padding: 13px 26px;
+            border-radius: 12px;
+            font-family: var(--rel-font-display);
+            font-size: 0.95rem;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 0 20px rgba(255, 71, 87, 0.4);
+            outline: none;
+        }
+
+        .btn-generate:hover { 
+            background: #ff6b81; 
+            box-shadow: 0 0 28px rgba(255, 71, 87, 0.7);
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            text-align: center;
+            font-family: var(--rel-font-mono);
+            font-size: 1.15rem;
+            color: #ffa502;
+            font-weight: 700;
+            padding: 50px 0;
+            letter-spacing: 1px;
+            display: none;
+        }
+
+        #meal-result {
+            display: none;
+            flex-direction: column;
+            gap: 25px;
+            animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .meal-title-area {
+            text-align: center;
+            border-bottom: 1.5px solid #2d0e0c;
+            padding-bottom: 18px;
+        }
+
+        .meal-title {
+            font-family: var(--rel-font-display);
+            font-size: 2.1rem;
+            color: #ffffff;
+            margin: 0 0 8px 0;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .meal-category {
+            font-family: var(--rel-font-mono);
+            font-size: 0.88rem;
+            color: #ffa502;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .meal-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.35fr;
+            gap: 30px;
+        }
+
+        .meal-img {
+            width: 100%;
+            border-radius: 16px;
+            border: 2px solid rgba(255, 71, 87, 0.35);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.85);
+            margin-bottom: 20px;
+            object-fit: cover;
+            aspect-ratio: 4 / 3;
+        }
+
+        .section-title {
+            color: #ffa502;
+            font-family: var(--rel-font-display);
+            font-size: 1.15rem;
+            font-weight: 800;
+            margin: 0 0 14px 0;
+            border-bottom: 1.5px solid rgba(255, 165, 2, 0.3);
+            padding-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .ingredients-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .ingredients-list li {
+            background-color: #0c0403;
+            padding: 11px 15px;
+            border-radius: 10px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.88rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #ffffff;
+            border: 1.5px solid #2d0e0c;
+            border-left: 4px solid #ff4757;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+        }
+
+        .ingredients-list li span {
+            font-weight: 800;
+            color: #2ed573;
+            background: rgba(46, 213, 115, 0.12);
+            padding: 2px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(46, 213, 115, 0.3);
+            font-size: 0.8rem;
+        }
+
+        .instructions {
+            font-size: 0.96rem;
+            line-height: 1.75;
+            color: #fce7f3;
+            white-space: pre-wrap;
+            background: #0c0403;
+            padding: 22px;
+            border-radius: 14px;
+            border: 1.5px solid #2d0e0c;
+            font-family: var(--rel-font-sans);
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
+        }
+
+        @media (max-width: 768px) {
+            .meal-grid { grid-template-columns: 1fr; }
+            .btn-generate { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="meal-wrapper">
+        <div class="app-container">
+            
+            <div class="app-card rel-tactile-surface">
+                
+                <div class="brand-header">
+                    <div class="brand-info">
+                        <img src="logo.png" alt="The Rel Works Logo" class="brand-logo" onerror="this.style.display='none'">
+                        <div class="brand-text-container">
+                            <span class="chef-badge">NEON GOURMET WORKSHOP</span>
+                            <h1 class="brand-title">GOURMET NEON KITCHEN</h1>
+                            <p class="brand-subtitle">THE REL WORKS // RECIPE INSPIRATION & GASTRONOMY DECK</p>
+                        </div>
+                    </div>
+                    <button class="btn-generate" id="btn-generate">SYNTHESIZE RECIPE 🍽️</button>
+                </div>
+
+                <div class="loading" id="loading">Synthesizing culinary formula from recipe database...</div>
+
+                <div id="meal-result"></div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/rel-audio.js"></script>
+    <script src="js/rel-hud.js"></script>
+    <script>
+        const btnGenerate = document.getElementById('btn-generate');
+        const mealResult = document.getElementById('meal-result');
+        const loadingIndicator = document.getElementById('loading');
+
+        async function fetchRandomMeal() {
+            mealResult.style.display = 'none';
+            loadingIndicator.style.display = 'block';
+            btnGenerate.disabled = true;
+            btnGenerate.style.opacity = '0.5';
+            if (window.RelAudio) window.RelAudio.chirp(1000);
+
+            try {
+                const response = await fetch('https://www.themealdb.com/api/json/v1/1/random.php');
+                const data = await response.json();
+                createMealDOM(data.meals[0]);
+                if (window.RelAudio) window.RelAudio.success();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                // Offline Fallback Blueprint
+                createMealDOM({
+                    strMeal: "Pan-Seared Salmon & Asparagus",
+                    strCategory: "Seafood",
+                    strArea: "Nordic Pacific",
+                    strMealThumb: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?q=80&w=800&auto=format&fit=crop",
+                    strInstructions: "1. Heat a heavy skillet over medium-high heat with a drizzle of cold-pressed olive oil.\n2. Season fresh salmon fillets with cracked sea salt and coarse black pepper.\n3. Sear skin-side down for 4-5 minutes until crisp, flip gently and cook 3 minutes more.\n4. Sauté tender asparagus spears in the same pan with fresh garlic.\n5. Plate and finish with a squeeze of fresh lemon juice.",
+                    strIngredient1: "Salmon Fillets", strMeasure1: "2 portions",
+                    strIngredient2: "Olive Oil", strMeasure2: "2 tbsp.",
+                    strIngredient3: "Fresh Asparagus", strMeasure3: "200g",
+                    strIngredient4: "Lemon Juice", strMeasure4: "1 tbsp.",
+                    strIngredient5: "Sea Salt & Pepper", strMeasure5: "To taste"
+                });
+            } finally {
+                btnGenerate.disabled = false;
+                btnGenerate.style.opacity = '1';
+            }
+        }
+
+        function createMealDOM(meal) {
+            const ingredients = [];
+            for (let i = 1; i <= 20; i++) {
+                const ingName = meal[`strIngredient${i}`];
+                let ingMeasure = meal[`strMeasure${i}`];
+
+                if (ingName && ingName.trim() !== '') {
+                    if (ingMeasure) {
+                        ingMeasure = ingMeasure.replace(/tablespoons?/gi, 'tbsp.');
+                        ingMeasure = ingMeasure.replace(/teaspoons?/gi, 'tsp.');
+                    }
+
+                    ingredients.push({
+                        ingredient: ingName,
+                        measure: ingMeasure || 'Present'
+                    });
+                } else {
+                    break;
+                }
+            }
+
+            const newInnerHTML = `
+                <div class="meal-title-area">
+                    <h2 class="meal-title">${meal.strMeal}</h2>
+                    <div class="meal-category">${meal.strArea || 'Global'} Cuisine // ${meal.strCategory || 'General'}</div>
+                </div>
+
+                <div class="meal-grid">
+                    
+                    <div class="meal-left">
+                        <img src="${meal.strMealThumb}" alt="${meal.strMeal}" class="meal-img">
+                        <h3 class="section-title">Ingredients Checklist</h3>
+                        <ul class="ingredients-list">
+                            ${ingredients.map(ing => `
+                                <li>${ing.ingredient} <span>${ing.measure}</span></li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                    
+                    <div class="meal-right">
+                        <h3 class="section-title">Culinary Instructions</h3>
+                        <div class="instructions">${meal.strInstructions}</div>
+                    </div>
+
+                </div>
+            `;
+
+            loadingIndicator.style.display = 'none';
+            mealResult.innerHTML = newInnerHTML;
+            mealResult.style.display = 'flex';
+        }
+
+        btnGenerate.addEventListener('click', fetchRandomMeal);
+
+        fetchRandomMeal();
+    </script>
+</body>
+</html>

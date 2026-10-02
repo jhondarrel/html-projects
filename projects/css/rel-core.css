@@ -1,0 +1,532 @@
+/* ==========================================================================
+   THE REL WORKS // QUANTUM DESIGN SYSTEM & HUD CORE
+   Bespoke, realistic, tactile, futuristic hardware styling
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700;800;900&family=Space+Grotesk:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --rel-bg-deep: #05070c;
+    --rel-bg-surface: #0a0e18;
+    --rel-bg-elevated: #111726;
+    --rel-bg-recessed: #030508;
+
+    --rel-border-dim: rgba(255, 255, 255, 0.08);
+    --rel-border-bright: rgba(0, 243, 255, 0.4);
+    --rel-border-bevel-top: rgba(255, 255, 255, 0.16);
+    --rel-border-bevel-bottom: rgba(0, 0, 0, 0.8);
+
+    --rel-cyan: #00f3ff;
+    --rel-cyan-glow: rgba(0, 243, 255, 0.35);
+    --rel-blue: #0088ff;
+    --rel-green: #00ff88;
+    --rel-green-glow: rgba(0, 255, 136, 0.35);
+    --rel-amber: #ffaa00;
+    --rel-red: #ff2255;
+    --rel-red-glow: rgba(255, 34, 85, 0.4);
+    --rel-purple: #9d4edd;
+
+    --rel-text-high: #f0f4fc;
+    --rel-text-mid: #94a3b8;
+    --rel-text-dim: #475569;
+
+    --rel-font-display: 'Orbitron', 'Space Grotesk', -apple-system, sans-serif;
+    --rel-font-sans: 'Space Grotesk', 'Inter', -apple-system, sans-serif;
+    --rel-font-mono: 'Fira Code', 'JetBrains Mono', monospace;
+
+    --rel-hud-height: 52px;
+}
+
+/* Base Body Environment */
+body {
+    background-color: var(--rel-bg-deep);
+    color: var(--rel-text-high);
+    font-family: var(--rel-font-sans);
+    margin: 0;
+    padding-top: var(--rel-hud-height) !important;
+    min-height: 100vh;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    position: relative;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Background Canvas */
+#rel-bg-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* Custom Telemetry Scrollbars */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #060910;
+}
+::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 3px;
+    border: 1px solid rgba(0, 243, 255, 0.2);
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--rel-cyan);
+    box-shadow: 0 0 10px var(--rel-cyan-glow);
+}
+
+/* ==========================================================================
+   TOP TELEMETRY HUD BAR
+   ========================================================================== */
+#rel-hud-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--rel-hud-height);
+    background: rgba(8, 12, 20, 0.88);
+    backdrop-filter: blur(14px) saturate(180%);
+    -webkit-backdrop-filter: blur(14px) saturate(180%);
+    border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    z-index: 10000;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(255, 255, 255, 0.05) inset;
+}
+
+.rel-hud-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.rel-hud-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--rel-text-high);
+}
+
+.rel-hud-logo {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    border: 1px solid rgba(0, 243, 255, 0.4);
+    box-shadow: 0 0 8px rgba(0, 243, 255, 0.2);
+    object-fit: cover;
+}
+
+.rel-hud-brand-text {
+    font-family: var(--rel-font-display);
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rel-hud-badge {
+    background: rgba(0, 243, 255, 0.12);
+    color: var(--rel-cyan);
+    border: 1px solid rgba(0, 243, 255, 0.4);
+    font-family: var(--rel-font-mono);
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.8px;
+}
+
+.rel-hud-status {
+    font-family: var(--rel-font-mono);
+    font-size: 0.7rem;
+    color: var(--rel-green);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    background: rgba(0, 255, 136, 0.08);
+    border: 1px solid rgba(0, 255, 136, 0.25);
+    border-radius: 4px;
+    letter-spacing: 1px;
+}
+
+.rel-hud-led {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--rel-green);
+    box-shadow: 0 0 8px var(--rel-green);
+    animation: rel-led-pulse 2s ease infinite;
+}
+
+@keyframes rel-led-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.rel-hud-center {
+    display: flex;
+    align-items: center;
+}
+
+.rel-launcher-trigger {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(0, 243, 255, 0.3) !important;
+    color: var(--rel-text-high) !important;
+    padding: 6px 14px !important;
+    border-radius: 6px !important;
+    font-family: var(--rel-font-sans) !important;
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 1px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.rel-launcher-trigger:hover {
+    background: rgba(0, 243, 255, 0.12) !important;
+    border-color: var(--rel-cyan) !important;
+    box-shadow: 0 0 15px var(--rel-cyan-glow) !important;
+    transform: translateY(-1px) !important;
+}
+
+.rel-launcher-trigger kbd {
+    background: #030508;
+    color: var(--rel-cyan);
+    border: 1px solid rgba(0, 243, 255, 0.4);
+    font-family: var(--rel-font-mono);
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: normal;
+}
+
+.rel-hud-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.rel-hud-btn {
+    background: transparent;
+    border: 1px solid var(--rel-border-dim);
+    color: var(--rel-text-mid);
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.rel-hud-btn:hover {
+    border-color: var(--rel-cyan);
+    color: #ffffff;
+    background: rgba(0, 243, 255, 0.08);
+}
+
+.rel-hud-telemetry {
+    font-family: var(--rel-font-mono);
+    font-size: 0.8rem;
+    color: var(--rel-cyan);
+    background: #04060a;
+    padding: 5px 10px;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 243, 255, 0.25);
+    letter-spacing: 1px;
+    box-shadow: inset 0 0 8px rgba(0, 243, 255, 0.1);
+}
+
+/* ==========================================================================
+   APP LAUNCHER MODAL DRAWER
+   ========================================================================== */
+#rel-launcher-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 20000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+#rel-launcher-modal.open {
+    display: flex;
+}
+
+.rel-launcher-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(4, 6, 12, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.rel-launcher-dialog {
+    position: relative;
+    width: 90%;
+    max-width: 960px;
+    max-height: 85vh;
+    background: #0a0e1a;
+    border: 1px solid var(--rel-cyan);
+    border-radius: 14px;
+    box-shadow: 0 0 50px rgba(0, 243, 255, 0.25), 0 25px 60px rgba(0, 0, 0, 0.9);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: rel-dialog-appear 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes rel-dialog-appear {
+    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.rel-launcher-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    border-bottom: 1px solid var(--rel-border-dim);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.rel-launcher-title-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.rel-launcher-title-group h2 {
+    margin: 0;
+    font-family: var(--rel-font-display);
+    font-size: 1.1rem;
+    letter-spacing: 1.5px;
+    color: var(--rel-cyan);
+}
+
+.rel-launcher-close {
+    background: none;
+    border: none;
+    color: var(--rel-text-mid);
+    font-size: 1.8rem;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.rel-launcher-close:hover {
+    color: var(--rel-red);
+}
+
+.rel-launcher-search-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 25px;
+    border-bottom: 1px solid var(--rel-border-dim);
+    background: #060912;
+}
+
+.rel-search-icon {
+    font-size: 1.1rem;
+    color: var(--rel-cyan);
+}
+
+#rel-app-search {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-family: var(--rel-font-sans);
+    font-size: 1.1rem;
+    outline: none;
+}
+
+#rel-app-search::placeholder {
+    color: var(--rel-text-dim);
+}
+
+.rel-launcher-grid {
+    padding: 20px 25px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+    overflow-y: auto;
+    max-height: 55vh;
+}
+
+.rel-app-card {
+    background: #0f1524;
+    border: 1px solid var(--rel-border-dim);
+    border-radius: 10px;
+    padding: 16px;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.rel-app-card:hover {
+    border-color: var(--rel-cyan);
+    background: #141c30;
+    box-shadow: 0 8px 24px rgba(0, 243, 255, 0.15);
+    transform: translateY(-2px);
+}
+
+.rel-app-card.active-app {
+    border-color: var(--rel-cyan);
+    background: rgba(0, 243, 255, 0.08);
+}
+
+.rel-app-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.rel-app-icon {
+    font-size: 1.3rem;
+}
+
+.rel-app-cat {
+    font-family: var(--rel-font-mono);
+    font-size: 0.65rem;
+    color: var(--rel-cyan);
+    background: rgba(0, 243, 255, 0.1);
+    padding: 2px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.rel-app-current-tag {
+    font-family: var(--rel-font-mono);
+    font-size: 0.6rem;
+    color: var(--rel-green);
+    background: rgba(0, 255, 136, 0.15);
+    border: 1px solid rgba(0, 255, 136, 0.4);
+    padding: 2px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+}
+
+.rel-app-title {
+    font-family: var(--rel-font-sans);
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.rel-app-desc {
+    font-size: 0.8rem;
+    color: var(--rel-text-mid);
+    line-height: 1.35;
+    flex: 1;
+}
+
+.rel-app-arrow {
+    font-family: var(--rel-font-mono);
+    font-size: 0.7rem;
+    color: var(--rel-cyan);
+    letter-spacing: 1px;
+    opacity: 0.7;
+    margin-top: 4px;
+}
+
+.rel-app-card:hover .rel-app-arrow {
+    opacity: 1;
+    transform: translateX(4px);
+    transition: transform 0.2s ease;
+}
+
+.rel-launcher-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 25px;
+    background: #060912;
+    border-top: 1px solid var(--rel-border-dim);
+    font-family: var(--rel-font-mono);
+    font-size: 0.75rem;
+    color: var(--rel-text-dim);
+}
+
+.rel-launcher-footer kbd {
+    background: #111726;
+    color: var(--rel-text-mid);
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid var(--rel-border-dim);
+}
+
+/* ==========================================================================
+   TACTILE HARDWARE SURFACE EFFECT (3D TILT & SPECULAR HIGHLIGHT)
+   ========================================================================== */
+.rel-tactile-surface {
+    position: relative;
+    transition: transform 0.1s ease-out, box-shadow 0.3s ease;
+    will-change: transform;
+}
+
+.rel-tactile-surface::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(circle 350px at var(--mouse-x, -500px) var(--mouse-y, -500px), rgba(255, 255, 255, 0.07) 0%, transparent 80%);
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* ==========================================================================
+   OLED SCANLINE & DISPLAY REFINEMENTS
+   ========================================================================== */
+.rel-oled-display {
+    background: #020408 !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.rel-oled-display::before {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+    background-size: 100% 4px;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+/* Responsive Rules */
+@media (max-width: 768px) {
+    .rel-hud-badge, .rel-hud-status, .rel-hud-telemetry, .rel-launcher-trigger kbd {
+        display: none !important;
+    }
+    .rel-launcher-dialog {
+        width: 96%;
+        max-height: 92vh;
+    }
+}

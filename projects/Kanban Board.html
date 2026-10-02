@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyberpunk Taskforge // Kanban Board</title>
+    
+    <link rel="stylesheet" href="css/rel-core.css">
+
+    <style>
+        :root {
+            --kanban-cyan: #00f2fe;
+            --kanban-purple: #4facfe;
+            --kanban-green: #00ff87;
+            --kanban-coral: #ff0844;
+            --kanban-amber: #ffa502;
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 15%, #101c36 0%, #070e1e 50%, #03060d 100%);
+            min-height: 100vh;
+            color: #f0fdf4;
+        }
+
+        .kanban-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: calc(100vh - var(--rel-hud-height));
+            padding: 30px 20px;
+        }
+
+        .kanban-container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        /* --- Header Deck --- */
+        .header-card {
+            background: linear-gradient(160deg, #101e38 0%, #081124 60%, #040914 100%);
+            padding: 24px 36px;
+            border-radius: 20px;
+            border: 2px solid #1c3563;
+            box-shadow: 
+                0 0 0 1px rgba(0, 242, 254, 0.3),
+                0 0 45px rgba(0, 242, 254, 0.12),
+                0 20px 50px rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            position: relative;
+        }
+
+        /* Top Cyan Rim */
+        .header-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 25px;
+            right: 25px;
+            height: 3px;
+            background: linear-gradient(90deg, #00f2fe, #4facfe, #00ff87, #00f2fe);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 0 16px rgba(0, 242, 254, 0.8);
+        }
+
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 16px; 
+        }
+
+        .brand-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            border: 1.5px solid #00f2fe;
+            box-shadow: 0 0 16px rgba(0, 242, 254, 0.4);
+            object-fit: cover;
+            background: #000;
+        }
+
+        .brand-text-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .kanban-badge {
+            display: inline-block;
+            align-self: flex-start;
+            font-family: var(--rel-font-mono);
+            font-size: 0.62rem;
+            color: #00f2fe;
+            background: rgba(0, 242, 254, 0.15);
+            padding: 2px 7px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            border: 1px solid rgba(0, 242, 254, 0.35);
+        }
+
+        .brand-title {
+            color: #ffffff; 
+            font-family: var(--rel-font-display);
+            font-size: 1.45rem; 
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0;
+            line-height: 1.1;
+        }
+
+        .brand-subtitle {
+            color: #4facfe; 
+            font-family: var(--rel-font-mono);
+            font-size: 0.8rem; 
+            font-weight: 600;
+            margin-top: 3px;
+            letter-spacing: 0.6px;
+        }
+
+        .btn-new-task {
+            background: linear-gradient(180deg, #00f2fe 0%, #0088cc 100%);
+            color: #020814;
+            border: 1.5px solid rgba(0, 242, 254, 0.6);
+            padding: 13px 26px;
+            border-radius: 12px;
+            font-family: var(--rel-font-display);
+            font-size: 0.95rem;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.35);
+            outline: none;
+        }
+
+        .btn-new-task:hover {
+            background: #48f7ff;
+            box-shadow: 0 0 30px rgba(0, 242, 254, 0.7);
+            transform: translateY(-2px);
+        }
+
+        /* Progress Telemetry Ribbon */
+        .progress-ribbon {
+            background: #060e1d;
+            border: 1.5px solid #162a4d;
+            border-radius: 14px;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--rel-font-mono);
+            font-size: 0.8rem;
+            font-weight: 700;
+            gap: 15px;
+        }
+
+        .progress-bar-wrap {
+            flex: 1;
+            height: 8px;
+            background: #0d1a33;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid #1e3a6c;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00f2fe, #00ff87);
+            box-shadow: 0 0 10px #00ff87;
+            transition: width 0.3s ease;
+        }
+
+        /* --- 3-Column Kanban Board --- */
+        .board-columns {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .column-card {
+            background: linear-gradient(160deg, #0d172c 0%, #070d1a 100%);
+            border: 2px solid #16274a;
+            border-radius: 18px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            min-height: 480px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            transition: border-color 0.2s ease;
+        }
+
+        .column-card.drag-over {
+            border-color: #00f2fe;
+            background: linear-gradient(160deg, #13223f 0%, #0a1426 100%);
+            box-shadow: 0 0 25px rgba(0, 242, 254, 0.25);
+        }
+
+        .column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1.5px solid #1a2f58;
+            padding-bottom: 12px;
+        }
+
+        .column-title {
+            font-family: var(--rel-font-display);
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .count-pill {
+            background: rgba(0, 242, 254, 0.15);
+            color: #00f2fe;
+            font-family: var(--rel-font-mono);
+            font-size: 0.72rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 800;
+            border: 1px solid rgba(0, 242, 254, 0.3);
+        }
+
+        .tasks-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex: 1;
+        }
+
+        /* --- Individual Task Card --- */
+        .task-card {
+            background: linear-gradient(160deg, #13223f 0%, #091324 100%);
+            border: 1.5px solid #1e3966;
+            border-radius: 14px;
+            padding: 16px;
+            cursor: grab;
+            transition: all 0.15s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+            position: relative;
+            user-select: none;
+        }
+
+        .task-card:hover {
+            border-color: #00f2fe;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.8), 0 0 15px rgba(0, 242, 254, 0.2);
+        }
+
+        .task-card:active {
+            cursor: grabbing;
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .priority-badge {
+            font-family: var(--rel-font-mono);
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .priority-urgent { background: rgba(255, 8, 68, 0.2); color: #ff0844; border: 1px solid rgba(255, 8, 68, 0.4); }
+        .priority-high { background: rgba(255, 165, 2, 0.2); color: #ffa502; border: 1px solid rgba(255, 165, 2, 0.4); }
+        .priority-normal { background: rgba(0, 242, 254, 0.2); color: #00f2fe; border: 1px solid rgba(0, 242, 254, 0.4); }
+        .priority-low { background: rgba(0, 255, 135, 0.2); color: #00ff87; border: 1px solid rgba(0, 255, 135, 0.4); }
+
+        .btn-card-del {
+            background: none;
+            border: none;
+            color: #64748b;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: color 0.15s;
+            padding: 0;
+        }
+
+        .btn-card-del:hover {
+            color: #ff0844;
+        }
+
+        .task-title {
+            font-family: var(--rel-font-sans);
+            font-size: 1rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 0 0 6px 0;
+            line-height: 1.3;
+        }
+
+        .task-desc {
+            font-size: 0.82rem;
+            color: #94a3b8;
+            line-height: 1.4;
+            margin: 0 0 10px 0;
+        }
+
+        .task-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--rel-font-mono);
+            font-size: 0.68rem;
+            color: #64748b;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 8px;
+        }
+
+        /* --- Modal Dialog --- */
+        #task-modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(3, 6, 16, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 10000;
+        }
+
+        #task-modal {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(160deg, #101c38 0%, #070e1c 100%);
+            border: 2px solid #00f2fe;
+            padding: 34px;
+            border-radius: 20px;
+            box-shadow: 0 0 50px rgba(0, 242, 254, 0.3), 0 25px 60px rgba(0,0,0,0.9);
+            z-index: 10010;
+            width: 90%;
+            max-width: 440px;
+            box-sizing: border-box;
+        }
+
+        #task-modal h2 {
+            margin: 0 0 20px 0;
+            color: #00f2fe;
+            font-family: var(--rel-font-display);
+            font-size: 1.35rem;
+            font-weight: 800;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            font-family: var(--rel-font-mono);
+            font-size: 0.75rem;
+            color: #00f2fe;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .form-group input, .form-group textarea, .form-group select {
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1.5px solid #1e3966;
+            background: #040914;
+            color: #ffffff;
+            font-family: var(--rel-font-sans);
+            font-size: 0.95rem;
+            outline: none;
+            box-sizing: border-box;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            border-color: #00f2fe;
+            box-shadow: 0 0 14px rgba(0, 242, 254, 0.4);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn-modal {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.85rem;
+            font-weight: 800;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .btn-save-task {
+            background: #00f2fe;
+            color: #030814;
+            border: 1px solid #00f2fe;
+        }
+
+        .btn-cancel-task {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #cbd5e1;
+        }
+
+        @media (max-width: 900px) {
+            .board-columns { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="kanban-wrapper">
+        <div class="kanban-container">
+            
+            <div class="header-card rel-tactile-surface">
+                <div class="brand-header">
+                    <img src="logo.png" alt="The Rel Works Logo" class="brand-logo" onerror="this.style.display='none'">
+                    <div class="brand-text-container">
+                        <span class="kanban-badge">NEO-TOKYO PROJECT DECK</span>
+                        <h1 class="brand-title">CYBERPUNK TASKFORGE</h1>
+                        <p class="brand-subtitle">THE REL WORKS // HOLOGRAPHIC TASK & SPRINT DECK</p>
+                    </div>
+                </div>
+
+                <button class="btn-new-task" id="btn-new-task">
+                    <span>+</span> INITIATE TASK
+                </button>
+            </div>
+
+            <!-- Progress Telemetry -->
+            <div class="progress-ribbon">
+                <span style="color: #00f2fe;">SPRINT COMPLETION TELEMETRY:</span>
+                <div class="progress-bar-wrap">
+                    <div class="progress-bar-fill" id="progress-bar-fill"></div>
+                </div>
+                <span id="progress-text" style="color: #00ff87;">0% COMPLETED</span>
+            </div>
+
+            <!-- 3 Kanban Columns -->
+            <div class="board-columns">
+                
+                <!-- Backlog -->
+                <div class="column-card rel-tactile-surface" data-col="backlog">
+                    <div class="column-header">
+                        <div class="column-title">
+                            <span>📡</span> BACKLOG QUEUE
+                        </div>
+                        <span class="count-pill" id="count-backlog">0</span>
+                    </div>
+                    <div class="tasks-list" id="col-backlog"></div>
+                </div>
+
+                <!-- In Progress -->
+                <div class="column-card rel-tactile-surface" data-col="inprogress">
+                    <div class="column-header">
+                        <div class="column-title">
+                            <span>⚡</span> ACTIVE IN-FLIGHT
+                        </div>
+                        <span class="count-pill" id="count-inprogress" style="color: #4facfe; border-color: rgba(79, 172, 254, 0.4);">0</span>
+                    </div>
+                    <div class="tasks-list" id="col-inprogress"></div>
+                </div>
+
+                <!-- Completed -->
+                <div class="column-card rel-tactile-surface" data-col="completed">
+                    <div class="column-header">
+                        <div class="column-title">
+                            <span>🚀</span> DEPLOYED COMPLETE
+                        </div>
+                        <span class="count-pill" id="count-completed" style="color: #00ff87; border-color: rgba(0, 255, 135, 0.4);">0</span>
+                    </div>
+                    <div class="tasks-list" id="col-completed"></div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal Dialog -->
+    <div id="task-modal-backdrop"></div>
+    <div id="task-modal">
+        <h2>Initiate Mission Task</h2>
+        
+        <div class="form-group">
+            <label for="task-title-input">Task Title</label>
+            <input type="text" id="task-title-input" placeholder="e.g., Optimize neural rendering pipeline">
+        </div>
+
+        <div class="form-group">
+            <label for="task-desc-input">Task Brief / Notes</label>
+            <textarea id="task-desc-input" rows="3" placeholder="Provide mission objectives..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="task-priority-input">Urgency Level</label>
+            <select id="task-priority-input">
+                <option value="urgent">CRITICAL / URGENT</option>
+                <option value="high">HIGH PRIORITY</option>
+                <option value="normal" selected>NORMAL CADENCE</option>
+                <option value="low">LOW LATENCY</option>
+            </select>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-modal btn-cancel-task" id="btn-cancel-task">Cancel</button>
+            <button class="btn-modal btn-save-task" id="btn-save-task">Deploy Task</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/rel-audio.js"></script>
+    <script src="js/rel-hud.js"></script>
+    <script>
+        let tasks = JSON.parse(localStorage.getItem('relWorksKanban')) || [
+            { id: "1", title: "Refactor Shader Pipeline", desc: "Integrate WebGL post-processing passes into core.", priority: "urgent", column: "inprogress" },
+            { id: "2", title: "Calibrate Quantum Audio", desc: "Ensure Web Audio synthesizer produces harmonic intervals.", priority: "high", column: "completed" },
+            { id: "3", title: "Draft Sprint Architecture", desc: "Map out 5 new modules for Creative Workshop Suite.", priority: "normal", column: "backlog" }
+        ];
+
+        const modalBackdrop = document.getElementById('task-modal-backdrop');
+        const modal = document.getElementById('task-modal');
+        const btnNewTask = document.getElementById('btn-new-task');
+        const btnSaveTask = document.getElementById('btn-save-task');
+        const btnCancelTask = document.getElementById('btn-cancel-task');
+
+        const titleInput = document.getElementById('task-title-input');
+        const descInput = document.getElementById('task-desc-input');
+        const priorityInput = document.getElementById('task-priority-input');
+
+        function saveTasks() {
+            localStorage.setItem('relWorksKanban', JSON.stringify(tasks));
+            renderBoard();
+        }
+
+        function openModal() {
+            titleInput.value = '';
+            descInput.value = '';
+            priorityInput.value = 'normal';
+            modalBackdrop.style.display = 'block';
+            modal.style.display = 'block';
+            titleInput.focus();
+            if (window.RelAudio) window.RelAudio.chirp(1000);
+        }
+
+        function closeModal() {
+            modalBackdrop.style.display = 'none';
+            modal.style.display = 'none';
+        }
+
+        function createTask() {
+            const title = titleInput.value.trim();
+            if (!title) return;
+
+            const newTask = {
+                id: Date.now().toString(),
+                title: title,
+                desc: descInput.value.trim(),
+                priority: priorityInput.value,
+                column: 'backlog'
+            };
+
+            tasks.push(newTask);
+            saveTasks();
+            closeModal();
+            if (window.RelAudio) window.RelAudio.success();
+        }
+
+        function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            saveTasks();
+            if (window.RelAudio) window.RelAudio.error();
+        }
+
+        function renderBoard() {
+            const cols = {
+                backlog: document.getElementById('col-backlog'),
+                inprogress: document.getElementById('col-inprogress'),
+                completed: document.getElementById('col-completed')
+            };
+
+            for (const key in cols) {
+                cols[key].innerHTML = '';
+            }
+
+            const counts = { backlog: 0, inprogress: 0, completed: 0 };
+
+            tasks.forEach(task => {
+                counts[task.column] = (counts[task.column] || 0) + 1;
+
+                const card = document.createElement('div');
+                card.className = 'task-card';
+                card.draggable = true;
+                card.dataset.id = task.id;
+
+                card.innerHTML = `
+                    <div class="task-header">
+                        <span class="priority-badge priority-${task.priority}">${task.priority}</span>
+                        <button class="btn-card-del" onclick="deleteTask('${task.id}')" title="Delete Task">✖</button>
+                    </div>
+                    <h4 class="task-title">${task.title}</h4>
+                    ${task.desc ? `<p class="task-desc">${task.desc}</p>` : ''}
+                    <div class="task-footer">
+                        <span>ID: #${task.id.slice(-4)}</span>
+                        <span>STATUS: ${task.column.toUpperCase()}</span>
+                    </div>
+                `;
+
+                card.addEventListener('dragstart', handleDragStart);
+                cols[task.column].appendChild(card);
+            });
+
+            document.getElementById('count-backlog').innerText = counts.backlog;
+            document.getElementById('count-inprogress').innerText = counts.inprogress;
+            document.getElementById('count-completed').innerText = counts.completed;
+
+            // Update Progress Percentage
+            const total = tasks.length;
+            const pct = total === 0 ? 0 : Math.round((counts.completed / total) * 100);
+            document.getElementById('progress-bar-fill').style.width = `${pct}%`;
+            document.getElementById('progress-text').innerText = `${pct}% COMPLETED (${counts.completed}/${total})`;
+        }
+
+        let draggedId = null;
+
+        function handleDragStart(e) {
+            draggedId = e.currentTarget.dataset.id;
+            e.dataTransfer.setData('text/plain', draggedId);
+            if (window.RelAudio) window.RelAudio.click();
+        }
+
+        document.querySelectorAll('.column-card').forEach(col => {
+            col.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                col.classList.add('drag-over');
+            });
+
+            col.addEventListener('dragleave', () => {
+                col.classList.remove('drag-over');
+            });
+
+            col.addEventListener('drop', (e) => {
+                e.preventDefault();
+                col.classList.remove('drag-over');
+                const targetColName = col.dataset.col;
+
+                const task = tasks.find(t => t.id === draggedId);
+                if (task && task.column !== targetColName) {
+                    task.column = targetColName;
+                    saveTasks();
+                    if (targetColName === 'completed') {
+                        if (window.RelAudio) window.RelAudio.success();
+                    } else {
+                        if (window.RelAudio) window.RelAudio.snap();
+                    }
+                }
+            });
+        });
+
+        btnNewTask.addEventListener('click', openModal);
+        btnSaveTask.addEventListener('click', createTask);
+        btnCancelTask.addEventListener('click', closeModal);
+        modalBackdrop.addEventListener('click', closeModal);
+
+        renderBoard();
+    </script>
+</body>
+</html>

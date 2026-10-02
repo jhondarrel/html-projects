@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photonics Stage // CSS Box Shadow Sculptor</title>
+    
+    <link rel="stylesheet" href="css/rel-core.css">
+
+    <style>
+        :root {
+            --light-indigo: #575fcf;
+            --light-cyan: #00d2d3;
+            --light-gold: #ffd32a;
+            --light-card-bg: rgba(18, 22, 34, 0.88);
+            --light-dark: #0a0d14;
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 12%, #151b2e 0%, #0a0e18 50%, #030508 100%);
+            min-height: 100vh;
+            color: #f1f2f6;
+        }
+
+        .studio-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: calc(100vh - var(--rel-hud-height));
+            padding: 30px 20px;
+        }
+
+        .studio-container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        /* --- Header Deck --- */
+        .studio-header {
+            background: linear-gradient(160deg, #18223c 0%, #0d1324 60%, #04070e 100%);
+            padding: 24px 34px;
+            border-radius: 20px;
+            border: 2px solid #28375e;
+            box-shadow: 
+                0 0 0 1px rgba(87, 95, 207, 0.3),
+                0 0 40px rgba(87, 95, 207, 0.15),
+                0 20px 50px rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            position: relative;
+        }
+
+        .studio-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 25px;
+            right: 25px;
+            height: 3px;
+            background: linear-gradient(90deg, #575fcf, #00d2d3, #ffd32a, #575fcf);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 0 16px rgba(87, 95, 207, 0.8);
+        }
+
+        .studio-brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .studio-logo-badge {
+            width: 52px;
+            height: 52px;
+            background: rgba(87, 95, 207, 0.1);
+            border: 2px solid var(--light-indigo);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            box-shadow: 0 0 20px rgba(87, 95, 207, 0.4);
+        }
+
+        .studio-title {
+            font-family: var(--rel-font-display);
+            font-size: 1.6rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: #ffffff;
+            margin: 0;
+            text-shadow: 0 0 15px rgba(87, 95, 207, 0.4);
+        }
+
+        .studio-subtitle {
+            font-family: var(--rel-font-sans);
+            font-size: 0.88rem;
+            color: var(--light-cyan);
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        /* --- Presets Ribbon --- */
+        .presets-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            background: var(--light-card-bg);
+            padding: 12px 20px;
+            border-radius: 14px;
+            border: 1px solid #232d4b;
+        }
+
+        .preset-chip {
+            background: rgba(28, 36, 60, 0.8);
+            border: 1px solid #36446e;
+            color: #dcdde1;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .preset-chip:hover {
+            border-color: var(--light-cyan);
+            color: var(--light-cyan);
+            background: rgba(0, 210, 211, 0.1);
+        }
+
+        /* --- Main Dual Layout --- */
+        .stage-grid {
+            display: grid;
+            grid-template-columns: 460px 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 960px) {
+            .stage-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Left Controls Card */
+        .controls-card {
+            background: var(--light-card-bg);
+            border-radius: 20px;
+            border: 2px solid #232f50;
+            padding: 26px 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.7);
+        }
+
+        .card-heading {
+            font-family: var(--rel-font-mono);
+            font-size: 0.9rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: var(--light-cyan);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(87, 95, 207, 0.2);
+            padding-bottom: 10px;
+        }
+
+        /* Interactive 2D Light Angle Manipulator */
+        .light-manipulator-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            background: rgba(10, 14, 24, 0.7);
+            padding: 16px;
+            border-radius: 14px;
+            border: 1px solid #1f2a47;
+        }
+
+        .light-orbit-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 2px dashed rgba(87, 95, 207, 0.5);
+            position: relative;
+            cursor: crosshair;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .orbit-center-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ffffff;
+            opacity: 0.5;
+        }
+
+        .light-bulb-handle {
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--light-gold);
+            box-shadow: 0 0 16px var(--light-gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            cursor: grab;
+            transform: translate(-50%, -50%);
+            user-select: none;
+        }
+
+        .light-bulb-handle:active {
+            cursor: grabbing;
+        }
+
+        /* Sliders */
+        .slider-row {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .slider-lbl-row {
+            display: flex;
+            justify-content: space-between;
+            font-family: var(--rel-font-mono);
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #a4b0be;
+        }
+
+        .rel-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #141c30;
+            outline: none;
+        }
+
+        .rel-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--light-indigo);
+            border: 2px solid #ffffff;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(87, 95, 207, 0.6);
+            transition: all 0.15s ease;
+        }
+
+        .rel-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+            background: var(--light-cyan);
+        }
+
+        /* Right Lighting Stage Preview */
+        .stage-preview-card {
+            background: linear-gradient(160deg, #131929 0%, #0a0d16 100%);
+            border-radius: 20px;
+            border: 2px solid #232f50;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.7);
+        }
+
+        /* Stage Arena */
+        .stage-arena {
+            flex-grow: 1;
+            min-height: 380px;
+            background: #0e121e;
+            border-radius: 16px;
+            border: 2px dashed #202b48;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            transition: background 0.3s ease;
+        }
+
+        /* The Subject Object */
+        .target-subject {
+            width: 220px;
+            height: 220px;
+            background: #1b243b;
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: #ffffff;
+            font-family: var(--rel-font-display);
+            font-weight: 800;
+            transition: border-radius 0.2s ease, width 0.2s ease, height 0.2s ease, background 0.2s ease;
+            position: relative;
+        }
+
+        .target-subject.shape-circle {
+            border-radius: 50%;
+        }
+
+        .target-subject.shape-pill {
+            width: 260px;
+            height: 80px;
+            border-radius: 40px;
+        }
+
+        /* CSS Output Code Block */
+        .code-output-card {
+            background: #060910;
+            border-radius: 12px;
+            border: 1px solid #1c2742;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .code-text {
+            font-family: 'Consolas', 'Fira Code', var(--rel-font-mono);
+            font-size: 0.9rem;
+            color: #7bed9f;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            background: var(--light-indigo);
+            color: #ffffff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.85rem;
+            font-weight: 800;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(87, 95, 207, 0.4);
+        }
+
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            background: var(--light-cyan);
+            color: #050810;
+            box-shadow: 0 6px 20px rgba(0, 210, 211, 0.5);
+        }
+
+        /* Shape Pickers */
+        .shape-btn-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .shape-btn {
+            background: rgba(20, 28, 48, 0.8);
+            border: 1px solid #2d3c64;
+            color: #a4b0be;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .shape-btn.active {
+            border-color: var(--light-indigo);
+            color: #ffffff;
+            background: rgba(87, 95, 207, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="studio-wrapper">
+        <div class="studio-container">
+            
+            <!-- Header Deck -->
+            <header class="studio-header">
+                <div class="studio-brand">
+                    <div class="studio-logo-badge">💡</div>
+                    <div>
+                        <h1 class="studio-title">PHOTONICS LIGHTING STAGE</h1>
+                        <div class="studio-subtitle">2D Light Vector Casting // Multi-Layer CSS Shadow Sculptor</div>
+                    </div>
+                </div>
+
+                <div class="shape-btn-group">
+                    <button class="shape-btn active" data-shape="card">CARD</button>
+                    <button class="shape-btn" data-shape="circle">CIRCLE</button>
+                    <button class="shape-btn" data-shape="pill">BUTTON</button>
+                </div>
+            </header>
+
+            <!-- Presets Ribbon -->
+            <div class="presets-row">
+                <span style="font-family: var(--rel-font-mono); font-size: 0.75rem; color: #8c98a8; font-weight: 800;">PRESETS:</span>
+                <button class="preset-chip" data-preset="elevation1">Smooth Elevation (Soft)</button>
+                <button class="preset-chip" data-preset="elevation3">Medium Floating Card</button>
+                <button class="preset-chip" data-preset="elevation5">High Aerospace Hover</button>
+                <button class="preset-chip" data-preset="neonGlow">Cyberpunk Cyan Aura</button>
+                <button class="preset-chip" data-preset="retroHard">90s Hard Pop Shadow</button>
+            </div>
+
+            <!-- Main Layout -->
+            <div class="stage-grid">
+                
+                <!-- Left Controls -->
+                <div class="controls-card">
+                    <div class="card-heading">
+                        <span>☀️</span>
+                        <span>INTERACTIVE 2D LIGHT SOURCE</span>
+                    </div>
+
+                    <div class="light-manipulator-box">
+                        <div class="light-orbit-circle" id="orbit-field">
+                            <div class="orbit-center-dot"></div>
+                            <div class="light-bulb-handle" id="light-bulb" style="left: 25px; top: 25px;">💡</div>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 6px; font-family: var(--rel-font-mono); font-size: 0.8rem;">
+                            <div>ANGLE: <span id="disp-angle" style="color: var(--light-gold); font-weight: 800;">135°</span></div>
+                            <div>DISTANCE: <span id="disp-dist" style="color: var(--light-cyan); font-weight: 800;">45px</span></div>
+                            <div style="font-size: 0.7rem; color: #8c98a8;">Drag the bulb to cast real-time shadows!</div>
+                        </div>
+                    </div>
+
+                    <div class="card-heading">
+                        <span>⚙️</span>
+                        <span>DIMENSIONAL METRICS</span>
+                    </div>
+
+                    <div class="slider-row">
+                        <div class="slider-lbl-row">
+                            <span>BLUR RADIUS</span>
+                            <span id="lbl-blur">35px</span>
+                        </div>
+                        <input type="range" class="rel-slider" id="slider-blur" min="0" max="100" value="35">
+                    </div>
+
+                    <div class="slider-row">
+                        <div class="slider-lbl-row">
+                            <span>SPREAD RADIUS</span>
+                            <span id="lbl-spread">0px</span>
+                        </div>
+                        <input type="range" class="rel-slider" id="slider-spread" min="-30" max="50" value="0">
+                    </div>
+
+                    <div class="slider-row">
+                        <div class="slider-lbl-row">
+                            <span>SHADOW OPACITY</span>
+                            <span id="lbl-opacity">45%</span>
+                        </div>
+                        <input type="range" class="rel-slider" id="slider-opacity" min="0" max="100" value="45">
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-family: var(--rel-font-mono); font-size: 0.8rem; font-weight: 700; color: #a4b0be;">SHADOW COLOR</span>
+                        <input type="color" id="shadow-color-picker" value="#000000" style="border: none; background: transparent; cursor: pointer; width: 36px; height: 36px;">
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-family: var(--rel-font-mono); font-size: 0.8rem; font-weight: 700; color: #a4b0be;">INSET SHADOW</span>
+                        <input type="checkbox" id="toggle-inset" style="transform: scale(1.3); cursor: pointer;">
+                    </div>
+                </div>
+
+                <!-- Right Stage Preview -->
+                <div class="stage-preview-card">
+                    <div class="card-heading">
+                        <span>👁️</span>
+                        <span>OPTICAL STAGE ARENA</span>
+                    </div>
+
+                    <div class="stage-arena" id="stage-arena">
+                        <div class="target-subject" id="subject-box">
+                            <span style="font-size: 2.2rem;">❖</span>
+                            <span>QUANTUM DECK</span>
+                        </div>
+                    </div>
+
+                    <!-- Code Block -->
+                    <div class="code-output-card">
+                        <div class="code-text" id="css-output">box-shadow: 20px 20px 35px 0px rgba(0, 0, 0, 0.45);</div>
+                        <button class="copy-btn" id="btn-copy-css">COPY CSS</button>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/rel-audio.js"></script>
+    <script src="js/rel-hud.js"></script>
+    <script>
+        // State
+        let lightAngleDeg = 135;
+        let lightDist = 30;
+        let blurVal = 35;
+        let spreadVal = 0;
+        let opacityVal = 0.45;
+        let shadowHex = '#000000';
+        let isInset = false;
+
+        // Elements
+        const orbitField = document.getElementById('orbit-field');
+        const lightBulb = document.getElementById('light-bulb');
+        const dispAngle = document.getElementById('disp-angle');
+        const dispDist = document.getElementById('disp-dist');
+
+        const sliderBlur = document.getElementById('slider-blur');
+        const sliderSpread = document.getElementById('slider-spread');
+        const sliderOpacity = document.getElementById('slider-opacity');
+        const colorPicker = document.getElementById('shadow-color-picker');
+        const toggleInset = document.getElementById('toggle-inset');
+
+        const lblBlur = document.getElementById('lbl-blur');
+        const lblSpread = document.getElementById('lbl-spread');
+        const lblOpacity = document.getElementById('lbl-opacity');
+
+        const subjectBox = document.getElementById('subject-box');
+        const cssOutput = document.getElementById('css-output');
+        const btnCopyCss = document.getElementById('btn-copy-css');
+
+        function hexToRgba(hex, alpha) {
+            const r = parseInt(hex.slice(1, 3), 16) || 0;
+            const g = parseInt(hex.slice(3, 5), 16) || 0;
+            const b = parseInt(hex.slice(5, 7), 16) || 0;
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        function updateShadow() {
+            // Shadow offset is cast opposite of the light source
+            const shadowRad = (lightAngleDeg + 180) * (Math.PI / 180);
+            const x = Math.round(Math.cos(shadowRad) * lightDist);
+            const y = Math.round(Math.sin(shadowRad) * lightDist);
+
+            const colorRgba = hexToRgba(shadowHex, opacityVal);
+            const insetStr = isInset ? 'inset ' : '';
+
+            const shadowCss = `${insetStr}${x}px ${y}px ${blurVal}px ${spreadVal}px ${colorRgba}`;
+            subjectBox.style.boxShadow = shadowCss;
+
+            cssOutput.textContent = `box-shadow: ${shadowCss};`;
+        }
+
+        // Light bulb dragging physics
+        let isDragging = false;
+
+        function setBulbPositionFromMouse(e) {
+            const rect = orbitField.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            const dx = e.clientX - centerX;
+            const dy = e.clientY - centerY;
+
+            let angleRad = Math.atan2(dy, dx);
+            let angleDeg = Math.round(angleRad * (180 / Math.PI));
+            if (angleDeg < 0) angleDeg += 360;
+
+            const rawDist = Math.hypot(dx, dy);
+            const maxRadius = rect.width / 2;
+            const clampedDist = Math.min(rawDist, maxRadius);
+
+            // Light bulb visual position inside circle
+            const bulbX = rect.width / 2 + Math.cos(angleRad) * clampedDist;
+            const bulbY = rect.height / 2 + Math.sin(angleRad) * clampedDist;
+
+            lightBulb.style.left = `${bulbX}px`;
+            lightBulb.style.top = `${bulbY}px`;
+
+            lightAngleDeg = angleDeg;
+            lightDist = Math.round((clampedDist / maxRadius) * 60);
+
+            dispAngle.textContent = `${lightAngleDeg}°`;
+            dispDist.textContent = `${lightDist}px`;
+
+            updateShadow();
+        }
+
+        orbitField.addEventListener('pointerdown', (e) => {
+            isDragging = true;
+            orbitField.setPointerCapture(e.pointerId);
+            setBulbPositionFromMouse(e);
+            if (window.RelAudio) window.RelAudio.click();
+        });
+
+        orbitField.addEventListener('pointermove', (e) => {
+            if (isDragging) {
+                setBulbPositionFromMouse(e);
+            }
+        });
+
+        orbitField.addEventListener('pointerup', (e) => {
+            isDragging = false;
+            orbitField.releasePointerCapture(e.pointerId);
+        });
+
+        // Sliders
+        sliderBlur.addEventListener('input', (e) => {
+            blurVal = parseInt(e.target.value);
+            lblBlur.textContent = `${blurVal}px`;
+            updateShadow();
+        });
+
+        sliderSpread.addEventListener('input', (e) => {
+            spreadVal = parseInt(e.target.value);
+            lblSpread.textContent = `${spreadVal}px`;
+            updateShadow();
+        });
+
+        sliderOpacity.addEventListener('input', (e) => {
+            opacityVal = parseInt(e.target.value) / 100;
+            lblOpacity.textContent = `${Math.round(opacityVal * 100)}%`;
+            updateShadow();
+        });
+
+        colorPicker.addEventListener('input', (e) => {
+            shadowHex = e.target.value;
+            updateShadow();
+        });
+
+        toggleInset.addEventListener('change', (e) => {
+            isInset = e.target.checked;
+            updateShadow();
+            if (window.RelAudio) window.RelAudio.snap();
+        });
+
+        // Shape Pickers
+        document.querySelectorAll('.shape-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const shape = btn.dataset.shape;
+                subjectBox.className = `target-subject shape-${shape}`;
+                if (window.RelAudio) window.RelAudio.click();
+            });
+        });
+
+        // Presets
+        const PRESETS = {
+            elevation1: { blur: 15, spread: 0, opacity: 0.2, dist: 10, color: '#000000', inset: false },
+            elevation3: { blur: 40, spread: 0, opacity: 0.45, dist: 25, color: '#000000', inset: false },
+            elevation5: { blur: 70, spread: 10, opacity: 0.65, dist: 50, color: '#000000', inset: false },
+            neonGlow: { blur: 45, spread: 8, opacity: 0.85, dist: 0, color: '#00d2d3', inset: false },
+            retroHard: { blur: 0, spread: 0, opacity: 1, dist: 20, color: '#ff3838', inset: false }
+        };
+
+        document.querySelectorAll('.preset-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                const p = PRESETS[chip.dataset.preset];
+                if (!p) return;
+
+                sliderBlur.value = p.blur; blurVal = p.blur; lblBlur.textContent = `${blurVal}px`;
+                sliderSpread.value = p.spread; spreadVal = p.spread; lblSpread.textContent = `${spreadVal}px`;
+                sliderOpacity.value = p.opacity * 100; opacityVal = p.opacity; lblOpacity.textContent = `${Math.round(opacityVal * 100)}%`;
+                colorPicker.value = p.color; shadowHex = p.color;
+                toggleInset.checked = p.inset; isInset = p.inset;
+                lightDist = p.dist;
+
+                updateShadow();
+                if (window.RelAudio) window.RelAudio.chirp(1300);
+            });
+        });
+
+        // Copy CSS
+        btnCopyCss.addEventListener('click', () => {
+            navigator.clipboard.writeText(cssOutput.textContent);
+            btnCopyCss.textContent = 'COPIED!';
+            if (window.RelAudio) window.RelAudio.success();
+            setTimeout(() => btnCopyCss.textContent = 'COPY CSS', 2000);
+        });
+
+        // Init
+        updateShadow();
+    </script>
+</body>
+</html>

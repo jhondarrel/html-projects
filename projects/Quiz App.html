@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arcade Dev Quiz // The Rel Works</title>
+    
+    <link rel="stylesheet" href="css/rel-core.css">
+
+    <style>
+        :root {
+            --quiz-violet: #9b59b6;
+            --quiz-gold: #f1c40f;
+            --quiz-cyan: #00d2d3;
+            --quiz-green: #2ed573;
+            --quiz-red: #ff4757;
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 15%, #240e38 0%, #12061f 50%, #06020c 100%);
+            min-height: 100vh;
+            color: #fdf4ff;
+        }
+
+        .quiz-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: calc(100vh - var(--rel-hud-height));
+            padding: 30px 20px;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 880px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* --- Arcade Game Show Marquee Chassis --- */
+        .app-card {
+            background: linear-gradient(160deg, #1c0a2e 0%, #10041c 60%, #08020e 100%);
+            padding: 36px 44px;
+            border-radius: 24px;
+            border: 2px solid #3d1460;
+            box-shadow: 
+                0 0 0 1px rgba(155, 89, 182, 0.3),
+                0 0 45px rgba(241, 196, 15, 0.15),
+                0 25px 60px rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            position: relative;
+        }
+
+        /* Arcade marquee top neon bar */
+        .app-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 30px;
+            right: 30px;
+            height: 3px;
+            background: linear-gradient(90deg, #9b59b6, #f1c40f, #00d2d3, #9b59b6);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 0 16px rgba(241, 196, 15, 0.8);
+        }
+
+        /* Brand Header */
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 16px; 
+            border-bottom: 1.5px solid rgba(155, 89, 182, 0.25);
+            padding-bottom: 20px;
+        }
+
+        .brand-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            border: 1.5px solid #f1c40f;
+            box-shadow: 0 0 16px rgba(241, 196, 15, 0.4);
+            object-fit: cover;
+            background: #000;
+        }
+
+        .brand-text-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .arcade-badge {
+            display: inline-block;
+            align-self: flex-start;
+            font-family: var(--rel-font-mono);
+            font-size: 0.62rem;
+            color: #f1c40f;
+            background: rgba(241, 196, 15, 0.15);
+            padding: 2px 7px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            border: 1px solid rgba(241, 196, 15, 0.35);
+        }
+
+        .brand-title {
+            color: #ffffff; 
+            font-family: var(--rel-font-display);
+            font-size: 1.45rem; 
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0;
+            line-height: 1.1;
+        }
+
+        .brand-subtitle {
+            color: #00d2d3; 
+            font-family: var(--rel-font-mono);
+            font-size: 0.8rem; 
+            font-weight: 600;
+            margin-top: 3px;
+            letter-spacing: 0.6px;
+        }
+
+        /* Buttons */
+        .btn {
+            background: rgba(241, 196, 15, 0.12);
+            color: #f1c40f;
+            border: 1.5px solid rgba(241, 196, 15, 0.4);
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-family: var(--rel-font-display);
+            font-size: 0.9rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+            outline: none;
+        }
+
+        .btn:hover { 
+            background-color: #f1c40f; 
+            color: #0d0416; 
+            box-shadow: 0 0 22px rgba(241, 196, 15, 0.6);
+            transform: translateY(-2px);
+        }
+
+        /* Views */
+        .view {
+            display: none;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        .view.active {
+            display: flex;
+            animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Dashboard */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 18px;
+        }
+
+        .quiz-selector {
+            background: linear-gradient(160deg, #180929 0%, #0d0417 100%);
+            border: 1.5px solid #331152;
+            padding: 24px;
+            border-radius: 16px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            transition: all 0.2s ease;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+        }
+
+        .quiz-selector:hover {
+            border-color: #f1c40f;
+            box-shadow: 0 0 25px rgba(241, 196, 15, 0.25);
+            transform: translateY(-4px);
+        }
+        
+        .quiz-selector h3 { 
+            margin: 0; 
+            color: #ffffff; 
+            font-family: var(--rel-font-display);
+            font-size: 1.2rem; 
+            font-weight: 800;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.85rem;
+            background: #08020e;
+            border: 1.5px solid #2d0e45;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .history-table th, .history-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .history-table th { 
+            color: #f1c40f; 
+            text-transform: uppercase; 
+            font-size: 0.75rem; 
+            background: #150524;
+            letter-spacing: 0.8px;
+        }
+        .history-table td { color: #fdf4ff; }
+
+        /* Quiz View */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--rel-font-mono);
+            font-size: 0.95rem;
+            color: #f1c40f;
+            border-bottom: 1.5px solid #331152;
+            padding-bottom: 14px;
+            font-weight: 700;
+        }
+
+        .question-text {
+            font-family: var(--rel-font-sans);
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin: 10px 0;
+            line-height: 1.4;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+        }
+
+        /* Illuminated Arcade Buzzer Buttons */
+        .option-btn {
+            background: linear-gradient(180deg, #1a082b 0%, #0d0317 100%);
+            color: #fdf4ff;
+            border: 1.5px solid #38125a;
+            padding: 18px 24px;
+            border-radius: 14px;
+            font-family: var(--rel-font-sans);
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: left;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            outline: none;
+        }
+
+        .option-btn:hover {
+            background: linear-gradient(180deg, #2b0d45 0%, #160524 100%);
+            border-color: #00d2d3;
+            color: #ffffff;
+            box-shadow: 0 0 20px rgba(0, 210, 211, 0.4);
+            transform: translateX(6px);
+        }
+
+        /* Results View */
+        .results-container {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .result-status {
+            font-family: var(--rel-font-display);
+            font-size: 2.4rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .status-pass { color: #2ed573; text-shadow: 0 0 25px rgba(46, 213, 115, 0.6); }
+        .status-fail { color: #ff4757; text-shadow: 0 0 25px rgba(255, 71, 87, 0.6); }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin: 15px 0;
+        }
+
+        .stat-box {
+            background-color: #0d0317;
+            padding: 22px;
+            border-radius: 14px;
+            border: 1.5px solid #331152;
+        }
+
+        .stat-val { 
+            font-size: 2.4rem; 
+            font-weight: 900; 
+            color: #f1c40f; 
+            font-family: var(--rel-font-mono); 
+            text-shadow: 0 0 16px rgba(241, 196, 15, 0.5);
+        }
+        .stat-label { 
+            font-size: 0.78rem; 
+            color: #a4b0be; 
+            text-transform: uppercase; 
+            margin-top: 6px; 
+            font-family: var(--rel-font-mono);
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-wrapper">
+        <div class="app-container">
+            
+            <div class="app-card rel-tactile-surface">
+                
+                <div class="brand-header">
+                    <img src="logo.png" alt="The Rel Works Logo" class="brand-logo" onerror="this.style.display='none'">
+                    <div class="brand-text-container">
+                        <span class="arcade-badge">ARCADE TRIVIA SHOW</span>
+                        <div class="brand-title">ARCADE DEV QUIZ</div>
+                        <div class="brand-subtitle">THE REL WORKS // INTERACTIVE CODE PROFICIENCY ARENA</div>
+                    </div>
+                </div>
+
+                <div id="view-dashboard" class="view active">
+                    <h2 style="margin:0; font-family: var(--rel-font-mono); font-size: 0.95rem; color: #f1c40f; text-transform: uppercase; letter-spacing: 1px;">// SELECT TRIVIA MODULE</h2>
+                    
+                    <div class="dashboard-grid">
+                        <div class="quiz-selector rel-tactile-surface">
+                            <h3>HTML5 Architecture</h3>
+                            <p style="color: #cbd5e1; font-size: 0.85rem; margin:0;">Structural DOM elements, semantic markup & accessibility.</p>
+                            <button class="btn" onclick="startQuiz('html')">ENGAGE ROUND</button>
+                        </div>
+                        <div class="quiz-selector rel-tactile-surface">
+                            <h3>CSS3 Styling & Grid</h3>
+                            <p style="color: #cbd5e1; font-size: 0.85rem; margin:0;">Modern Flexbox, Grid layouts, animations & selectors.</p>
+                            <button class="btn" onclick="startQuiz('css')">ENGAGE ROUND</button>
+                        </div>
+                        <div class="quiz-selector rel-tactile-surface">
+                            <h3>JavaScript Runtime</h3>
+                            <p style="color: #cbd5e1; font-size: 0.85rem; margin:0;">Event loop, scoping, closures & ES6+ algorithms.</p>
+                            <button class="btn" onclick="startQuiz('js')">ENGAGE ROUND</button>
+                        </div>
+                    </div>
+
+                    <h2 style="margin:20px 0 0 0; font-family: var(--rel-font-mono); font-size: 0.95rem; color: #f1c40f; text-transform: uppercase; letter-spacing: 1px;">// RECENT TRIVIA ATTEMPTS</h2>
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Module</th>
+                                <th>Score</th>
+                                <th>Time Elapsed</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-body"></tbody>
+                    </table>
+                </div>
+
+                <div id="view-quiz" class="view">
+                    <div class="quiz-header">
+                        <div id="progress-text">Question 1/5</div>
+                        <div id="timer-text">00:00</div>
+                    </div>
+                    
+                    <div class="question-text" id="question-text">Loading trivia question...</div>
+                    
+                    <div class="options-grid" id="options-grid"></div>
+                </div>
+
+                <div id="view-results" class="view">
+                    <div class="results-container">
+                        <div id="result-status" class="result-status"></div>
+                        
+                        <div class="stat-grid">
+                            <div class="stat-box">
+                                <div class="stat-val" id="res-score">0/0</div>
+                                <div class="stat-label">Correct Answers</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-val" id="res-time">00:00</div>
+                                <div class="stat-label">Time Taken</div>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 15px;">
+                            <button class="btn" style="flex: 1;" onclick="shareResults()">SHARE TELEMETRY</button>
+                            <button class="btn" style="flex: 1;" onclick="showDashboard()">RETURN TO DASHBOARD</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/rel-audio.js"></script>
+    <script src="js/rel-hud.js"></script>
+    <script>
+        const quizData = {
+            html: [
+                { q: "What does HTML stand for?", options: ["Hyper Text Preprocessor", "Hyper Text Markup Language", "Hyper Tool Multi Language", "Hyperlink Text Markup Language"], a: 1 },
+                { q: "Which HTML element is used to specify a header for a document or section?", options: ["<head>", "<top>", "<header>", "<section>"], a: 2 },
+                { q: "Choose the correct HTML element to define important text.", options: ["<strong>", "<b>", "<i>", "<important>"], a: 0 },
+                { q: "What is the correct HTML for creating a hyperlink?", options: ["<a url='http://therelworks.com'>The Rel Works</a>", "<a href='http://therelworks.com'>The Rel Works</a>", "<a>http://therelworks.com</a>", "<link href='http://therelworks.com'>The Rel Works</link>"], a: 1 }
+            ],
+            css: [
+                { q: "What does CSS stand for?", options: ["Cascading Style Sheets", "Computer Style Sheets", "Creative Style Sheets", "Colorful Style Sheets"], a: 0 },
+                { q: "Which property is used to change the background color?", options: ["color", "bgcolor", "background-color", "bg-color"], a: 2 },
+                { q: "How do you select an element with id 'demo'?", options: [".demo", "demo", "*demo", "#demo"], a: 3 },
+                { q: "Which CSS property controls the text size?", options: ["font-style", "text-size", "font-size", "text-style"], a: 2 }
+            ],
+            js: [
+                { q: "Inside which HTML element do we put the JavaScript?", options: ["<javascript>", "<" + "script>", "<scripting>", "<js>"], a: 1 },
+                { q: "How do you write 'Hello World' in an alert box?", options: ["msg('Hello World');", "alertBox('Hello World');", "alert('Hello World');", "msgBox('Hello World');"], a: 2 },
+                { q: "How do you create a function in JavaScript?", options: ["function myFunction()", "function:myFunction()", "function = myFunction()", "def myFunction()"], a: 0 },
+                { q: "How does a FOR loop start?", options: ["for (i <= 5; i++)", "for (i = 0; i <= 5; i++)", "for (i = 0; i <= 5)", "for i = 1 to 5"], a: 1 }
+            ]
+        };
+
+        let attemptHistory = JSON.parse(localStorage.getItem('relWorksQuizHistory')) || [];
+        let activeQuizType = '';
+        let activeQuestions = [];
+        let currentQIndex = 0;
+        let score = 0;
+        let timerId = null;
+        let startTime = 0;
+        let timeTakenString = "";
+
+        const viewDash = document.getElementById('view-dashboard');
+        const viewQuiz = document.getElementById('view-quiz');
+        const viewRes = document.getElementById('view-results');
+        const historyBody = document.getElementById('history-body');
+        const progressText = document.getElementById('progress-text');
+        const timerText = document.getElementById('timer-text');
+        const questionText = document.getElementById('question-text');
+        const optionsGrid = document.getElementById('options-grid');
+
+        function switchView(viewId) {
+            viewDash.classList.remove('active');
+            viewQuiz.classList.remove('active');
+            viewRes.classList.remove('active');
+            document.getElementById(viewId).classList.add('active');
+        }
+
+        function renderHistory() {
+            historyBody.innerHTML = '';
+            if (attemptHistory.length === 0) {
+                historyBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--rel-text-dim);">No past evaluation attempts logged.</td></tr>`;
+                return;
+            }
+
+            const displayData = [...attemptHistory].reverse().slice(0, 5);
+            
+            displayData.forEach(attempt => {
+                const tr = document.createElement('tr');
+                const isPass = (attempt.score / attempt.total) >= 0.6;
+                const statusColor = isPass ? 'var(--quiz-green)' : 'var(--quiz-red)';
+                const statusText = isPass ? 'PASSED' : 'FAILED';
+
+                tr.innerHTML = `
+                    <td style="text-transform:uppercase; font-weight:700;">${attempt.type}</td>
+                    <td>${attempt.score}/${attempt.total}</td>
+                    <td>${attempt.timeStr}</td>
+                    <td style="color:${statusColor}; font-weight:800; letter-spacing: 1px;">${statusText}</td>
+                `;
+                historyBody.appendChild(tr);
+            });
+        }
+
+        function showDashboard() {
+            renderHistory();
+            switchView('view-dashboard');
+            if (window.RelAudio) window.RelAudio.click();
+        }
+
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        function startTimer() {
+            startTime = Date.now();
+            timerId = setInterval(() => {
+                const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
+                timerText.innerText = formatTime(elapsedSec);
+            }, 1000);
+        }
+
+        function startQuiz(type) {
+            activeQuizType = type;
+            activeQuestions = [...quizData[type]];
+            currentQIndex = 0;
+            score = 0;
+            timerText.innerText = "00:00";
+            
+            startTimer();
+            loadQuestion();
+            switchView('view-quiz');
+            if (window.RelAudio) window.RelAudio.snap();
+        }
+
+        function loadQuestion() {
+            const currentQ = activeQuestions[currentQIndex];
+            progressText.innerText = `QUESTION ${currentQIndex + 1}/${activeQuestions.length}`;
+            questionText.innerText = currentQ.q;
+            
+            optionsGrid.innerHTML = '';
+            
+            currentQ.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => handleAnswer(index);
+                optionsGrid.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(selectedIndex) {
+            const correctIndex = activeQuestions[currentQIndex].a;
+            if (selectedIndex === correctIndex) {
+                score++;
+                if (window.RelAudio) window.RelAudio.success();
+            } else {
+                if (window.RelAudio) window.RelAudio.error();
+            }
+
+            currentQIndex++;
+            
+            if (currentQIndex < activeQuestions.length) {
+                loadQuestion();
+            } else {
+                endQuiz();
+            }
+        }
+
+        function endQuiz() {
+            clearInterval(timerId);
+            
+            const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
+            timeTakenString = formatTime(elapsedSec);
+            const total = activeQuestions.length;
+            const percentage = score / total;
+
+            attemptHistory.push({
+                type: activeQuizType,
+                score: score,
+                total: total,
+                timeStr: timeTakenString,
+                date: Date.now()
+            });
+            localStorage.setItem('relWorksQuizHistory', JSON.stringify(attemptHistory));
+
+            document.getElementById('res-score').innerText = `${score}/${total}`;
+            document.getElementById('res-time').innerText = timeTakenString;
+
+            const statusEl = document.getElementById('result-status');
+            if (percentage >= 0.6) {
+                statusEl.innerText = "EVALUATION PASSED";
+                statusEl.className = "result-status status-pass";
+                if (window.RelAudio) window.RelAudio.success();
+            } else {
+                statusEl.innerText = "EVALUATION FAILED";
+                statusEl.className = "result-status status-fail";
+                if (window.RelAudio) window.RelAudio.error();
+            }
+
+            switchView('view-results');
+        }
+
+        function shareResults() {
+            const text = `I scored ${score}/${activeQuestions.length} on The Rel Works ${activeQuizType.toUpperCase()} Dev Quiz in ${timeTakenString}! 🚀`;
+            if (navigator.share) {
+                navigator.share({ title: 'Dev Quiz Result', text }).catch(console.error);
+            } else {
+                navigator.clipboard.writeText(text).then(() => {
+                    alert("Telemetry copied to clipboard!");
+                    if (window.RelAudio) window.RelAudio.chirp(1200);
+                });
+            }
+        }
+
+        showDashboard();
+    </script>
+</body>
+</html>

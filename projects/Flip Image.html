@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spatial Lens Studio // Flip Image Matrix</title>
+    
+    <link rel="stylesheet" href="css/rel-core.css">
+
+    <style>
+        body {
+            background: radial-gradient(circle at 50% 15%, #0d1e3d 0%, #081226 50%, #030813 100%);
+            min-height: 100vh;
+            color: #f0f9ff;
+        }
+
+        .flip-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - var(--rel-hud-height));
+            padding: 30px 20px;
+        }
+
+        /* --- Spatial Lens Studio Chassis --- */
+        .app-card {
+            background: linear-gradient(160deg, #101c36 0%, #091224 60%, #040913 100%);
+            padding: 36px 42px;
+            border-radius: 24px;
+            box-shadow: 
+                0 0 0 1px rgba(45, 152, 218, 0.3),
+                0 0 45px rgba(45, 152, 218, 0.15),
+                0 25px 60px rgba(0, 0, 0, 0.9);
+            border: 2px solid #1a2f5a;
+            width: 100%;
+            max-width: 940px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            position: relative;
+        }
+
+        /* Optic cyan top bar */
+        .app-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 30px;
+            right: 30px;
+            height: 3px;
+            background: linear-gradient(90deg, #2d98da, #fed330, #2ed573, #2d98da);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 0 16px rgba(45, 152, 218, 0.8);
+        }
+
+        /* Brand Header */
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 16px; 
+            border-bottom: 1.5px solid rgba(45, 152, 218, 0.25);
+            padding-bottom: 20px;
+        }
+
+        .brand-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            border: 1.5px solid #2d98da;
+            box-shadow: 0 0 16px rgba(45, 152, 218, 0.4);
+            object-fit: cover;
+            background: #000;
+        }
+
+        .brand-text-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .optic-badge {
+            display: inline-block;
+            align-self: flex-start;
+            font-family: var(--rel-font-mono);
+            font-size: 0.62rem;
+            color: #fed330;
+            background: rgba(254, 211, 48, 0.15);
+            padding: 2px 7px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            border: 1px solid rgba(254, 211, 48, 0.35);
+        }
+
+        .brand-title {
+            color: #ffffff; 
+            font-family: var(--rel-font-display);
+            font-size: 1.45rem; 
+            font-weight: 900;
+            letter-spacing: 1px;
+            line-height: 1.1;
+            text-transform: uppercase;
+            margin: 0;
+        }
+
+        .brand-subtitle {
+            color: #2d98da; 
+            font-family: var(--rel-font-mono);
+            font-size: 0.8rem; 
+            font-weight: 600;
+            margin-top: 3px;
+            letter-spacing: 0.6px;
+        }
+
+        /* Controls */
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 14px;
+            align-items: center;
+            background-color: #060e1d; 
+            padding: 16px 20px;
+            border-radius: 14px;
+            border: 1.5px solid #1a2f58;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
+        }
+
+        input {
+            padding: 13px 18px;
+            border-radius: 10px;
+            border: 1.5px solid #233e73;
+            background-color: #030812;
+            color: white;
+            font-family: var(--rel-font-mono);
+            font-size: 0.95rem;
+            width: 100%;
+            outline: none;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            border-color: #2d98da;
+            box-shadow: 0 0 16px rgba(45, 152, 218, 0.4);
+        }
+
+        .btn-display {
+            background: linear-gradient(180deg, #2d98da 0%, #156294 100%);
+            color: #ffffff;
+            border: 1.5px solid rgba(45, 152, 218, 0.6);
+            padding: 13px 26px;
+            border-radius: 10px;
+            font-family: var(--rel-font-display);
+            font-size: 0.95rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 0 20px rgba(45, 152, 218, 0.35);
+            white-space: nowrap;
+            outline: none;
+        }
+
+        .btn-display:hover { 
+            background: #2d98da; 
+            color: #020712; 
+            box-shadow: 0 0 28px rgba(45, 152, 218, 0.7); 
+            transform: translateY(-2px);
+        }
+
+        .error-message {
+            color: #ff4757;
+            font-family: var(--rel-font-mono);
+            font-size: 0.8rem;
+            font-weight: 700;
+            display: none;
+        }
+
+        /* Matrix Display Area */
+        .matrix-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 22px;
+        }
+
+        .image-module {
+            display: grid;
+            grid-template-areas: 
+                ". top ."
+                "left img right"
+                ". bottom .";
+            grid-template-columns: 48px 1fr 48px;
+            grid-template-rows: 48px 1fr 48px;
+            gap: 12px;
+            align-items: center;
+            justify-items: center;
+            background-color: #060e1d;
+            padding: 18px;
+            border-radius: 16px;
+            border: 1.5px solid #1a2f58;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        .img-wrapper {
+            grid-area: img;
+            width: 100%;
+            height: 100%;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            border-radius: 12px;
+            background-color: #02050b;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+            border: 1.5px solid rgba(45, 152, 218, 0.25);
+            position: relative;
+        }
+
+        /* Camera Reticle Target Overlay */
+        .img-wrapper::after {
+            content: '';
+            position: absolute;
+            inset: 6px;
+            border: 1px dashed rgba(254, 211, 48, 0.25);
+            border-radius: 8px;
+            pointer-events: none;
+        }
+
+        .flip-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: scale(1, 1);
+        }
+
+        /* Arrow D-Pad Buttons */
+        .btn-arrow {
+            background: linear-gradient(180deg, #16284d 0%, #0d1a36 100%);
+            color: #fed330;
+            border: 1.5px solid #233e73;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            font-size: 1.25rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.15s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+            outline: none;
+        }
+
+        .btn-arrow:hover {
+            background: #fed330;
+            color: #050b17;
+            box-shadow: 0 0 20px rgba(254, 211, 48, 0.6);
+            transform: scale(1.12);
+        }
+
+        .btn-arrow:active { transform: scale(0.92); }
+
+        .btn-up { grid-area: top; }
+        .btn-down { grid-area: bottom; }
+        .btn-left { grid-area: left; }
+        .btn-right { grid-area: right; }
+
+        @media (max-width: 700px) {
+            .matrix-container { grid-template-columns: 1fr; }
+            .controls { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="flip-wrapper">
+        <div class="app-card rel-tactile-surface">
+            
+            <div class="brand-header">
+                <img src="logo.png" alt="The Rel Works Logo" class="brand-logo" onerror="this.style.display='none'">
+                <div class="brand-text-container">
+                    <span class="optic-badge">OPTICAL QUADRANT STUDIO</span>
+                    <h1 class="brand-title">SPATIAL LENS STUDIO</h1>
+                    <p class="brand-subtitle">THE REL WORKS // 4-QUADRANT VIEWPORT REFLECTION MATRIX</p>
+                </div>
+            </div>
+
+            <div class="controls">
+                <input type="url" id="image-url" placeholder="Paste image URL here or use sample...">
+                <button class="btn-display" id="display-btn">LOAD LENS</button>
+            </div>
+            <div class="error-message" id="error-msg">⚠️ Telemetry Alert: Unable to resolve image URL stream.</div>
+
+            <div class="matrix-container">
+                
+                <div class="image-module">
+                    <button class="btn-arrow btn-up" onclick="flipVertical(0)">&#8593;</button>
+                    <button class="btn-arrow btn-left" onclick="flipHorizontal(0)">&#8592;</button>
+                    <div class="img-wrapper">
+                        <img src="" class="flip-img" id="img-0" alt="Matrix Image 1">
+                    </div>
+                    <button class="btn-arrow btn-right" onclick="flipHorizontal(0)">&#8594;</button>
+                    <button class="btn-arrow btn-down" onclick="flipVertical(0)">&#8595;</button>
+                </div>
+
+                <div class="image-module">
+                    <button class="btn-arrow btn-up" onclick="flipVertical(1)">&#8593;</button>
+                    <button class="btn-arrow btn-left" onclick="flipHorizontal(1)">&#8592;</button>
+                    <div class="img-wrapper">
+                        <img src="" class="flip-img" id="img-1" alt="Matrix Image 2">
+                    </div>
+                    <button class="btn-arrow btn-right" onclick="flipHorizontal(1)">&#8594;</button>
+                    <button class="btn-arrow btn-down" onclick="flipVertical(1)">&#8595;</button>
+                </div>
+
+                <div class="image-module">
+                    <button class="btn-arrow btn-up" onclick="flipVertical(2)">&#8593;</button>
+                    <button class="btn-arrow btn-left" onclick="flipHorizontal(2)">&#8592;</button>
+                    <div class="img-wrapper">
+                        <img src="" class="flip-img" id="img-2" alt="Matrix Image 3">
+                    </div>
+                    <button class="btn-arrow btn-right" onclick="flipHorizontal(2)">&#8594;</button>
+                    <button class="btn-arrow btn-down" onclick="flipVertical(2)">&#8595;</button>
+                </div>
+
+                <div class="image-module">
+                    <button class="btn-arrow btn-up" onclick="flipVertical(3)">&#8593;</button>
+                    <button class="btn-arrow btn-left" onclick="flipHorizontal(3)">&#8592;</button>
+                    <div class="img-wrapper">
+                        <img src="" class="flip-img" id="img-3" alt="Matrix Image 4">
+                    </div>
+                    <button class="btn-arrow btn-right" onclick="flipHorizontal(3)">&#8594;</button>
+                    <button class="btn-arrow btn-down" onclick="flipVertical(3)">&#8595;</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/rel-audio.js"></script>
+    <script src="js/rel-hud.js"></script>
+    <script>
+        const urlInput = document.getElementById('image-url');
+        const displayBtn = document.getElementById('display-btn');
+        const errorMsg = document.getElementById('error-msg');
+        const images = [
+            document.getElementById('img-0'),
+            document.getElementById('img-1'),
+            document.getElementById('img-2'),
+            document.getElementById('img-3')
+        ];
+
+        const imgStates = [
+            { scaleX: 1, scaleY: 1 },
+            { scaleX: 1, scaleY: 1 },
+            { scaleX: 1, scaleY: 1 },
+            { scaleX: 1, scaleY: 1 }
+        ];
+
+        const defaultImageUrl = 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=800&auto=format&fit=crop';
+
+        function applyTransform(index) {
+            const state = imgStates[index];
+            if (images[index]) {
+                images[index].style.transform = `scale(${state.scaleX}, ${state.scaleY})`;
+            }
+        }
+
+        function flipHorizontal(index) {
+            imgStates[index].scaleX *= -1;
+            applyTransform(index);
+            if (window.RelAudio) window.RelAudio.chirp(1000);
+        }
+
+        function flipVertical(index) {
+            imgStates[index].scaleY *= -1;
+            applyTransform(index);
+            if (window.RelAudio) window.RelAudio.chirp(1200);
+        }
+
+        function loadImages(url) {
+            errorMsg.style.display = 'none';
+
+            const testerImg = new Image();
+            testerImg.onload = () => {
+                images.forEach((img, index) => {
+                    if (img) {
+                        img.src = url;
+                        imgStates[index] = { scaleX: 1, scaleY: 1 };
+                        applyTransform(index);
+                    }
+                });
+                if (window.RelAudio) window.RelAudio.success();
+            };
+
+            testerImg.onerror = () => {
+                errorMsg.style.display = 'block';
+                if (window.RelAudio) window.RelAudio.error();
+            };
+
+            testerImg.src = url;
+        }
+
+        displayBtn.addEventListener('click', () => {
+            const url = urlInput.value.trim();
+            if (url) {
+                loadImages(url);
+            }
+        });
+
+        loadImages(defaultImageUrl);
+    </script>
+</body>
+</html>

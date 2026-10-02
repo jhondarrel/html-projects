@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solar Sunburst Calendar // The Rel Works</title>
+  
+  <link rel="stylesheet" href="css/rel-core.css">
+
+  <style>
+    body {
+      background: radial-gradient(circle at 50% 15%, #0f1c3f 0%, #080e22 50%, #030611 100%);
+      min-height: 100vh;
+      color: #f1f5f9;
+    }
+
+    body.dark-mode {
+      background: radial-gradient(circle at 50% 15%, #0a1128 0%, #050814 60%, #020308 100%);
+    }
+
+    .calendar-page-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: calc(100vh - var(--rel-hud-height));
+      padding: 30px 20px;
+    }
+
+    /* --- Solar Celestial Calendar Chassis --- */
+    #calendar-container {
+      width: 100%;
+      max-width: 980px;
+      background: linear-gradient(160deg, #101935 0%, #0a1024 60%, #060a17 100%);
+      border-radius: 24px;
+      border: 2px solid #1e2c56;
+      box-shadow: 
+        0 0 0 1px rgba(255, 165, 2, 0.25),
+        0 0 45px rgba(255, 165, 2, 0.12),
+        0 25px 60px rgba(0, 0, 0, 0.9);
+      padding: 32px 38px;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    /* Solar crown light bar */
+    #calendar-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 30px;
+      right: 30px;
+      height: 3px;
+      background: linear-gradient(90deg, #ffa502, #00d2d3, #ffa502);
+      border-radius: 0 0 4px 4px;
+      box-shadow: 0 0 16px rgba(255, 165, 2, 0.8);
+    }
+
+    /* Brand Header */
+    .brand-header {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      margin-bottom: 25px;
+      gap: 16px; 
+      border-bottom: 1.5px solid rgba(255, 165, 2, 0.2);
+      padding-bottom: 20px;
+    }
+
+    .brand-logo {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      border: 1.5px solid #ffa502;
+      box-shadow: 0 0 16px rgba(255, 165, 2, 0.35);
+      object-fit: cover;
+      background: #000;
+    }
+
+    .brand-text-container {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .solar-badge {
+      display: inline-block;
+      align-self: flex-start;
+      font-family: var(--rel-font-mono);
+      font-size: 0.62rem;
+      color: #ffa502;
+      background: rgba(255, 165, 2, 0.15);
+      padding: 2px 7px;
+      border-radius: 4px;
+      letter-spacing: 1px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      border: 1px solid rgba(255, 165, 2, 0.3);
+    }
+
+    .brand-title {
+      color: #ffffff;
+      font-family: var(--rel-font-display);
+      font-size: 1.45rem; 
+      font-weight: 900;
+      letter-spacing: 1px;
+      line-height: 1.1;
+      text-transform: uppercase;
+    }
+
+    .brand-subtitle {
+      color: #00d2d3; 
+      font-family: var(--rel-font-mono);
+      font-size: 0.8rem; 
+      font-weight: 600;
+      margin-top: 3px;
+      letter-spacing: 0.5px;
+    }
+
+    /* Navigation Bar */
+    #header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+      gap: 15px;
+      background: rgba(8, 14, 32, 0.6);
+      padding: 12px 18px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    h2#month-display {
+      margin: 0;
+      color: #ffa502;
+      font-family: var(--rel-font-display);
+      font-size: 1.5rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-weight: 900;
+      text-shadow: 0 0 20px rgba(255, 165, 2, 0.5);
+    }
+
+    .btn {
+      background: rgba(255, 165, 2, 0.12);
+      color: #ffa502;
+      border: 1.5px solid rgba(255, 165, 2, 0.4);
+      padding: 9px 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: var(--rel-font-mono);
+      font-size: 0.85rem;
+      font-weight: 700; 
+      letter-spacing: 0.5px;
+      transition: all 0.15s ease;
+      outline: none;
+    }
+
+    .btn:hover {
+      background: #ffa502;
+      color: #0c0802;
+      box-shadow: 0 0 18px rgba(255, 165, 2, 0.6);
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    /* Weekday Headers */
+    #weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    #weekdays div {
+      text-align: center;
+      font-family: var(--rel-font-mono);
+      font-weight: 800;
+      font-size: 0.82rem;
+      padding: 8px 0;
+      color: #00d2d3;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    /* Calendar Grid Days */
+    #calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+    }
+
+    .day {
+      background: rgba(16, 25, 53, 0.7);
+      border: 1.5px solid #1f2f5e;
+      min-height: 110px;
+      padding: 10px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      position: relative;
+    }
+
+    .day:hover { 
+      background: rgba(30, 48, 98, 0.8); 
+      border-color: #00d2d3;
+      box-shadow: 0 0 16px rgba(0, 210, 211, 0.25);
+      transform: translateY(-2px);
+    }
+
+    .day.padding { 
+      background: transparent; 
+      border-color: transparent; 
+      cursor: default; 
+      box-shadow: none;
+    }
+
+    .day.today { 
+      background: linear-gradient(145deg, rgba(255, 165, 2, 0.18) 0%, rgba(16, 25, 53, 0.9) 100%); 
+      border: 2px solid #ffa502;
+      box-shadow: 
+        0 0 20px rgba(255, 165, 2, 0.35),
+        inset 0 0 20px rgba(255, 165, 2, 0.15);
+    }
+    
+    .day-number {
+      font-family: var(--rel-font-mono);
+      font-weight: 800;
+      font-size: 0.9rem;
+      color: #94a3b8;
+      margin-bottom: 8px;
+      pointer-events: none;
+    }
+
+    .day.today .day-number {
+      color: #ffa502;
+      text-shadow: 0 0 10px rgba(255, 165, 2, 0.8);
+      font-size: 1rem;
+    }
+
+    .event {
+      background: linear-gradient(90deg, rgba(255, 165, 2, 0.3) 0%, rgba(255, 107, 129, 0.3) 100%);
+      border: 1px solid rgba(255, 165, 2, 0.6);
+      color: #ffffff;
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-family: var(--rel-font-sans);
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 5px;
+      cursor: grab;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      transition: all 0.15s ease;
+    }
+
+    .event:hover {
+      background: #ffa502;
+      color: #060910;
+      box-shadow: 0 0 14px rgba(255, 165, 2, 0.7);
+      transform: scale(1.02);
+    }
+
+    .event:active { cursor: grabbing; }
+
+    /* Modal Backdrop & Dialog */
+    #modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 6, 16, 0.85);
+      backdrop-filter: blur(12px);
+      z-index: 1000;
+    }
+
+    #event-modal {
+      display: none;
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(160deg, #131c38 0%, #0a1024 100%);
+      border: 2px solid #ffa502;
+      padding: 32px;
+      border-radius: 20px;
+      box-shadow: 0 0 50px rgba(255, 165, 2, 0.35), 0 25px 60px rgba(0,0,0,0.9);
+      z-index: 1010;
+      width: 90%;
+      max-width: 420px;
+    }
+
+    #event-modal h2 {
+      margin: 0 0 20px 0;
+      color: #ffa502;
+      font-family: var(--rel-font-display);
+      font-size: 1.4rem;
+      letter-spacing: 1px;
+      font-weight: 800;
+    }
+
+    #event-modal input {
+      width: 100%;
+      padding: 12px 16px;
+      margin: 8px 0 18px 0;
+      border: 1.5px solid #233566;
+      border-radius: 10px;
+      background: #050a16;
+      color: #ffffff;
+      font-family: var(--rel-font-sans);
+      font-size: 0.95rem;
+      box-sizing: border-box;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    #event-modal input:focus {
+      border-color: #ffa502;
+      box-shadow: 0 0 16px rgba(255, 165, 2, 0.4);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 18px;
+    }
+    
+    .btn-danger { 
+      background: rgba(255, 71, 87, 0.15);
+      border-color: #ff4757;
+      color: #ff4757 !important;
+    }
+    .btn-danger:hover { 
+      background: #ff4757; 
+      color: #fff !important; 
+      box-shadow: 0 0 16px rgba(255, 71, 87, 0.6);
+    }
+    
+    .btn-cancel {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #cbd5e1 !important;
+    }
+    .btn-cancel:hover { 
+      background: rgba(255, 255, 255, 0.15); 
+      color: #fff !important; 
+    }
+
+    /* Audio Toast Notification */
+    #chrono-alert-toast {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      background: #111a36;
+      border: 2px solid #ffa502;
+      border-radius: 14px;
+      padding: 16px 24px;
+      color: #ffffff;
+      box-shadow: 0 0 35px rgba(255, 165, 2, 0.4);
+      font-family: var(--rel-font-mono);
+      font-size: 0.95rem;
+      z-index: 10000;
+      display: none;
+      animation: rel-toast-slide 0.3s ease;
+    }
+
+    @keyframes rel-toast-slide {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="calendar-page-wrapper">
+    <div id="calendar-container" class="rel-tactile-surface">
+      
+      <div class="brand-header">
+          <img src="logo.png" alt="The Rel Works Logo" class="brand-logo" onerror="this.style.display='none'">
+          <div class="brand-text-container">
+              <span class="solar-badge">CELESTIAL TEMPORAL DOCK</span>
+              <div class="brand-title">SOLAR SUNBURST CALENDAR</div>
+              <div class="brand-subtitle">THE REL WORKS // CELESTIAL ORBIT & MILESTONE PLANNER</div>
+          </div>
+      </div>
+
+      <div id="header">
+        <button class="btn" id="prev-btn">◄ PREV</button>
+        <h2 id="month-display"></h2>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn" id="theme-btn">THEME</button>
+          <button class="btn" id="next-btn">NEXT ►</button>
+        </div>
+      </div>
+
+      <div id="weekdays">
+        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+      </div>
+      
+      <div id="calendar-grid"></div>
+    </div>
+  </div>
+
+  <div id="modal-backdrop"></div>
+  
+  <div id="event-modal">
+    <h2 id="modal-title">Schedule Milestone</h2>
+    <label for="event-title-input" style="font-size: 0.8rem; font-family: var(--rel-font-mono); color: #ffa502; font-weight: 700;">EVENT TITLE:</label>
+    <input type="text" id="event-title-input" placeholder="e.g., Orbital Launch Meeting" />
+    
+    <label for="event-time-input" style="font-size: 0.8rem; font-family: var(--rel-font-mono); color: #ffa502; font-weight: 700;">REMINDER TIME (OPTIONAL):</label>
+    <input type="time" id="event-time-input" />
+    
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="delete-btn" style="display: none;">Delete</button>
+      <button class="btn btn-cancel" id="cancel-btn">Cancel</button>
+      <button class="btn" id="save-btn">Save</button>
+    </div>
+  </div>
+
+  <div id="chrono-alert-toast"></div>
+
+  <!-- Scripts -->
+  <script src="js/rel-audio.js"></script>
+  <script src="js/rel-hud.js"></script>
+  <script>
+    let nav = 0; 
+    let clickedDate = null;
+    let editingEventId = null;
+    let events = localStorage.getItem('events') ? JSON.parse(localStorage.getItem('events')) : [];
+
+    const calendarGrid = document.getElementById('calendar-grid');
+    const monthDisplay = document.getElementById('month-display');
+    const modalBackdrop = document.getElementById('modal-backdrop');
+    const eventModal = document.getElementById('event-modal');
+    const eventTitleInput = document.getElementById('event-title-input');
+    const eventTimeInput = document.getElementById('event-time-input');
+    const deleteBtn = document.getElementById('delete-btn');
+    const modalTitle = document.getElementById('modal-title');
+    const themeBtn = document.getElementById('theme-btn');
+    const toastEl = document.getElementById('chrono-alert-toast');
+
+    if (themeBtn) {
+      themeBtn.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        if (window.RelAudio) window.RelAudio.click();
+      });
+    }
+
+    function loadCalendar() {
+      const dt = new Date();
+      if (nav !== 0) {
+        dt.setMonth(new Date().getMonth() + nav);
+      }
+
+      const day = dt.getDate();
+      const month = dt.getMonth();
+      const year = dt.getFullYear();
+
+      const firstDayOfMonth = new Date(year, month, 1);
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      
+      const paddingDays = firstDayOfMonth.getDay();
+
+      if (monthDisplay) {
+        monthDisplay.innerText = `${dt.toLocaleDateString('en-us', { month: 'long' })} ${year}`;
+      }
+      
+      if (!calendarGrid) return;
+      calendarGrid.innerHTML = '';
+
+      for (let i = 1; i <= paddingDays + daysInMonth; i++) {
+        const daySquare = document.createElement('div');
+        daySquare.classList.add('day');
+        
+        const dateKey = `${month + 1}/${i - paddingDays}/${year}`;
+
+        if (i > paddingDays) {
+          daySquare.dataset.date = dateKey;
+          
+          const dayNumber = document.createElement('div');
+          dayNumber.classList.add('day-number');
+          dayNumber.innerText = i - paddingDays;
+          daySquare.appendChild(dayNumber);
+
+          if (i - paddingDays === day && nav === 0) {
+            daySquare.classList.add('today');
+          }
+
+          const eventsForDay = events.filter(e => e.date === dateKey);
+          eventsForDay.forEach(event => {
+            const eventEl = document.createElement('div');
+            eventEl.classList.add('event');
+            eventEl.innerText = `${event.time ? event.time + ' ' : ''}${event.title}`;
+            eventEl.draggable = true;
+            eventEl.dataset.id = event.id;
+            
+            eventEl.addEventListener('dragstart', handleDragStart);
+            eventEl.addEventListener('click', (e) => {
+              e.stopPropagation();
+              openModal(dateKey, event);
+            });
+            daySquare.appendChild(eventEl);
+          });
+
+          daySquare.addEventListener('dragover', handleDragOver);
+          daySquare.addEventListener('drop', handleDrop);
+          daySquare.addEventListener('click', () => openModal(dateKey));
+        } else {
+          daySquare.classList.add('padding');
+        }
+        calendarGrid.appendChild(daySquare);
+      }
+    }
+
+    function openModal(date, event = null) {
+      clickedDate = date;
+      if (event) {
+        editingEventId = event.id;
+        modalTitle.innerText = "Edit Milestone";
+        eventTitleInput.value = event.title;
+        eventTimeInput.value = event.time || '';
+        deleteBtn.style.display = 'block';
+      } else {
+        editingEventId = null;
+        modalTitle.innerText = "Schedule Milestone";
+        eventTitleInput.value = '';
+        eventTimeInput.value = '';
+        deleteBtn.style.display = 'none';
+      }
+      modalBackdrop.style.display = 'block';
+      eventModal.style.display = 'block';
+      eventTitleInput.focus();
+      if (window.RelAudio) window.RelAudio.chirp(950);
+    }
+
+    function closeModal() {
+      modalBackdrop.style.display = 'none';
+      eventModal.style.display = 'none';
+      clickedDate = null;
+      editingEventId = null;
+    }
+
+    function saveEvent() {
+      if (!eventTitleInput.value) return;
+
+      if (editingEventId) {
+        const index = events.findIndex(e => e.id === editingEventId);
+        if (index > -1) {
+          events[index].title = eventTitleInput.value;
+          events[index].time = eventTimeInput.value;
+          events[index].notified = false; 
+        }
+      } else {
+        events.push({
+          id: Date.now().toString(),
+          date: clickedDate,
+          title: eventTitleInput.value,
+          time: eventTimeInput.value,
+          notified: false
+        });
+      }
+      
+      localStorage.setItem('events', JSON.stringify(events));
+      closeModal();
+      loadCalendar();
+      if (window.RelAudio) window.RelAudio.success();
+    }
+
+    function deleteEvent() {
+      events = events.filter(e => e.id !== editingEventId);
+      localStorage.setItem('events', JSON.stringify(events));
+      closeModal();
+      loadCalendar();
+      if (window.RelAudio) window.RelAudio.error();
+    }
+
+    function handleDragStart(e) {
+      e.dataTransfer.setData('text/plain', e.target.dataset.id);
+      if (window.RelAudio) window.RelAudio.click();
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault(); 
+    }
+
+    function handleDrop(e) {
+      e.preventDefault(); 
+      const eventId = e.dataTransfer.getData('text/plain');
+      const targetDay = e.target.closest('.day'); 
+      
+      if (targetDay && targetDay.dataset.date) {
+        const newDate = targetDay.dataset.date;
+        const eventIndex = events.findIndex(ev => ev.id === eventId);
+        
+        if(eventIndex > -1) {
+          events[eventIndex].date = newDate;
+          localStorage.setItem('events', JSON.stringify(events));
+          loadCalendar();
+          if (window.RelAudio) window.RelAudio.snap();
+        }
+      }
+    }
+
+    function showChronoToast(msg) {
+      if (!toastEl) return;
+      toastEl.innerHTML = `🔔 <b>CHRONO REMINDER:</b> ${msg}`;
+      toastEl.style.display = 'block';
+      if (window.RelAudio) window.RelAudio.alarm(3);
+      setTimeout(() => {
+        toastEl.style.display = 'none';
+      }, 8000);
+    }
+
+    setInterval(() => {
+      const now = new Date();
+      const todayDateStr = `${now.getMonth() + 1}/${now.getDate()}/${now.getFullYear()}`;
+      const currentTimeStr = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+
+      let modified = false;
+      events.forEach(event => {
+        if (event.date === todayDateStr && event.time === currentTimeStr && !event.notified) {
+          showChronoToast(event.title);
+          event.notified = true;
+          modified = true;
+        }
+      });
+
+      if (modified) {
+        localStorage.setItem('events', JSON.stringify(events));
+      }
+    }, 15000);
+
+    document.getElementById('next-btn').addEventListener('click', () => { nav++; loadCalendar(); if (window.RelAudio) window.RelAudio.click(); });
+    document.getElementById('prev-btn').addEventListener('click', () => { nav--; loadCalendar(); if (window.RelAudio) window.RelAudio.click(); });
+    document.getElementById('save-btn').addEventListener('click', saveEvent);
+    document.getElementById('cancel-btn').addEventListener('click', closeModal);
+    document.getElementById('delete-btn').addEventListener('click', deleteEvent);
+    modalBackdrop.addEventListener('click', closeModal);
+
+    loadCalendar();
+  </script>
+</body>
+</html>

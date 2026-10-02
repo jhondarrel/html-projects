@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espionage Cipher Deck // Base64 & Hash Studio</title>
+    
+    <link rel="stylesheet" href="css/rel-core.css">
+
+    <style>
+        :root {
+            --rad-amber: #fbc531;
+            --rad-green: #4cd137;
+            --rad-cyan: #00d2d3;
+            --rad-red: #e84118;
+            --rad-card-bg: rgba(14, 18, 26, 0.88);
+            --rad-dark: #080b10;
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 12%, #211906 0%, #0d0a03 50%, #040301 100%);
+            min-height: 100vh;
+            color: #f1f2f6;
+        }
+
+        .cipher-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: calc(100vh - var(--rel-hud-height));
+            padding: 30px 20px;
+        }
+
+        .cipher-container {
+            width: 100%;
+            max-width: 1140px;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        /* --- Header Deck --- */
+        .cipher-header {
+            background: linear-gradient(160deg, #241c06 0%, #120e03 60%, #050401 100%);
+            padding: 24px 34px;
+            border-radius: 20px;
+            border: 2px solid #4a3a10;
+            box-shadow: 
+                0 0 0 1px rgba(251, 197, 49, 0.3),
+                0 0 40px rgba(251, 197, 49, 0.12),
+                0 20px 50px rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            position: relative;
+        }
+
+        .cipher-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 25px;
+            right: 25px;
+            height: 3px;
+            background: linear-gradient(90deg, #fbc531, #4cd137, #00d2d3, #fbc531);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 0 16px rgba(251, 197, 49, 0.8);
+        }
+
+        .cipher-brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .cipher-logo-badge {
+            width: 52px;
+            height: 52px;
+            background: rgba(251, 197, 49, 0.1);
+            border: 2px solid var(--rad-amber);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            box-shadow: 0 0 20px rgba(251, 197, 49, 0.4);
+        }
+
+        .cipher-title {
+            font-family: var(--rel-font-display);
+            font-size: 1.6rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: #ffffff;
+            margin: 0;
+            text-shadow: 0 0 15px rgba(251, 197, 49, 0.4);
+        }
+
+        .cipher-subtitle {
+            font-family: var(--rel-font-sans);
+            font-size: 0.88rem;
+            color: var(--rad-green);
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        /* --- Mode Switcher Tabs --- */
+        .tab-switcher {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            background: var(--rad-card-bg);
+            padding: 12px 20px;
+            border-radius: 14px;
+            border: 1px solid #362908;
+        }
+
+        .cipher-tab-btn {
+            background: rgba(26, 20, 6, 0.8);
+            border: 1px solid #4a3a10;
+            color: #a4b0be;
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.84rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cipher-tab-btn:hover {
+            border-color: var(--rad-amber);
+            color: #ffffff;
+        }
+
+        .cipher-tab-btn.active {
+            background: rgba(251, 197, 49, 0.2);
+            border-color: var(--rad-amber);
+            color: var(--rad-amber);
+            box-shadow: 0 0 14px rgba(251, 197, 49, 0.3);
+        }
+
+        /* Main Workspace Section */
+        .cipher-card {
+            background: var(--rad-card-bg);
+            border-radius: 20px;
+            border: 2px solid #3d2f0a;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.7);
+        }
+
+        .split-panes {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 820px) {
+            .split-panes {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .pane-box {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .pane-label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--rel-font-mono);
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: var(--rad-amber);
+            letter-spacing: 0.8px;
+        }
+
+        .cipher-textarea {
+            width: 100%;
+            height: 220px;
+            background: #080602;
+            border: 1.5px solid #382c0b;
+            border-radius: 12px;
+            color: #f1f2f6;
+            font-family: 'Consolas', 'Fira Code', var(--rel-font-mono);
+            font-size: 0.92rem;
+            line-height: 1.5;
+            padding: 14px;
+            outline: none;
+            resize: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .cipher-textarea:focus {
+            border-color: var(--rad-amber);
+            box-shadow: 0 0 16px rgba(251, 197, 49, 0.25);
+        }
+
+        /* Action Buttons */
+        .action-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .btn-amber {
+            background: linear-gradient(135deg, #fbc531 0%, #e1b12c 100%);
+            color: #0d0a03;
+            font-family: var(--rel-font-mono);
+            font-size: 0.88rem;
+            font-weight: 800;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(251, 197, 49, 0.35);
+            transition: all 0.2s ease;
+        }
+
+        .btn-amber:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(251, 197, 49, 0.5);
+        }
+
+        .copy-pill {
+            background: rgba(30, 24, 8, 0.8);
+            border: 1px solid #4a3a10;
+            color: #a4b0be;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .copy-pill:hover {
+            border-color: var(--rad-green);
+            color: var(--rad-green);
+        }
+
+        /* File Drop Chamber */
+        .drop-chamber {
+            border: 2px dashed #4a3a10;
+            border-radius: 16px;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: rgba(10, 8, 2, 0.7);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .drop-chamber:hover, .drop-chamber.dragover {
+            border-color: var(--rad-amber);
+            background: rgba(251, 197, 49, 0.08);
+            box-shadow: 0 0 25px rgba(251, 197, 49, 0.2);
+        }
+
+        .file-preview-img {
+            max-width: 240px;
+            max-height: 180px;
+            border-radius: 10px;
+            border: 2px solid var(--rad-amber);
+            margin-top: 10px;
+            display: none;
+        }
+
+        /* Hash Stack Grid */
+        .hash-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .hash-item {
+            background: #080602;
+            border: 1.5px solid #382c0b;
+            border-radius: 12px;
+            padding: 14px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .hash-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--rel-font-mono);
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--rad-amber);
+        }
+
+        .hash-val-text {
+            font-family: 'Consolas', 'Fira Code', var(--rel-font-mono);
+            font-size: 0.88rem;
+            color: #7bed9f;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cipher-wrapper">
+        <div class="cipher-container">
+            
+            <!-- Header Deck -->
+            <header class="cipher-header">
+                <div class="cipher-brand">
+                    <div class="cipher-logo-badge">🔐</div>
+                    <div>
+                        <h1 class="cipher-title">ESPIONAGE CIPHER DECK</h1>
+                        <div class="cipher-subtitle">Hardware Base64 Transcoder // SHA Cryptographic Hashing</div>
+                    </div>
+                </div>
+
+                <div style="font-family: var(--rel-font-mono); font-size: 0.82rem; color: #a4b0be;">
+                    CRYPTO ENGINE: <span style="color: var(--rad-green); font-weight: 800;">SUBTLE WEB API ACTIVE</span>
+                </div>
+            </header>
+
+            <!-- Mode Tabs -->
+            <div class="tab-switcher">
+                <button class="cipher-tab-btn active" data-tab="text-b64">📝 TEXT ⇄ BASE64</button>
+                <button class="cipher-tab-btn" data-tab="file-b64">📁 FILE ⇄ DATA URI</button>
+                <button class="cipher-tab-btn" data-tab="hashes">⚡ CRYPTO HASHES</button>
+                <button class="cipher-tab-btn" data-tab="url-hex">🌐 URL & HEX DUMP</button>
+            </div>
+
+            <!-- TAB 1: Text Base64 -->
+            <div class="cipher-card" id="tab-text-b64">
+                <div class="split-panes">
+                    <div class="pane-box">
+                        <div class="pane-label-row">
+                            <span>RAW TEXT (INPUT)</span>
+                            <span id="char-count-raw">0 BYTES</span>
+                        </div>
+                        <textarea class="cipher-textarea" id="b64-raw" placeholder="Enter plaintext to encode...">The Rel Works // Quantum Suite 2026</textarea>
+                    </div>
+
+                    <div class="pane-box">
+                        <div class="pane-label-row">
+                            <span>BASE64 (ENCODED)</span>
+                            <button class="copy-pill" id="btn-copy-b64">📋 COPY BASE64</button>
+                        </div>
+                        <textarea class="cipher-textarea" id="b64-encoded" placeholder="Base64 output or paste to decode..."></textarea>
+                    </div>
+                </div>
+
+                <div class="action-row">
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-amber" id="btn-encode-b64">ENCODE TO BASE64 ➔</button>
+                        <button class="btn-amber" id="btn-decode-b64" style="background: rgba(30, 24, 8, 0.8); border: 1px solid #4a3a10; color: #ffffff;">⬅ DECODE TO TEXT</button>
+                    </div>
+                    <label style="font-family: var(--rel-font-mono); font-size: 0.8rem; color: #a4b0be; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                        <input type="checkbox" id="chk-urlsafe"> URL-Safe Base64 (- and _)
+                    </label>
+                </div>
+            </div>
+
+            <!-- TAB 2: File Base64 -->
+            <div class="cipher-card" id="tab-file-b64" style="display: none;">
+                <input type="file" id="file-picker" style="display: none;">
+                
+                <div class="drop-chamber" id="drop-chamber">
+                    <span style="font-size: 2.5rem;">📥</span>
+                    <span style="font-family: var(--rel-font-display); font-size: 1.15rem; font-weight: 800;">DRAG & DROP ANY IMAGE OR FILE HERE</span>
+                    <span style="font-family: var(--rel-font-mono); font-size: 0.8rem; color: #a4b0be;">or click to browse from your filesystem</span>
+                    <img class="file-preview-img" id="file-preview" alt="Preview">
+                </div>
+
+                <div class="pane-box">
+                    <div class="pane-label-row">
+                        <span id="file-meta-lbl">DATA URI BASE64 STREAM</span>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="copy-pill" id="btn-copy-uri">📋 COPY DATA URI</button>
+                            <button class="copy-pill" id="btn-copy-raw-file-b64">📋 COPY RAW BASE64</button>
+                        </div>
+                    </div>
+                    <textarea class="cipher-textarea" id="file-b64-output" placeholder="Data URI will appear here..." readonly></textarea>
+                </div>
+            </div>
+
+            <!-- TAB 3: Hashes -->
+            <div class="cipher-card" id="tab-hashes" style="display: none;">
+                <div class="pane-box">
+                    <div class="pane-label-row">
+                        <span>DATA INPUT FOR HASH CALCULATOR</span>
+                    </div>
+                    <textarea class="cipher-textarea" id="hash-input" style="height: 100px;" placeholder="Type text to compute live cryptographic digests...">The Rel Works Quantum OS</textarea>
+                </div>
+
+                <div class="hash-list">
+                    <div class="hash-item">
+                        <div class="hash-header">
+                            <span>SHA-256 (STANDARD 256-BIT DIGEST)</span>
+                            <button class="copy-pill" onclick="copyHash('hash-sha256')">COPY</button>
+                        </div>
+                        <div class="hash-val-text" id="hash-sha256">Computing...</div>
+                    </div>
+
+                    <div class="hash-item">
+                        <div class="hash-header">
+                            <span>SHA-512 (HIGH-SECURITY 512-BIT DIGEST)</span>
+                            <button class="copy-pill" onclick="copyHash('hash-sha512')">COPY</button>
+                        </div>
+                        <div class="hash-val-text" id="hash-sha512">Computing...</div>
+                    </div>
+
+                    <div class="hash-item">
+                        <div class="hash-header">
+                            <span>SHA-384 (384-BIT DIGEST)</span>
+                            <button class="copy-pill" onclick="copyHash('hash-sha384')">COPY</button>
+                        </div>
+                        <div class="hash-val-text" id="hash-sha384">Computing...</div>
+                    </div>
+
+                    <div class="hash-item">
+                        <div class="hash-header">
+                            <span>SHA-1 (LEGACY 160-BIT DIGEST)</span>
+                            <button class="copy-pill" onclick="copyHash('hash-sha1')">COPY</button>
+                        </div>
+                        <div class="hash-val-text" id="hash-sha1">Computing...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: URL & Hex Dump -->
+            <div class="cipher-card" id="tab-url-hex" style="display: none;">
+                <div class="split-panes">
+                    <div class="pane-box">
+                        <div class="pane-label-row">
+                            <span>URL ENCODED / DECODED</span>
+                            <button class="copy-pill" id="btn-copy-url">COPY</button>
+                        </div>
+                        <textarea class="cipher-textarea" id="url-encoded-output" placeholder="URL escaped result..."></textarea>
+                    </div>
+
+                    <div class="pane-box">
+                        <div class="pane-label-row">
+                            <span>HEXADECIMAL BYTE DUMP (ASCII)</span>
+                            <button class="copy-pill" id="btn-copy-hex">COPY</button>
+                        </div>
+                        <textarea class="cipher-textarea" id="hex-dump-output" placeholder="Hex dump result..." readonly></textarea>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/rel-audio.js"></script>
+    <script src="js/rel-hud.js"></script>
+    <script>
+        // Tab switching
+        const tabBtns = document.querySelectorAll('.cipher-tab-btn');
+        const tabCards = {
+            'text-b64': document.getElementById('tab-text-b64'),
+            'file-b64': document.getElementById('tab-file-b64'),
+            'hashes': document.getElementById('tab-hashes'),
+            'url-hex': document.getElementById('tab-url-hex')
+        };
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const target = btn.dataset.tab;
+
+                Object.keys(tabCards).forEach(k => {
+                    tabCards[k].style.display = k === target ? 'flex' : 'none';
+                });
+
+                if (window.RelAudio) window.RelAudio.click();
+            });
+        });
+
+        // 1. Text Base64
+        const b64Raw = document.getElementById('b64-raw');
+        const b64Encoded = document.getElementById('b64-encoded');
+        const chkUrlSafe = document.getElementById('chk-urlsafe');
+        const charCountRaw = document.getElementById('char-count-raw');
+
+        function utf8ToBase64(str, urlSafe = false) {
+            const bytes = new TextEncoder().encode(str);
+            let bin = '';
+            bytes.forEach(b => bin += String.fromCharCode(b));
+            let b64 = btoa(bin);
+            if (urlSafe) {
+                b64 = b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+            }
+            return b64;
+        }
+
+        function base64ToUtf8(b64) {
+            let clean = b64.replace(/-/g, '+').replace(/_/g, '/');
+            while (clean.length % 4 !== 0) clean += '=';
+            const bin = atob(clean);
+            const bytes = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+            return new TextDecoder().decode(bytes);
+        }
+
+        function doEncode() {
+            try {
+                const text = b64Raw.value;
+                charCountRaw.textContent = `${new TextEncoder().encode(text).length} BYTES`;
+                b64Encoded.value = utf8ToBase64(text, chkUrlSafe.checked);
+            } catch (err) {
+                b64Encoded.value = 'Encoding error: ' + err.message;
+            }
+        }
+
+        function doDecode() {
+            try {
+                const b64 = b64Encoded.value.trim();
+                b64Raw.value = base64ToUtf8(b64);
+                charCountRaw.textContent = `${new TextEncoder().encode(b64Raw.value).length} BYTES`;
+            } catch (err) {
+                b64Raw.value = 'Decoding error: ' + err.message;
+            }
+        }
+
+        b64Raw.addEventListener('input', doEncode);
+        chkUrlSafe.addEventListener('change', doEncode);
+        document.getElementById('btn-encode-b64').addEventListener('click', () => { doEncode(); if (window.RelAudio) window.RelAudio.click(); });
+        document.getElementById('btn-decode-b64').addEventListener('click', () => { doDecode(); if (window.RelAudio) window.RelAudio.click(); });
+
+        document.getElementById('btn-copy-b64').addEventListener('click', () => {
+            navigator.clipboard.writeText(b64Encoded.value);
+            if (window.RelAudio) window.RelAudio.success();
+            alert('Base64 copied to clipboard!');
+        });
+
+        // 2. File to Base64
+        const dropChamber = document.getElementById('drop-chamber');
+        const filePicker = document.getElementById('file-picker');
+        const filePreview = document.getElementById('file-preview');
+        const fileB64Output = document.getElementById('file-b64-output');
+        const fileMetaLbl = document.getElementById('file-meta-lbl');
+
+        dropChamber.addEventListener('click', () => filePicker.click());
+
+        dropChamber.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropChamber.classList.add('dragover');
+        });
+
+        dropChamber.addEventListener('dragleave', () => dropChamber.classList.remove('dragover'));
+
+        dropChamber.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropChamber.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                processFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        filePicker.addEventListener('change', () => {
+            if (filePicker.files.length > 0) {
+                processFile(filePicker.files[0]);
+            }
+        });
+
+        function processFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const dataUri = e.target.result;
+                fileB64Output.value = dataUri;
+                fileMetaLbl.textContent = `DATA URI: ${file.name} (${(file.size / 1024).toFixed(1)} KB, ${file.type || 'unknown'})`;
+
+                if (file.type.startsWith('image/')) {
+                    filePreview.src = dataUri;
+                    filePreview.style.display = 'block';
+                } else {
+                    filePreview.style.display = 'none';
+                }
+
+                if (window.RelAudio) window.RelAudio.success();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        document.getElementById('btn-copy-uri').addEventListener('click', () => {
+            navigator.clipboard.writeText(fileB64Output.value);
+            if (window.RelAudio) window.RelAudio.success();
+            alert('Data URI copied!');
+        });
+
+        document.getElementById('btn-copy-raw-file-b64').addEventListener('click', () => {
+            const raw = fileB64Output.value.split(',')[1] || fileB64Output.value;
+            navigator.clipboard.writeText(raw);
+            if (window.RelAudio) window.RelAudio.success();
+            alert('Raw Base64 copied!');
+        });
+
+        // 3. Cryptographic Hashes
+        const hashInput = document.getElementById('hash-input');
+
+        async function computeHash(algo, text) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(text);
+            const hashBuffer = await crypto.subtle.digest(algo, data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function updateHashes() {
+            const text = hashInput.value;
+            document.getElementById('hash-sha256').textContent = await computeHash('SHA-256', text);
+            document.getElementById('hash-sha512').textContent = await computeHash('SHA-512', text);
+            document.getElementById('hash-sha384').textContent = await computeHash('SHA-384', text);
+            document.getElementById('hash-sha1').textContent = await computeHash('SHA-1', text);
+        }
+
+        hashInput.addEventListener('input', () => {
+            updateHashes();
+            if (window.RelAudio) window.RelAudio.click(1.3);
+        });
+
+        function copyHash(id) {
+            const val = document.getElementById(id).textContent;
+            navigator.clipboard.writeText(val);
+            if (window.RelAudio) window.RelAudio.success();
+            alert('Hash copied!');
+        }
+
+        // 4. URL & Hex Dump
+        function updateUrlAndHex() {
+            const raw = b64Raw.value;
+            document.getElementById('url-encoded-output').value = encodeURIComponent(raw);
+
+            // Hex dump
+            const bytes = new TextEncoder().encode(raw);
+            const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+            document.getElementById('hex-dump-output').value = hex;
+        }
+
+        b64Raw.addEventListener('input', updateUrlAndHex);
+
+        document.getElementById('btn-copy-url').addEventListener('click', () => {
+            navigator.clipboard.writeText(document.getElementById('url-encoded-output').value);
+            if (window.RelAudio) window.RelAudio.success();
+            alert('URL encoded text copied!');
+        });
+
+        document.getElementById('btn-copy-hex').addEventListener('click', () => {
+            navigator.clipboard.writeText(document.getElementById('hex-dump-output').value);
+            if (window.RelAudio) window.RelAudio.success();
+            alert('Hex dump copied!');
+        });
+
+        // Init
+        doEncode();
+        updateHashes();
+        updateUrlAndHex();
+    </script>
+</body>
+</html>

@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pattern Collider // Quantum Regex Sandbox</title>
+    
+    <link rel="stylesheet" href="css/rel-core.css">
+
+    <style>
+        :root {
+            --rx-purple: #8854d0;
+            --rx-cyan: #00d2d3;
+            --rx-green: #2ed573;
+            --rx-pink: #ff007f;
+            --rx-red: #ff4757;
+            --rx-card-bg: rgba(13, 14, 26, 0.88);
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 12%, #190e2d 0%, #0d0618 50%, #040208 100%);
+            min-height: 100vh;
+            color: #f1f2f6;
+        }
+
+        .rx-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: calc(100vh - var(--rel-hud-height));
+            padding: 30px 20px;
+        }
+
+        .rx-container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        /* --- Header Deck --- */
+        .rx-header {
+            background: linear-gradient(160deg, #1f1035 0%, #0e071c 60%, #05020c 100%);
+            padding: 24px 34px;
+            border-radius: 20px;
+            border: 2px solid #3d1f66;
+            box-shadow: 
+                0 0 0 1px rgba(136, 84, 208, 0.3),
+                0 0 40px rgba(136, 84, 208, 0.15),
+                0 20px 50px rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            position: relative;
+        }
+
+        .rx-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 25px;
+            right: 25px;
+            height: 3px;
+            background: linear-gradient(90deg, #8854d0, #00d2d3, #ff007f, #8854d0);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 0 16px rgba(136, 84, 208, 0.8);
+        }
+
+        .rx-brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .rx-logo-badge {
+            width: 52px;
+            height: 52px;
+            background: rgba(136, 84, 208, 0.1);
+            border: 2px solid var(--rx-purple);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            box-shadow: 0 0 20px rgba(136, 84, 208, 0.4);
+        }
+
+        .rx-title {
+            font-family: var(--rel-font-display);
+            font-size: 1.6rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: #ffffff;
+            margin: 0;
+            text-shadow: 0 0 15px rgba(136, 84, 208, 0.4);
+        }
+
+        .rx-subtitle {
+            font-family: var(--rel-font-sans);
+            font-size: 0.88rem;
+            color: #00d2d3;
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        .rx-telemetry {
+            display: flex;
+            gap: 16px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.82rem;
+            background: rgba(6, 4, 12, 0.8);
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: 1px solid rgba(136, 84, 208, 0.3);
+        }
+
+        /* --- Pattern Presets Ribbon --- */
+        .presets-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            background: var(--rx-card-bg);
+            padding: 14px 20px;
+            border-radius: 14px;
+            border: 1px solid #2e1a4f;
+        }
+
+        .presets-label {
+            font-family: var(--rel-font-mono);
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #a4b0be;
+            text-transform: uppercase;
+        }
+
+        .preset-chip {
+            background: rgba(22, 16, 42, 0.8);
+            border: 1px solid #3f256a;
+            color: #dcdde1;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .preset-chip:hover {
+            border-color: var(--rx-cyan);
+            color: var(--rx-cyan);
+            background: rgba(0, 210, 211, 0.1);
+        }
+
+        /* --- Regex Engine Input Deck --- */
+        .rx-input-deck {
+            background: var(--rx-card-bg);
+            border-radius: 18px;
+            border: 2px solid #341c5a;
+            padding: 24px 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+        }
+
+        .regex-bar {
+            display: flex;
+            align-items: center;
+            background: #090513;
+            border: 2px solid #4a287c;
+            border-radius: 12px;
+            padding: 4px 14px;
+            gap: 8px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .regex-bar.has-error {
+            border-color: var(--rx-red);
+            box-shadow: 0 0 20px rgba(255, 71, 87, 0.4);
+        }
+
+        .regex-bar.is-valid {
+            border-color: var(--rx-green);
+            box-shadow: 0 0 16px rgba(46, 213, 115, 0.25);
+        }
+
+        .slash-glyph {
+            font-family: var(--rel-font-mono);
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--rx-purple);
+        }
+
+        #regex-input {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-family: 'Consolas', 'Fira Code', var(--rel-font-mono);
+            font-size: 1.15rem;
+            padding: 10px 4px;
+            outline: none;
+        }
+
+        .flag-switches {
+            display: flex;
+            gap: 4px;
+        }
+
+        .flag-btn {
+            background: rgba(30, 20, 56, 0.8);
+            border: 1px solid #432870;
+            color: #8c7ae6;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.85rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .flag-btn:hover {
+            color: #ffffff;
+        }
+
+        .flag-btn.active {
+            background: var(--rx-purple);
+            color: #ffffff;
+            border-color: #a55eea;
+            box-shadow: 0 0 10px rgba(136, 84, 208, 0.6);
+        }
+
+        .error-banner {
+            display: none;
+            color: var(--rx-red);
+            font-family: var(--rel-font-mono);
+            font-size: 0.82rem;
+            padding: 6px 12px;
+            background: rgba(255, 71, 87, 0.1);
+            border-radius: 6px;
+            border-left: 3px solid var(--rx-red);
+        }
+
+        /* --- Split Corpus and Results Area --- */
+        .workspace-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .workspace-split {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel-box {
+            background: var(--rx-card-bg);
+            border-radius: 18px;
+            border: 2px solid #2e1a4f;
+            padding: 22px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+        }
+
+        .panel-title {
+            font-family: var(--rel-font-mono);
+            font-size: 0.82rem;
+            font-weight: 800;
+            color: var(--rx-cyan);
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .test-textarea {
+            width: 100%;
+            height: 240px;
+            background: #080410;
+            border: 1.5px solid #2e1a4f;
+            border-radius: 12px;
+            color: #f1f2f6;
+            font-family: 'Consolas', 'Fira Code', var(--rel-font-mono);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            padding: 14px;
+            outline: none;
+            resize: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .test-textarea:focus {
+            border-color: var(--rx-cyan);
+            box-shadow: 0 0 16px rgba(0, 210, 211, 0.25);
+        }
+
+        /* Real-Time Highlight Render Chamber */
+        .highlight-output-chamber {
+            width: 100%;
+            height: 240px;
+            background: #080410;
+            border: 1.5px solid #2e1a4f;
+            border-radius: 12px;
+            color: #f1f2f6;
+            font-family: 'Consolas', 'Fira Code', var(--rel-font-mono);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            padding: 14px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        mark.rx-match {
+            background: rgba(0, 210, 211, 0.25);
+            color: #00f3ff;
+            border-radius: 3px;
+            padding: 2px 4px;
+            border-bottom: 2px solid #00d2d3;
+            font-weight: 700;
+            box-shadow: 0 0 8px rgba(0, 210, 211, 0.4);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        mark.rx-match:hover {
+            background: rgba(0, 210, 211, 0.45);
+            color: #ffffff;
+            box-shadow: 0 0 14px rgba(0, 210, 211, 0.8);
+        }
+
+        mark.rx-match-alt {
+            background: rgba(255, 0, 127, 0.25);
+            color: #ff79cd;
+            border-bottom-color: #ff007f;
+            box-shadow: 0 0 8px rgba(255, 0, 127, 0.4);
+        }
+
+        /* --- Capture Groups & Replace Deck --- */
+        .tools-bottom-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .tools-bottom-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .matches-table-container {
+            max-height: 200px;
+            overflow-y: auto;
+            border-radius: 10px;
+            border: 1px solid #2e1a4f;
+            background: #080410;
+        }
+
+        .matches-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--rel-font-mono);
+            font-size: 0.8rem;
+            text-align: left;
+        }
+
+        .matches-table th {
+            background: rgba(25, 14, 46, 0.9);
+            color: var(--rx-purple);
+            padding: 8px 12px;
+            border-bottom: 1px solid #3d1f66;
+            font-weight: 800;
+            position: sticky;
+            top: 0;
+        }
+
+        .matches-table td {
+            padding: 7px 12px;
+            border-bottom: 1px solid rgba(62, 31, 102, 0.4);
+            color: #dcdde1;
+        }
+
+        .matches-table tr:hover {
+            background: rgba(136, 84, 208, 0.12);
+        }
+
+        /* Replace Module */
+        .replace-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .replace-input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .replace-input {
+            flex-grow: 1;
+            background: #080410;
+            border: 1.5px solid #2e1a4f;
+            border-radius: 8px;
+            color: #f1f2f6;
+            padding: 10px 14px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .replace-input:focus {
+            border-color: var(--rx-purple);
+        }
+
+        .replace-preview-box {
+            background: #080410;
+            border: 1.5px solid #2e1a4f;
+            border-radius: 8px;
+            padding: 12px;
+            color: #7bed9f;
+            font-family: var(--rel-font-mono);
+            font-size: 0.85rem;
+            min-height: 80px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="rx-wrapper">
+        <div class="rx-container">
+            
+            <!-- Header Deck -->
+            <header class="rx-header">
+                <div class="rx-brand">
+                    <div class="rx-logo-badge">⚡</div>
+                    <div>
+                        <h1 class="rx-title">QUANTUM PATTERN COLLIDER</h1>
+                        <div class="rx-subtitle">Live Regex Syntax Dissector // Token Extraction Sandbox</div>
+                    </div>
+                </div>
+
+                <div class="rx-telemetry">
+                    <div>MATCHES: <span id="tele-matches" style="color: var(--rx-cyan); font-weight: 800;">0 FOUND</span></div>
+                    <div>CYCLE TIME: <span id="tele-time" style="color: #2ed573; font-weight: 800;">0.00 ms</span></div>
+                    <div>STATUS: <span id="tele-status" style="color: #70a1ff; font-weight: 800;">READY</span></div>
+                </div>
+            </header>
+
+            <!-- Quick Pattern Presets -->
+            <div class="presets-bar">
+                <span class="presets-label">QUICK PRESETS:</span>
+                <button class="preset-chip" data-pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" data-flags="g">📧 Email Addresses</button>
+                <button class="preset-chip" data-pattern="https?:\/\/[^\s/$.?#].[^\s]*" data-flags="g">🌐 URLs / Links</button>
+                <button class="preset-chip" data-pattern="#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b" data-flags="g">🎨 Hex Colors</button>
+                <button class="preset-chip" data-pattern="\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b" data-flags="g">🖥️ IPv4 Addresses</button>
+                <button class="preset-chip" data-pattern="<([a-zA-Z0-9]+)[^>]*>(.*?)<\/\1>" data-flags="g">🏷️ HTML Elements</button>
+                <button class="preset-chip" data-pattern="\b\d{4}-\d{2}-\d{2}\b" data-flags="g">📅 ISO Dates</button>
+            </div>
+
+            <!-- Regex Main Bar -->
+            <div class="rx-input-deck">
+                <div class="regex-bar" id="regex-bar">
+                    <span class="slash-glyph">/</span>
+                    <input type="text" id="regex-input" value="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" placeholder="Enter regular expression..." autocomplete="off" spellcheck="false">
+                    <span class="slash-glyph">/</span>
+
+                    <!-- Flag Toggles -->
+                    <div class="flag-switches">
+                        <button class="flag-btn active" data-flag="g" title="Global match">g</button>
+                        <button class="flag-btn active" data-flag="i" title="Case insensitive">i</button>
+                        <button class="flag-btn" data-flag="m" title="Multiline">m</button>
+                        <button class="flag-btn" data-flag="s" title="DotAll (dot matches newline)">s</button>
+                        <button class="flag-btn" data-flag="u" title="Unicode">u</button>
+                    </div>
+                </div>
+
+                <div class="error-banner" id="error-banner"></div>
+            </div>
+
+            <!-- Split Corpus & Highlight Chamber -->
+            <div class="workspace-split">
+                
+                <!-- Left: Test Corpus Input -->
+                <div class="panel-box">
+                    <div class="panel-title">
+                        <span>📝 TEST CORPUS (INPUT)</span>
+                        <span style="color: #a4b0be; font-size: 0.72rem;">TYPE OR PASTE TEXT</span>
+                    </div>
+                    <textarea class="test-textarea" id="test-corpus" spellcheck="false">Welcome to The Rel Works Quantum Suite!
+Contact telemetry operators at admin@therelworks.io or support-team@subdomain.example.com.
+Visit our portal at https://quantum.therelworks.io/status for active hex themes like #00f3ff and #ff007f.
+Nodes connected: 192.168.1.1, 10.0.0.254. Incident reported on 2026-09-25.
+Developer contact: test.user+filter@work-corp.co.uk.</textarea>
+                </div>
+
+                <!-- Right: Real-Time Highlight Render Chamber -->
+                <div class="panel-box">
+                    <div class="panel-title">
+                        <span>✨ LIVE HIGHLIGHT CHAMBER</span>
+                        <span id="match-badge" style="color: var(--rx-cyan);">0 MATCHES</span>
+                    </div>
+                    <div class="highlight-output-chamber" id="highlight-chamber"></div>
+                </div>
+
+            </div>
+
+            <!-- Bottom Tools: Group Inspector & Live Replacement -->
+            <div class="tools-bottom-grid">
+                
+                <!-- Matches & Capture Groups Inspector -->
+                <div class="panel-box">
+                    <div class="panel-title">
+                        <span>🔍 CAPTURE GROUPS INSPECTOR</span>
+                    </div>
+                    <div class="matches-table-container">
+                        <table class="matches-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>MATCH STRING</th>
+                                    <th>INDEX</th>
+                                    <th>GROUPS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="matches-tbody">
+                                <!-- Injected via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Live Replace Sandbox -->
+                <div class="panel-box">
+                    <div class="panel-title">
+                        <span>🔄 LIVE REPLACEMENT LABORATORY</span>
+                    </div>
+                    <div class="replace-controls">
+                        <div class="replace-input-row">
+                            <input type="text" id="replace-input" class="replace-input" value="[REDACTED_EMAIL]" placeholder="Replacement text (supports $1, $&)...">
+                        </div>
+                        <div class="replace-preview-box" id="replace-preview">
+                            <!-- Injected via JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/rel-audio.js"></script>
+    <script src="js/rel-hud.js"></script>
+    <script>
+        const regexInput = document.getElementById('regex-input');
+        const regexBar = document.getElementById('regex-bar');
+        const errorBanner = document.getElementById('error-banner');
+        const flagBtns = document.querySelectorAll('.flag-btn');
+        const testCorpus = document.getElementById('test-corpus');
+        const highlightChamber = document.getElementById('highlight-chamber');
+        const matchBadge = document.getElementById('match-badge');
+        const matchesTbody = document.getElementById('matches-tbody');
+
+        const teleMatches = document.getElementById('tele-matches');
+        const teleTime = document.getElementById('tele-time');
+        const teleStatus = document.getElementById('tele-status');
+
+        const replaceInput = document.getElementById('replace-input');
+        const replacePreview = document.getElementById('replace-preview');
+        const presetChips = document.querySelectorAll('.preset-chip');
+
+        let activeFlags = new Set(['g', 'i']);
+
+        function getFlagsString() {
+            return Array.from(activeFlags).join('');
+        }
+
+        function escapeHtml(str) {
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function runRegex() {
+            const rawPattern = regexInput.value;
+            const text = testCorpus.value;
+            const flags = getFlagsString();
+
+            if (!rawPattern) {
+                regexBar.className = 'regex-bar';
+                errorBanner.style.display = 'none';
+                highlightChamber.textContent = text;
+                matchBadge.textContent = '0 MATCHES';
+                teleMatches.textContent = '0 FOUND';
+                teleStatus.textContent = 'EMPTY PATTERN';
+                matchesTbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #57606f;">No pattern provided</td></tr>';
+                replacePreview.textContent = text;
+                return;
+            }
+
+            const startTime = performance.now();
+            let regex = null;
+
+            try {
+                regex = new RegExp(rawPattern, flags);
+                regexBar.className = 'regex-bar is-valid';
+                errorBanner.style.display = 'none';
+                teleStatus.textContent = 'VALID // ACTIVE';
+                teleStatus.style.color = '#2ed573';
+            } catch (err) {
+                regexBar.className = 'regex-bar has-error';
+                errorBanner.style.display = 'block';
+                errorBanner.textContent = `SYNTAX ERROR: ${err.message}`;
+                teleStatus.textContent = 'SYNTAX ERROR';
+                teleStatus.style.color = '#ff4757';
+                if (window.RelAudio) window.RelAudio.error();
+                return;
+            }
+
+            // Find all matches
+            let matches = [];
+            if (flags.includes('g')) {
+                let m;
+                let guard = 0;
+                while ((m = regex.exec(text)) !== null && guard < 1000) {
+                    matches.push(m);
+                    if (m.index === regex.lastIndex) regex.lastIndex++;
+                    guard++;
+                }
+            } else {
+                const single = regex.exec(text);
+                if (single) matches.push(single);
+            }
+
+            const duration = (performance.now() - startTime).toFixed(2);
+            teleTime.textContent = `${duration} ms`;
+            teleMatches.textContent = `${matches.length} FOUND`;
+            matchBadge.textContent = `${matches.length} MATCHES`;
+
+            // Build Highlight HTML
+            if (matches.length === 0) {
+                highlightChamber.textContent = text;
+            } else {
+                let html = '';
+                let lastIdx = 0;
+
+                matches.forEach((m, idx) => {
+                    const matchStart = m.index;
+                    const matchEnd = matchStart + m[0].length;
+
+                    // Unmatched prefix
+                    html += escapeHtml(text.substring(lastIdx, matchStart));
+
+                    // Highlighted match
+                    const altClass = idx % 2 === 1 ? 'rx-match-alt' : '';
+                    html += `<mark class="rx-match ${altClass}" title="Match #${idx + 1} at index ${matchStart}">${escapeHtml(m[0])}</mark>`;
+
+                    lastIdx = matchEnd;
+                });
+
+                html += escapeHtml(text.substring(lastIdx));
+                highlightChamber.innerHTML = html;
+            }
+
+            // Populate Matches Table
+            if (matches.length === 0) {
+                matchesTbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #57606f;">No matches found in corpus</td></tr>';
+            } else {
+                matchesTbody.innerHTML = matches.map((m, idx) => {
+                    const groups = m.slice(1);
+                    const groupsStr = groups.length > 0 
+                        ? groups.map((g, gIdx) => `$${gIdx + 1}: ${g !== undefined ? escapeHtml(g) : 'undefined'}`).join(', ')
+                        : '—';
+                    return `
+                        <tr>
+                            <td style="color: var(--rx-purple); font-weight: 800;">#${idx + 1}</td>
+                            <td style="color: var(--rx-cyan); font-weight: 700;">${escapeHtml(m[0])}</td>
+                            <td style="color: #a4b0be;">${m.index}</td>
+                            <td style="color: #7bed9f;">${groupsStr}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            // Live Replacement
+            try {
+                const repVal = replaceInput.value;
+                const replaced = text.replace(regex, repVal);
+                replacePreview.textContent = replaced;
+            } catch (err) {
+                replacePreview.textContent = 'Replacement error: ' + err.message;
+            }
+        }
+
+        // Listeners
+        regexInput.addEventListener('input', () => {
+            runRegex();
+            if (window.RelAudio) window.RelAudio.click(1.2);
+        });
+
+        testCorpus.addEventListener('input', runRegex);
+        replaceInput.addEventListener('input', runRegex);
+
+        flagBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const f = btn.getAttribute('data-flag');
+                if (activeFlags.has(f)) {
+                    activeFlags.delete(f);
+                    btn.classList.remove('active');
+                } else {
+                    activeFlags.add(f);
+                    btn.classList.add('active');
+                }
+                runRegex();
+                if (window.RelAudio) window.RelAudio.snap();
+            });
+        });
+
+        presetChips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                regexInput.value = chip.getAttribute('data-pattern');
+                const fl = chip.getAttribute('data-flags') || 'g';
+                activeFlags = new Set(fl.split(''));
+
+                flagBtns.forEach(b => {
+                    b.classList.toggle('active', activeFlags.has(b.getAttribute('data-flag')));
+                });
+
+                runRegex();
+                if (window.RelAudio) window.RelAudio.chirp(1400);
+            });
+        });
+
+        // Init
+        runRegex();
+    </script>
+</body>
+</html>

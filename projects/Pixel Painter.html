@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retro CRT Arcade // Pixel Painter Studio</title>
+    
+    <link rel="stylesheet" href="css/rel-core.css">
+
+    <style>
+        :root {
+            --pix-magenta: #e056fd;
+            --pix-turquoise: #22a6b3;
+            --pix-amber: #f0932b;
+            --pix-green: #6ab04c;
+            --pix-red: #eb4d4b;
+            --pix-dark: #0e0a1a;
+            --pix-card-bg: rgba(18, 14, 32, 0.88);
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 12%, #220e38 0%, #0d0617 50%, #030108 100%);
+            min-height: 100vh;
+            color: #f1f2f6;
+            user-select: none;
+        }
+
+        .pixel-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: calc(100vh - var(--rel-hud-height));
+            padding: 30px 20px;
+        }
+
+        .pixel-container {
+            width: 100%;
+            max-width: 1140px;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        /* --- Header Deck --- */
+        .pixel-header {
+            background: linear-gradient(160deg, #28103d 0%, #150822 60%, #08020e 100%);
+            padding: 24px 34px;
+            border-radius: 20px;
+            border: 2px solid #52227d;
+            box-shadow: 
+                0 0 0 1px rgba(224, 86, 253, 0.3),
+                0 0 40px rgba(224, 86, 253, 0.15),
+                0 20px 50px rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            position: relative;
+        }
+
+        .pixel-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 25px;
+            right: 25px;
+            height: 3px;
+            background: linear-gradient(90deg, #e056fd, #22a6b3, #f0932b, #e056fd);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 0 16px rgba(224, 86, 253, 0.8);
+        }
+
+        .pixel-brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .pixel-logo-badge {
+            width: 52px;
+            height: 52px;
+            background: rgba(224, 86, 253, 0.1);
+            border: 2px solid var(--pix-magenta);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            box-shadow: 0 0 20px rgba(224, 86, 253, 0.4);
+        }
+
+        .pixel-title {
+            font-family: var(--rel-font-display);
+            font-size: 1.6rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: #ffffff;
+            margin: 0;
+            text-shadow: 0 0 15px rgba(224, 86, 253, 0.4);
+        }
+
+        .pixel-subtitle {
+            font-family: var(--rel-font-sans);
+            font-size: 0.88rem;
+            color: var(--pix-turquoise);
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        /* --- Toolbar Ribbon --- */
+        .pixel-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: var(--pix-card-bg);
+            padding: 12px 24px;
+            border-radius: 14px;
+            border: 1px solid #3c1a59;
+        }
+
+        .tool-btn-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .tool-btn {
+            background: rgba(30, 18, 50, 0.8);
+            border: 1.5px solid #4a2470;
+            color: #dcdde1;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.84rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tool-btn:hover {
+            border-color: var(--pix-magenta);
+            color: #ffffff;
+        }
+
+        .tool-btn.active {
+            background: var(--pix-magenta);
+            color: #0c0414;
+            border-color: var(--pix-magenta);
+            box-shadow: 0 0 12px rgba(224, 86, 253, 0.5);
+        }
+
+        /* --- Workspace Grid --- */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 24px;
+        }
+
+        @media (max-width: 900px) {
+            .workspace-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* CRT Monitor Frame */
+        .crt-frame {
+            background: #110d1c;
+            border-radius: 24px;
+            border: 4px solid #3d1b5a;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Scanlines Overlay */
+        .crt-scanlines {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px;
+            opacity: 0.4;
+            display: block;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            background: #090610;
+            box-shadow: 0 0 35px rgba(224, 86, 253, 0.2);
+            border: 2px solid var(--pix-magenta);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #pixel-canvas {
+            display: block;
+            image-rendering: pixelated;
+            cursor: crosshair;
+        }
+
+        /* Right Palette & Tools Deck */
+        .palette-card {
+            background: var(--pix-card-bg);
+            border-radius: 20px;
+            border: 2px solid #3c1a59;
+            padding: 24px 26px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.7);
+        }
+
+        .card-heading {
+            font-family: var(--rel-font-mono);
+            font-size: 0.88rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: var(--pix-turquoise);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(224, 86, 253, 0.2);
+            padding-bottom: 8px;
+        }
+
+        /* Swatches Grid */
+        .swatches-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .swatch-box {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .swatch-box:hover {
+            transform: scale(1.1);
+        }
+
+        .swatch-box.active {
+            border-color: #ffffff;
+            box-shadow: 0 0 12px #ffffff;
+            transform: scale(1.08);
+        }
+
+        /* Custom Color Row */
+        .custom-color-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(14, 10, 24, 0.8);
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid #3c1a59;
+        }
+
+        /* Export Stack */
+        .export-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        .btn-export {
+            background: linear-gradient(135deg, #e056fd 0%, #be2edd 100%);
+            color: #ffffff;
+            font-family: var(--rel-font-mono);
+            font-size: 0.9rem;
+            font-weight: 800;
+            padding: 12px 18px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 18px rgba(224, 86, 253, 0.4);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-export:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(224, 86, 253, 0.6);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="pixel-wrapper">
+        <div class="pixel-container">
+            
+            <!-- Header Deck -->
+            <header class="pixel-header">
+                <div class="pixel-brand">
+                    <div class="pixel-logo-badge">🎨</div>
+                    <div>
+                        <h1 class="pixel-title">RETRO CRT PIXEL PAINTER</h1>
+                        <div class="pixel-subtitle">8-Bit Sprite Workshop // Precision Grid & Mirroring Canvas</div>
+                    </div>
+                </div>
+
+                <div class="tool-btn-group">
+                    <span style="font-family: var(--rel-font-mono); font-size: 0.75rem; color: #a4b0be; font-weight: 800;">GRID:</span>
+                    <button class="tool-btn active" id="btn-size-16" data-res="16">16x16</button>
+                    <button class="tool-btn" id="btn-size-24" data-res="24">24x24</button>
+                    <button class="tool-btn" id="btn-size-32" data-res="32">32x32</button>
+                </div>
+            </header>
+
+            <!-- Main Toolbar -->
+            <div class="pixel-toolbar">
+                <div class="tool-btn-group">
+                    <button class="tool-btn active" id="tool-pencil" data-tool="pencil">✏️ PENCIL</button>
+                    <button class="tool-btn" id="tool-eraser" data-tool="eraser">🧽 ERASER</button>
+                    <button class="tool-btn" id="tool-bucket" data-tool="bucket">🪣 FILL</button>
+                    <button class="tool-btn" id="tool-picker" data-tool="picker">💧 PICKER</button>
+                </div>
+
+                <div class="tool-btn-group">
+                    <button class="tool-btn" id="btn-mirror">🪞 MIRROR: OFF</button>
+                    <button class="tool-btn active" id="btn-grid-toggle">⌗ GRID: ON</button>
+                    <button class="tool-btn active" id="btn-scanlines-toggle">📺 CRT: ON</button>
+                </div>
+
+                <div class="tool-btn-group">
+                    <button class="tool-btn" id="btn-undo">⮌ UNDO</button>
+                    <button class="tool-btn" id="btn-clear" style="border-color: #eb4d4b; color: #eb4d4b;">🗑️ CLEAR</button>
+                </div>
+            </div>
+
+            <!-- Workspace -->
+            <div class="workspace-grid">
+                
+                <!-- CRT Screen Area -->
+                <div class="crt-frame">
+                    <div class="crt-scanlines" id="scanlines-layer"></div>
+                    <div class="canvas-wrapper">
+                        <canvas id="pixel-canvas" width="480" height="480"></canvas>
+                    </div>
+                </div>
+
+                <!-- Palette & Export Deck -->
+                <div class="palette-card">
+                    <div class="card-heading">
+                        <span>🎨</span>
+                        <span>RETRO 16-COLOR PALETTE</span>
+                    </div>
+
+                    <div class="swatches-grid" id="swatches-grid">
+                        <!-- Injected via JavaScript -->
+                    </div>
+
+                    <div class="custom-color-row">
+                        <span style="font-family: var(--rel-font-mono); font-size: 0.8rem; font-weight: 700;">CUSTOM COLOR</span>
+                        <input type="color" id="custom-color-input" value="#e056fd" style="border: none; background: transparent; cursor: pointer; width: 36px; height: 36px;">
+                    </div>
+
+                    <div class="export-stack">
+                        <button class="btn-export" id="btn-export-png">
+                            <span>📥</span>
+                            <span>EXPORT 512px PNG</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/rel-audio.js"></script>
+    <script src="js/rel-hud.js"></script>
+    <script>
+        const SWATCHES = [
+            '#000000', '#ffffff', '#e056fd', '#be2edd',
+            '#22a6b3', '#00d2d3', '#eb4d4b', '#ff7979',
+            '#f0932b', '#f9ca24', '#6ab04c', '#badc58',
+            '#30336b', '#130e26', '#535c68', '#95afc0'
+        ];
+
+        let resolution = 16;
+        let pixelSize = 480 / resolution;
+        let grid = []; // 2D array of colors
+        let history = []; // Undo stack
+        let currentColor = '#e056fd';
+        let currentTool = 'pencil';
+        let isMirror = false;
+        let showGrid = true;
+        let isDrawing = false;
+
+        const canvas = document.getElementById('pixel-canvas');
+        const ctx = canvas.getContext('2d');
+        const swatchesGrid = document.getElementById('swatches-grid');
+        const customColorInput = document.getElementById('custom-color-input');
+        const scanlinesLayer = document.getElementById('scanlines-layer');
+
+        // 8-Bit Pip Audio Synthesizer
+        function playPixelPip(pitch = 1) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return;
+            const c = new AudioCtx();
+            const t = c.currentTime;
+            const osc = c.createOscillator();
+            const gain = c.createGain();
+
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(400 * pitch, t);
+            osc.frequency.exponentialRampToValueAtTime(150 * pitch, t + 0.02);
+
+            gain.gain.setValueAtTime(0.08, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.025);
+
+            osc.connect(gain);
+            gain.connect(c.destination);
+            osc.start(t);
+            osc.stop(t + 0.03);
+        }
+
+        function initGrid() {
+            pixelSize = 480 / resolution;
+            grid = Array.from({ length: resolution }, () => Array(resolution).fill(null));
+            history = [];
+            renderCanvas();
+        }
+
+        function saveState() {
+            if (history.length > 20) history.shift();
+            history.push(JSON.parse(JSON.stringify(grid)));
+        }
+
+        function renderCanvas() {
+            ctx.clearRect(0, 0, 480, 480);
+
+            // Draw painted pixels
+            for (let r = 0; r < resolution; r++) {
+                for (let c = 0; c < resolution; c++) {
+                    const color = grid[r][c];
+                    if (color) {
+                        ctx.fillStyle = color;
+                        ctx.fillRect(c * pixelSize, r * pixelSize, pixelSize, pixelSize);
+                    }
+                }
+            }
+
+            // Draw grid lines
+            if (showGrid) {
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+                ctx.lineWidth = 1;
+                for (let i = 0; i <= resolution; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(i * pixelSize, 0);
+                    ctx.lineTo(i * pixelSize, 480);
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.moveTo(0, i * pixelSize);
+                    ctx.lineTo(480, i * pixelSize);
+                    ctx.stroke();
+                }
+
+                // If mirror mode, draw vertical mirror guideline
+                if (isMirror) {
+                    ctx.strokeStyle = 'rgba(34, 166, 179, 0.5)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(240, 0);
+                    ctx.lineTo(240, 480);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        function getCellFromMouse(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const c = Math.floor(x / (rect.width / resolution));
+            const r = Math.floor(y / (rect.height / resolution));
+            return { r: Math.max(0, Math.min(r, resolution - 1)), c: Math.max(0, Math.min(c, resolution - 1)) };
+        }
+
+        function applyTool(r, c) {
+            if (currentTool === 'pencil') {
+                grid[r][c] = currentColor;
+                if (isMirror) {
+                    const mirrorC = resolution - 1 - c;
+                    grid[r][mirrorC] = currentColor;
+                }
+                playPixelPip(1 + (r / resolution));
+            } else if (currentTool === 'eraser') {
+                grid[r][c] = null;
+                if (isMirror) grid[r][resolution - 1 - c] = null;
+                playPixelPip(0.6);
+            } else if (currentTool === 'picker') {
+                const picked = grid[r][c];
+                if (picked) {
+                    currentColor = picked;
+                    customColorInput.value = picked;
+                    updateSwatchSelection();
+                    if (window.RelAudio) window.RelAudio.click();
+                }
+            } else if (currentTool === 'bucket') {
+                floodFill(r, c, grid[r][c], currentColor);
+                if (window.RelAudio) window.RelAudio.success();
+            }
+            renderCanvas();
+        }
+
+        function floodFill(startR, startC, targetColor, fillColor) {
+            if (targetColor === fillColor) return;
+            const queue = [[startR, startC]];
+            const visited = new Set();
+
+            while (queue.length > 0) {
+                const [r, c] = queue.pop();
+                const key = `${r},${c}`;
+                if (visited.has(key)) continue;
+                visited.add(key);
+
+                if (r < 0 || r >= resolution || c < 0 || c >= resolution) continue;
+                if (grid[r][c] !== targetColor) continue;
+
+                grid[r][c] = fillColor;
+
+                queue.push([r + 1, c], [r - 1, c], [r, c + 1], [r, c - 1]);
+            }
+        }
+
+        // Canvas Events
+        canvas.addEventListener('pointerdown', (e) => {
+            isDrawing = true;
+            canvas.setPointerCapture(e.pointerId);
+            saveState();
+            const { r, c } = getCellFromMouse(e);
+            applyTool(r, c);
+        });
+
+        canvas.addEventListener('pointermove', (e) => {
+            if (isDrawing && (currentTool === 'pencil' || currentTool === 'eraser')) {
+                const { r, c } = getCellFromMouse(e);
+                applyTool(r, c);
+            }
+        });
+
+        canvas.addEventListener('pointerup', (e) => {
+            isDrawing = false;
+            canvas.releasePointerCapture(e.pointerId);
+        });
+
+        // Swatches
+        function buildSwatches() {
+            swatchesGrid.innerHTML = '';
+            SWATCHES.forEach(color => {
+                const sw = document.createElement('div');
+                sw.className = `swatch-box ${color === currentColor ? 'active' : ''}`;
+                sw.style.backgroundColor = color;
+                sw.addEventListener('click', () => {
+                    currentColor = color;
+                    customColorInput.value = color;
+                    updateSwatchSelection();
+                    if (window.RelAudio) window.RelAudio.click();
+                });
+                swatchesGrid.appendChild(sw);
+            });
+        }
+
+        function updateSwatchSelection() {
+            document.querySelectorAll('.swatch-box').forEach(s => {
+                s.classList.toggle('active', s.style.backgroundColor === currentColor || s.dataset.color === currentColor);
+            });
+        }
+
+        customColorInput.addEventListener('input', (e) => {
+            currentColor = e.target.value;
+            updateSwatchSelection();
+        });
+
+        // Tools
+        const toolBtns = [
+            document.getElementById('tool-pencil'),
+            document.getElementById('tool-eraser'),
+            document.getElementById('tool-bucket'),
+            document.getElementById('tool-picker')
+        ];
+
+        toolBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                toolBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentTool = btn.dataset.tool;
+                if (window.RelAudio) window.RelAudio.click();
+            });
+        });
+
+        // Mirror
+        const mirrorBtn = document.getElementById('btn-mirror');
+        mirrorBtn.addEventListener('click', () => {
+            isMirror = !isMirror;
+            mirrorBtn.textContent = isMirror ? '🪞 MIRROR: ON' : '🪞 MIRROR: OFF';
+            mirrorBtn.classList.toggle('active', isMirror);
+            renderCanvas();
+            if (window.RelAudio) window.RelAudio.snap();
+        });
+
+        // Grid toggle
+        const gridBtn = document.getElementById('btn-grid-toggle');
+        gridBtn.addEventListener('click', () => {
+            showGrid = !showGrid;
+            gridBtn.textContent = showGrid ? '⌗ GRID: ON' : '⌗ GRID: OFF';
+            gridBtn.classList.toggle('active', showGrid);
+            renderCanvas();
+            if (window.RelAudio) window.RelAudio.click();
+        });
+
+        // CRT scanlines toggle
+        const crtBtn = document.getElementById('btn-scanlines-toggle');
+        crtBtn.addEventListener('click', () => {
+            const isVisible = scanlinesLayer.style.display !== 'none';
+            scanlinesLayer.style.display = isVisible ? 'none' : 'block';
+            crtBtn.textContent = isVisible ? '📺 CRT: OFF' : '📺 CRT: ON';
+            crtBtn.classList.toggle('active', !isVisible);
+            if (window.RelAudio) window.RelAudio.click();
+        });
+
+        // Undo
+        document.getElementById('btn-undo').addEventListener('click', () => {
+            if (history.length > 0) {
+                grid = history.pop();
+                renderCanvas();
+                if (window.RelAudio) window.RelAudio.pop();
+            }
+        });
+
+        // Clear
+        document.getElementById('btn-clear').addEventListener('click', () => {
+            if (confirm('Clear entire pixel canvas?')) {
+                saveState();
+                initGrid();
+                if (window.RelAudio) window.RelAudio.snap();
+            }
+        });
+
+        // Resolution Switcher
+        [
+            document.getElementById('btn-size-16'),
+            document.getElementById('btn-size-24'),
+            document.getElementById('btn-size-32')
+        ].forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('[data-res]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                resolution = parseInt(btn.dataset.res);
+                initGrid();
+                if (window.RelAudio) window.RelAudio.chirp(1400);
+            });
+        });
+
+        // Export Clean 512px PNG
+        document.getElementById('btn-export-png').addEventListener('click', () => {
+            const expCanvas = document.createElement('canvas');
+            expCanvas.width = 512;
+            expCanvas.height = 512;
+            const expCtx = expCanvas.getContext('2d');
+            expCtx.imageSmoothingEnabled = false;
+
+            const expPxSize = 512 / resolution;
+
+            for (let r = 0; r < resolution; r++) {
+                for (let c = 0; c < resolution; c++) {
+                    const color = grid[r][c];
+                    if (color) {
+                        expCtx.fillStyle = color;
+                        expCtx.fillRect(c * expPxSize, r * expPxSize, expPxSize, expPxSize);
+                    }
+                }
+            }
+
+            const link = document.createElement('a');
+            link.download = `pixel-sprite-${resolution}x${resolution}-${Date.now()}.png`;
+            link.href = expCanvas.toDataURL('image/png');
+            link.click();
+
+            if (window.RelAudio) window.RelAudio.success();
+            alert('Pixel sprite exported at 512x512!');
+        });
+
+        // Init
+        buildSwatches();
+        initGrid();
+    </script>
+</body>
+</html>

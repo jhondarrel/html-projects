@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modular Audio Visualizer // The Rel Works</title>
+    
+    <link rel="stylesheet" href="css/rel-core.css">
+
+    <style>
+        :root {
+            --synth-green: #00ff66;
+            --synth-orange: #ff793f;
+            --synth-blue: #3867d6;
+            --synth-pink: #ff3838;
+            --synth-glow: rgba(0, 255, 102, 0.4);
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 15%, #051c10 0%, #030d07 50%, #010503 100%);
+            min-height: 100vh;
+            color: #f0fdf4;
+        }
+
+        .synth-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: calc(100vh - var(--rel-hud-height));
+            padding: 30px 20px;
+        }
+
+        .synth-card {
+            background: linear-gradient(160deg, #091a10 0%, #040d07 60%, #020704 100%);
+            padding: 36px 42px;
+            border-radius: 24px;
+            border: 2px solid #143d22;
+            box-shadow: 
+                0 0 0 1px rgba(0, 255, 102, 0.3),
+                0 0 45px rgba(0, 255, 102, 0.15),
+                0 25px 60px rgba(0, 0, 0, 0.9);
+            width: 100%;
+            max-width: 960px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            position: relative;
+        }
+
+        /* Top Oscilloscope Neon Rim */
+        .synth-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 30px;
+            right: 30px;
+            height: 3px;
+            background: linear-gradient(90deg, #00ff66, #ff793f, #3867d6, #00ff66);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 0 16px rgba(0, 255, 102, 0.8);
+        }
+
+        /* Brand Header */
+        .brand-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1.5px solid rgba(0, 255, 102, 0.25);
+            padding-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .brand-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            border: 1.5px solid #00ff66;
+            box-shadow: 0 0 16px var(--synth-glow);
+            object-fit: cover;
+            background: #000;
+        }
+
+        .brand-text-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .synth-badge {
+            display: inline-block;
+            align-self: flex-start;
+            font-family: var(--rel-font-mono);
+            font-size: 0.62rem;
+            color: #00ff66;
+            background: rgba(0, 255, 102, 0.15);
+            padding: 2px 7px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            border: 1px solid rgba(0, 255, 102, 0.35);
+        }
+
+        .brand-title {
+            color: #ffffff;
+            font-family: var(--rel-font-display);
+            font-size: 1.45rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0;
+            line-height: 1.1;
+        }
+
+        .brand-subtitle {
+            color: #00ff66;
+            font-family: var(--rel-font-mono);
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 3px;
+            letter-spacing: 0.6px;
+        }
+
+        /* Oscilloscope Display Screen */
+        .scope-container {
+            position: relative;
+            background: #020704;
+            border: 2px solid #143d22;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.95), 0 0 20px rgba(0, 255, 102, 0.1);
+        }
+
+        /* CRT Raster Lines */
+        .scope-container::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.35) 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        #visualizer-canvas {
+            width: 100%;
+            height: 260px;
+            display: block;
+        }
+
+        /* Scope Header Status */
+        .scope-status-bar {
+            position: absolute;
+            top: 10px;
+            left: 16px;
+            right: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 3;
+            font-family: var(--rel-font-mono);
+            font-size: 0.72rem;
+            color: #00ff66;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        /* Mode & Waveform Selectors */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            background: #030a05;
+            padding: 18px;
+            border-radius: 14px;
+            border: 1.5px solid #14361e;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .control-group label {
+            font-family: var(--rel-font-mono);
+            font-size: 0.72rem;
+            color: #86efac;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+        }
+
+        select, input[type="range"] {
+            outline: none;
+        }
+
+        select {
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1.5px solid #1d4d2b;
+            background: #06140b;
+            color: #ffffff;
+            font-family: var(--rel-font-mono);
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        select:focus {
+            border-color: #00ff66;
+            box-shadow: 0 0 12px var(--synth-glow);
+        }
+
+        /* Piano / Synthesizer Keypad */
+        .synthesizer-keys {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+            justify-content: center;
+            background: #030805;
+            padding: 16px;
+            border-radius: 14px;
+            border: 1.5px solid #14361e;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
+        }
+
+        .synth-key {
+            flex: 1;
+            height: 90px;
+            background: linear-gradient(180deg, #163622 0%, #0a1f12 100%);
+            border: 1.5px solid #235233;
+            border-radius: 10px;
+            color: #ffffff;
+            font-family: var(--rel-font-mono);
+            font-size: 0.85rem;
+            font-weight: 800;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.08s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.15);
+            user-select: none;
+        }
+
+        .synth-key:hover {
+            border-color: #00ff66;
+            color: #00ff66;
+            box-shadow: 0 0 14px var(--synth-glow);
+        }
+
+        .synth-key:active, .synth-key.playing {
+            background: #00ff66;
+            color: #020704;
+            box-shadow: 0 0 20px #00ff66;
+            transform: translateY(3px);
+        }
+
+        /* Action Buttons */
+        .action-row {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 14px;
+            border-radius: 10px;
+            font-family: var(--rel-font-display);
+            font-size: 0.95rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+            outline: none;
+        }
+
+        .btn-demo {
+            background: linear-gradient(180deg, #1b6338 0%, #0d381e 100%);
+            color: #00ff66;
+            border: 1.5px solid rgba(0, 255, 102, 0.5);
+            box-shadow: 0 0 16px rgba(0, 255, 102, 0.25);
+        }
+
+        .btn-demo:hover {
+            background: #00ff66;
+            color: #020704;
+            box-shadow: 0 0 24px rgba(0, 255, 102, 0.7);
+        }
+
+        .btn-mic {
+            background: linear-gradient(180deg, #3d240d 0%, #211204 100%);
+            color: #ff793f;
+            border: 1.5px solid rgba(255, 121, 63, 0.5);
+        }
+
+        .btn-mic:hover {
+            background: #ff793f;
+            color: #080301;
+            box-shadow: 0 0 24px rgba(255, 121, 63, 0.7);
+        }
+
+        @media (max-width: 768px) {
+            .controls-grid { grid-template-columns: 1fr; }
+            .synthesizer-keys { gap: 4px; }
+            .synth-key { height: 70px; font-size: 0.7rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="synth-wrapper">
+        <div class="synth-card rel-tactile-surface">
+            
+            <div class="brand-header">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <img src="logo.png" alt="The Rel Works Logo" class="brand-logo" onerror="this.style.display='none'">
+                    <div class="brand-text-container">
+                        <span class="synth-badge">MODULAR OSCILLOSCOPE RIG</span>
+                        <h1 class="brand-title">ANALOG AUDIO VISUALIZER</h1>
+                        <p class="brand-subtitle">THE REL WORKS // REAL-TIME SPECTRUM & SYNTHESIZER</p>
+                    </div>
+                </div>
+
+                <div class="action-row">
+                    <button class="btn-action btn-demo" id="btn-demo">PLAY DEMO ARPEGGIO</button>
+                    <button class="btn-action btn-mic" id="btn-mic">ENGAGE MICROPHONE</button>
+                </div>
+            </div>
+
+            <!-- Visualizer Scope -->
+            <div class="scope-container">
+                <div class="scope-status-bar">
+                    <span id="scope-mode-text">PHOSPHOR WAVEFORM TRACE</span>
+                    <span id="scope-hz-text">44.1 kHz // 2048 FFT</span>
+                </div>
+                <canvas id="visualizer-canvas" width="900" height="260"></canvas>
+            </div>
+
+            <!-- Controls Grid -->
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label for="vis-style">Display Vector Mode</label>
+                    <select id="vis-style">
+                        <option value="wave">Oscilloscope Trace (Waveform)</option>
+                        <option value="bars">Spectrum Analyzer (EQ Bars)</option>
+                        <option value="radial">Radial Cyber-Bloom (Polar)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="synth-wave">Oscillator Waveform</label>
+                    <select id="synth-wave">
+                        <option value="sine">Sine Wave (Pure Tone)</option>
+                        <option value="sawtooth">Sawtooth (Rich Brass)</option>
+                        <option value="square">Square (8-Bit Pulse)</option>
+                        <option value="triangle">Triangle (Warm Flute)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="gain-slider">Oscillator Gain: <span id="gain-val">70</span>%</label>
+                    <input type="range" id="gain-slider" min="10" max="100" value="70">
+                </div>
+            </div>
+
+            <!-- Interactive Keyboard Keys -->
+            <div class="synthesizer-keys">
+                <div class="synth-key" data-note="261.63"><span>C4</span></div>
+                <div class="synth-key" data-note="293.66"><span>D4</span></div>
+                <div class="synth-key" data-note="329.63"><span>E4</span></div>
+                <div class="synth-key" data-note="349.23"><span>F4</span></div>
+                <div class="synth-key" data-note="392.00"><span>G4</span></div>
+                <div class="synth-key" data-note="440.00"><span>A4</span></div>
+                <div class="synth-key" data-note="493.88"><span>B4</span></div>
+                <div class="synth-key" data-note="523.25"><span>C5</span></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/rel-audio.js"></script>
+    <script src="js/rel-hud.js"></script>
+    <script>
+        const canvas = document.getElementById('visualizer-canvas');
+        const ctx = canvas.getContext('2d');
+        const visStyleSelect = document.getElementById('vis-style');
+        const synthWaveSelect = document.getElementById('synth-wave');
+        const gainSlider = document.getElementById('gain-slider');
+        const gainVal = document.getElementById('gain-val');
+        const btnDemo = document.getElementById('btn-demo');
+        const btnMic = document.getElementById('btn-mic');
+        const scopeModeText = document.getElementById('scope-mode-text');
+
+        let audioCtx = null;
+        let analyser = null;
+        let masterGain = null;
+        let demoInterval = null;
+        let activeOscillators = {};
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 2048;
+
+                masterGain = audioCtx.createGain();
+                masterGain.gain.value = 0.5;
+
+                masterGain.connect(analyser);
+                analyser.connect(audioCtx.destination);
+
+                renderVisualizer();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playNote(freq) {
+            initAudio();
+            stopNote(freq);
+
+            const osc = audioCtx.createOscillator();
+            const noteGain = audioCtx.createGain();
+
+            osc.type = synthWaveSelect.value;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+            const vol = (parseInt(gainSlider.value) / 100) * 0.4;
+            noteGain.gain.setValueAtTime(0.01, audioCtx.currentTime);
+            noteGain.gain.exponentialRampToValueAtTime(vol, audioCtx.currentTime + 0.04);
+
+            osc.connect(noteGain);
+            noteGain.connect(masterGain);
+
+            osc.start();
+            activeOscillators[freq] = { osc, gain: noteGain };
+        }
+
+        function stopNote(freq) {
+            if (activeOscillators[freq]) {
+                const { osc, gain } = activeOscillators[freq];
+                gain.gain.setValueAtTime(gain.gain.value, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.15);
+                setTimeout(() => {
+                    try { osc.stop(); osc.disconnect(); } catch(e){}
+                }, 160);
+                delete activeOscillators[freq];
+            }
+        }
+
+        // Attach touch & mouse events to piano keys
+        document.querySelectorAll('.synth-key').forEach(key => {
+            const freq = parseFloat(key.dataset.note);
+            
+            const startHandler = (e) => {
+                e.preventDefault();
+                key.classList.add('playing');
+                playNote(freq);
+            };
+
+            const stopHandler = (e) => {
+                e.preventDefault();
+                key.classList.remove('playing');
+                stopNote(freq);
+            };
+
+            key.addEventListener('mousedown', startHandler);
+            key.addEventListener('mouseup', stopHandler);
+            key.addEventListener('mouseleave', stopHandler);
+
+            key.addEventListener('touchstart', startHandler);
+            key.addEventListener('touchend', stopHandler);
+        });
+
+        // Demo Arpeggiator
+        const arpeggioNotes = [261.63, 329.63, 392.00, 523.25, 440.00, 349.23, 293.66, 392.00];
+        let isDemoPlaying = false;
+        let arpIndex = 0;
+
+        btnDemo.addEventListener('click', () => {
+            initAudio();
+            isDemoPlaying = !isDemoPlaying;
+
+            if (isDemoPlaying) {
+                btnDemo.innerText = "STOP ARPEGGIO";
+                btnDemo.style.background = "#ff4757";
+                btnDemo.style.color = "#ffffff";
+                btnDemo.style.borderColor = "#ff4757";
+
+                demoInterval = setInterval(() => {
+                    const freq = arpeggioNotes[arpIndex];
+                    playNote(freq);
+                    setTimeout(() => stopNote(freq), 180);
+                    arpIndex = (arpIndex + 1) % arpeggioNotes.length;
+                }, 220);
+            } else {
+                clearInterval(demoInterval);
+                btnDemo.innerText = "PLAY DEMO ARPEGGIO";
+                btnDemo.style.background = "";
+                btnDemo.style.color = "";
+                btnDemo.style.borderColor = "";
+                for (const f in activeOscillators) stopNote(f);
+            }
+        });
+
+        // Microphone Input
+        btnMic.addEventListener('click', async () => {
+            initAudio();
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const micSource = audioCtx.createMediaStreamSource(stream);
+                micSource.connect(analyser);
+                btnMic.innerText = "MIC ACTIVE 🎙️";
+                btnMic.style.borderColor = "#00ff66";
+                btnMic.style.color = "#00ff66";
+                if (window.RelAudio) window.RelAudio.success();
+            } catch (err) {
+                alert("Microphone permission denied or unavailable. Use the keyboard or demo synthesizer!");
+                if (window.RelAudio) window.RelAudio.error();
+            }
+        });
+
+        // Visualizer Render Loop
+        function renderVisualizer() {
+            requestAnimationFrame(renderVisualizer);
+            if (!analyser) return;
+
+            const mode = visStyleSelect.value;
+            const w = canvas.width;
+            const h = canvas.height;
+
+            ctx.fillStyle = "rgba(2, 7, 4, 0.25)";
+            ctx.fillRect(0, 0, w, h);
+
+            if (mode === 'wave') {
+                scopeModeText.innerText = "PHOSPHOR WAVEFORM TRACE";
+                const bufferLength = analyser.fftSize;
+                const dataArray = new Uint8Array(bufferLength);
+                analyser.getByteTimeDomainData(dataArray);
+
+                ctx.lineWidth = 2.5;
+                ctx.strokeStyle = "#00ff66";
+                ctx.shadowColor = "#00ff66";
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+
+                const sliceWidth = w / bufferLength;
+                let x = 0;
+
+                for (let i = 0; i < bufferLength; i++) {
+                    const v = dataArray[i] / 128.0;
+                    const y = (v * h) / 2;
+
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+
+                    x += sliceWidth;
+                }
+
+                ctx.lineTo(w, h / 2);
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+
+            } else if (mode === 'bars') {
+                scopeModeText.innerText = "FREQUENCY SPECTRUM BARS";
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                analyser.getByteFrequencyData(dataArray);
+
+                const barCount = 64;
+                const barWidth = (w / barCount) - 3;
+                let x = 0;
+
+                for (let i = 0; i < barCount; i++) {
+                    const sampleIdx = Math.floor(i * (bufferLength / barCount) * 0.7);
+                    const barHeight = (dataArray[sampleIdx] / 255) * (h - 20);
+
+                    const hue = 120 + (i / barCount) * 160;
+                    ctx.fillStyle = `hsl(${hue}, 100%, 55%)`;
+                    ctx.shadowColor = `hsl(${hue}, 100%, 55%)`;
+                    ctx.shadowBlur = 8;
+
+                    ctx.fillRect(x, h - barHeight, barWidth, barHeight);
+                    x += barWidth + 3;
+                }
+                ctx.shadowBlur = 0;
+
+            } else if (mode === 'radial') {
+                scopeModeText.innerText = "RADIAL CYBER-BLOOM";
+                const bufferLength = 64;
+                const dataArray = new Uint8Array(bufferLength);
+                analyser.getByteFrequencyData(dataArray);
+
+                const cx = w / 2;
+                const cy = h / 2;
+                const baseRadius = 45;
+
+                ctx.beginPath();
+                ctx.lineWidth = 2.5;
+                ctx.strokeStyle = "#ff793f";
+                ctx.shadowColor = "#ff793f";
+                ctx.shadowBlur = 12;
+
+                for (let i = 0; i < bufferLength; i++) {
+                    const angle = (i / bufferLength) * Math.PI * 2;
+                    const amp = (dataArray[i] / 255) * 60;
+                    const r = baseRadius + amp;
+
+                    const x = cx + Math.cos(angle) * r;
+                    const y = cy + Math.sin(angle) * r;
+
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+
+                ctx.closePath();
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        gainSlider.addEventListener('input', (e) => {
+            gainVal.innerText = e.target.value;
+            if (masterGain) masterGain.gain.value = (parseInt(e.target.value) / 100) * 0.6;
+        });
+
+        // Initialize display frame
+        renderVisualizer();
+    </script>
+</body>
+</html>

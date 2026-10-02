@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synthwave Outrun // Correlation Analyzer</title>
+    
+    <link rel="stylesheet" href="css/rel-core.css">
+
+    <style>
+        body {
+            background: radial-gradient(circle at 50% 15%, #240a2b 0%, #120517 50%, #06010a 100%);
+            min-height: 100vh;
+            color: #fdf2f8;
+        }
+
+        .analyzer-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: calc(100vh - var(--rel-hud-height));
+            padding: 30px 20px;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 1120px;
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 25px;
+        }
+
+        /* --- Synthwave Outrun Card Chassis --- */
+        .card {
+            background: linear-gradient(160deg, #1c0924 0%, #110517 60%, #08020c 100%);
+            padding: 30px 34px;
+            border-radius: 22px;
+            box-shadow: 
+                0 0 0 1px rgba(255, 0, 127, 0.3),
+                0 0 45px rgba(255, 0, 127, 0.15),
+                0 25px 60px rgba(0, 0, 0, 0.9);
+            border: 2px solid #381245;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+        }
+
+        /* Outrun neon top accent bar */
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 25px;
+            right: 25px;
+            height: 3px;
+            background: linear-gradient(90deg, #ff007f, #00f0ff, #ff9f43, #ff007f);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 0 14px rgba(255, 0, 127, 0.8);
+        }
+
+        .full-width {
+            grid-column: span 2;
+        }
+
+        /* Brand Header */
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 16px; 
+            border-bottom: 1.5px solid rgba(255, 0, 127, 0.25);
+            padding-bottom: 18px;
+        }
+
+        .brand-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            border: 1.5px solid #ff007f;
+            box-shadow: 0 0 16px rgba(255, 0, 127, 0.4);
+            object-fit: cover;
+            background: #000;
+        }
+
+        .brand-text-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .synth-badge {
+            display: inline-block;
+            align-self: flex-start;
+            font-family: var(--rel-font-mono);
+            font-size: 0.62rem;
+            color: #ff007f;
+            background: rgba(255, 0, 127, 0.15);
+            padding: 2px 7px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            border: 1px solid rgba(255, 0, 127, 0.35);
+        }
+
+        .brand-title {
+            color: #ffffff;
+            font-family: var(--rel-font-display);
+            font-size: 1.35rem; 
+            font-weight: 900;
+            text-transform: uppercase;
+            margin: 0;
+            line-height: 1.1;
+            letter-spacing: 1px;
+        }
+
+        .brand-subtitle {
+            color: #00f0ff; 
+            font-family: var(--rel-font-mono);
+            font-size: 0.78rem; 
+            font-weight: 600;
+            margin-top: 3px;
+            letter-spacing: 0.6px;
+        }
+
+        /* Controls */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 12px;
+            align-items: end;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-family: var(--rel-font-mono);
+            font-size: 0.75rem;
+            color: #f472b6;
+            font-weight: 700;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input {
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1.5px solid #361542;
+            background-color: #09020d;
+            color: white;
+            font-family: var(--rel-font-mono);
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        input:focus { 
+            border-color: #ff007f; 
+            box-shadow: 0 0 16px rgba(255, 0, 127, 0.4);
+        }
+        
+        .file-upload {
+            font-size: 0.8rem;
+            color: #f9a8d4;
+            margin-top: 6px;
+            background: #09020d;
+            border: 1.5px dashed rgba(255, 0, 127, 0.4);
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 10px;
+        }
+
+        /* Buttons */
+        .btn {
+            background: rgba(255, 0, 127, 0.15);
+            color: #ff007f;
+            border: 1.5px solid rgba(255, 0, 127, 0.5);
+            padding: 11px 20px;
+            border-radius: 10px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.9rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            outline: none;
+        }
+
+        .btn:hover { 
+            background: #ff007f; 
+            color: #ffffff; 
+            box-shadow: 0 0 18px rgba(255, 0, 127, 0.6); 
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-calc {
+            width: 100%;
+            padding: 15px;
+            font-family: var(--rel-font-display);
+            font-size: 1.1rem;
+            background: linear-gradient(180deg, #0e3d24 0%, #062615 100%);
+            color: #2ed573;
+            border: 1.5px solid rgba(46, 213, 115, 0.5);
+            border-radius: 12px;
+            letter-spacing: 1.5px;
+            font-weight: 900;
+            box-shadow: 0 0 25px rgba(46, 213, 115, 0.25);
+        }
+        .btn-calc:hover { 
+            background: #2ed573; 
+            color: #030805; 
+            box-shadow: 0 0 30px rgba(46, 213, 115, 0.7); 
+            transform: translateY(-2px);
+        }
+
+        .error-msg {
+            color: #ff4757;
+            font-family: var(--rel-font-mono);
+            font-size: 0.78rem;
+            font-weight: 700;
+            min-height: 18px;
+        }
+
+        /* Table */
+        .table-container {
+            max-height: 220px;
+            overflow-y: auto;
+            border: 1.5px solid #361542;
+            border-radius: 12px;
+            background-color: #08020c;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--rel-font-mono);
+            font-size: 0.85rem;
+        }
+
+        th, td {
+            padding: 9px 12px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        th {
+            background-color: #1a0622;
+            color: #00f0ff;
+            position: sticky;
+            top: 0;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-weight: 800;
+        }
+
+        td { color: #fce7f3; }
+
+        /* Results Panel */
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .result-box {
+            background-color: #0c0312;
+            border: 1.5px solid #2d0e38;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .result-box.full { 
+            grid-column: span 2; 
+            background: linear-gradient(145deg, #22062b 0%, #120317 100%);
+            border: 1.5px solid rgba(255, 0, 127, 0.5);
+            box-shadow: 0 0 25px rgba(255, 0, 127, 0.15);
+        }
+
+        .res-val {
+            font-family: var(--rel-font-mono);
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: #ff007f;
+            margin-bottom: 4px;
+            text-shadow: 0 0 14px rgba(255, 0, 127, 0.5);
+        }
+
+        .res-label {
+            font-family: var(--rel-font-mono);
+            font-size: 0.72rem;
+            color: #00f0ff;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-weight: 700;
+        }
+
+        /* Canvas (Scatter Plot) */
+        #plotCanvas {
+            width: 100%;
+            background-color: #06010a;
+            border: 1.5px solid #361542;
+            border-radius: 14px;
+            margin-top: 10px;
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.9);
+        }
+
+        @media (max-width: 800px) {
+            .app-container { grid-template-columns: 1fr; }
+            .card.full-width { grid-column: span 1; }
+            .controls-grid { grid-template-columns: 1fr 1fr; }
+            .controls-grid .btn { grid-column: span 2; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="analyzer-wrapper">
+        <div class="app-container">
+            
+            <div class="card rel-tactile-surface">
+                <div class="brand-header">
+                    <img src="logo.png" alt="The Rel Works Logo" class="brand-logo" onerror="this.style.display='none'">
+                    <div class="brand-text-container">
+                        <span class="synth-badge">SYNTHWAVE STATS RIG</span>
+                        <h1 class="brand-title">CORRELATION ANALYZER</h1>
+                        <p class="brand-subtitle">THE REL WORKS // STATISTICAL TELEMETRY & REGRESSION RIG</p>
+                    </div>
+                </div>
+
+                <div class="controls-grid">
+                    <div class="control-group">
+                        <label for="x-input">X Variable</label>
+                        <input type="number" id="x-input" step="any" placeholder="e.g. 2.5">
+                    </div>
+                    <div class="control-group">
+                        <label for="y-input">Y Variable</label>
+                        <input type="number" id="y-input" step="any" placeholder="e.g. 5.1">
+                    </div>
+                    <button class="btn" id="btn-add">Add</button>
+                </div>
+
+                <div class="error-msg" id="error-msg"></div>
+
+                <div class="control-group">
+                    <label>Or Upload CSV Data Matrix (X, Y pairs):</label>
+                    <input type="file" id="file-input" accept=".csv" class="file-upload">
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>X (Independent)</th>
+                                <th>Y (Dependent)</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-body"></tbody>
+                    </table>
+                </div>
+
+                <button class="btn btn-calc" id="btn-calc" disabled>EXECUTE REGRESSION ANALYSIS</button>
+                <button class="btn" id="btn-clear" style="background-color: transparent; border: 1.5px solid rgba(255, 0, 127, 0.4); color: #ff007f;">CLEAR TELEMETRY DATA</button>
+            </div>
+
+            <div class="card rel-tactile-surface">
+                <div class="brand-header" style="border: none; padding-bottom: 0;">
+                    <h2 class="brand-title" style="font-size: 1.2rem;">STATISTICAL METRICS</h2>
+                </div>
+                
+                <div class="results-grid">
+                    <div class="result-box">
+                        <div class="res-val" id="res-mean-x">--</div>
+                        <div class="res-label">Mean (X)</div>
+                    </div>
+                    <div class="result-box">
+                        <div class="res-val" id="res-mean-y">--</div>
+                        <div class="res-label">Mean (Y)</div>
+                    </div>
+                    <div class="result-box">
+                        <div class="res-val" id="res-std-x">--</div>
+                        <div class="res-label">Std Deviation (X)</div>
+                    </div>
+                    <div class="result-box">
+                        <div class="res-val" id="res-std-y">--</div>
+                        <div class="res-label">Std Deviation (Y)</div>
+                    </div>
+                    
+                    <div class="result-box full">
+                        <div class="res-val" id="res-pearson" style="font-size: 2.3rem;">--</div>
+                        <div class="res-label">Pearson Correlation Coefficient (r)</div>
+                        <div id="res-interpretation" style="margin-top: 8px; font-family: var(--rel-font-mono); font-size: 0.88rem; font-weight: 800; color: #00f0ff;">Awaiting Calculation</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card full-width rel-tactile-surface">
+                <div class="brand-header" style="border: none; padding-bottom: 0;">
+                    <h2 class="brand-title" style="font-size: 1.2rem;">SCATTER PLOT & LINEAR REGRESSION VECTOR</h2>
+                </div>
+                <canvas id="plotCanvas" width="900" height="400"></canvas>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/rel-audio.js"></script>
+    <script src="js/rel-hud.js"></script>
+    <script>
+        // DOM Elements
+        const xInput = document.getElementById('x-input');
+        const yInput = document.getElementById('y-input');
+        const btnAdd = document.getElementById('btn-add');
+        const btnCalc = document.getElementById('btn-calc');
+        const btnClear = document.getElementById('btn-clear');
+        const fileInput = document.getElementById('file-input');
+        const errorMsg = document.getElementById('error-msg');
+        const dataBody = document.getElementById('data-body');
+        const canvas = document.getElementById('plotCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Results Elements
+        const elMeanX = document.getElementById('res-mean-x');
+        const elMeanY = document.getElementById('res-mean-y');
+        const elStdX = document.getElementById('res-std-x');
+        const elStdY = document.getElementById('res-std-y');
+        const elPearson = document.getElementById('res-pearson');
+        const elInterp = document.getElementById('res-interpretation');
+
+        // Application State
+        let points = [
+            { id: 1, x: 1, y: 2 },
+            { id: 2, x: 2, y: 3 },
+            { id: 3, x: 3, y: 2.5 },
+            { id: 4, x: 4, y: 4 },
+            { id: 5, x: 5, y: 4.5 }
+        ];
+
+        function showError(msg) {
+            errorMsg.innerText = msg;
+            btnAdd.disabled = true;
+        }
+
+        function clearError() {
+            errorMsg.innerText = '';
+            btnAdd.disabled = false;
+        }
+
+        function validateInputs() {
+            if (xInput.value === '' || yInput.value === '') {
+                showError('Warning: Both observation fields required.');
+                return false;
+            }
+            if (isNaN(parseFloat(xInput.value)) || isNaN(parseFloat(yInput.value))) {
+                showError('Warning: Observation values must be valid numbers.');
+                return false;
+            }
+            clearError();
+            return true;
+        }
+
+        xInput.addEventListener('input', validateInputs);
+        yInput.addEventListener('input', validateInputs);
+
+        function updateTable() {
+            dataBody.innerHTML = '';
+            points.forEach(pt => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${pt.x}</td>
+                    <td>${pt.y}</td>
+                    <td><button onclick="removePoint(${pt.id})" style="background:none;border:none;color:#ff007f;cursor:pointer;font-size:1.1rem;font-weight:bold;">✖</button></td>
+                `;
+                dataBody.appendChild(tr);
+            });
+
+            if (points.length < 2) {
+                btnCalc.disabled = true;
+                showError("Minimum 2 observation points required.");
+            } else {
+                btnCalc.disabled = false;
+                if(errorMsg.innerText.includes("Minimum")) clearError();
+            }
+        }
+
+        function removePoint(id) {
+            points = points.filter(p => p.id !== id);
+            updateTable();
+            if (window.RelAudio) window.RelAudio.click();
+        }
+
+        btnAdd.addEventListener('click', () => {
+            if (!validateInputs()) return;
+            points.push({
+                id: Date.now(),
+                x: parseFloat(xInput.value),
+                y: parseFloat(yInput.value)
+            });
+            xInput.value = '';
+            yInput.value = '';
+            xInput.focus();
+            updateTable();
+            if (window.RelAudio) window.RelAudio.chirp(1200);
+        });
+
+        btnClear.addEventListener('click', () => {
+            points = [];
+            resetResults();
+            clearCanvas();
+            updateTable();
+            if (window.RelAudio) window.RelAudio.snap();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const text = evt.target.result;
+                const lines = text.split(/\r?\n/);
+                
+                lines.forEach(line => {
+                    const parts = line.split(',');
+                    if (parts.length >= 2) {
+                        const vx = parseFloat(parts[0].trim());
+                        const vy = parseFloat(parts[1].trim());
+                        if (!isNaN(vx) && !isNaN(vy)) {
+                            points.push({ id: Math.random(), x: vx, y: vy });
+                        }
+                    }
+                });
+                updateTable();
+                fileInput.value = '';
+                if (window.RelAudio) window.RelAudio.success();
+            };
+            reader.readAsText(file);
+        });
+
+        function calcMean(arr) {
+            const sum = arr.reduce((acc, val) => acc + val, 0);
+            return sum / arr.length;
+        }
+
+        function calcSampleStdDev(arr, mean) {
+            const variance = arr.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / (arr.length - 1);
+            return Math.sqrt(variance);
+        }
+
+        btnCalc.addEventListener('click', () => {
+            const n = points.length;
+            if (n < 2) return;
+
+            const xs = points.map(p => p.x);
+            const ys = points.map(p => p.y);
+
+            const meanX = calcMean(xs);
+            const meanY = calcMean(ys);
+
+            const stdX = calcSampleStdDev(xs, meanX);
+            const stdY = calcSampleStdDev(ys, meanY);
+
+            let num = 0;
+            let denX = 0;
+            let denY = 0;
+
+            for (let i = 0; i < n; i++) {
+                const dx = xs[i] - meanX;
+                const dy = ys[i] - meanY;
+                num += (dx * dy);
+                denX += (dx * dx);
+                denY += (dy * dy);
+            }
+
+            let r = 0;
+            if (denX !== 0 && denY !== 0) {
+                r = num / Math.sqrt(denX * denY);
+            }
+
+            let m = 0;
+            let b = meanY;
+            if (stdX !== 0 && stdY !== 0) {
+                m = r * (stdY / stdX);
+                b = meanY - (m * meanX);
+            }
+
+            elMeanX.innerText = meanX.toFixed(3);
+            elMeanY.innerText = meanY.toFixed(3);
+            elStdX.innerText = stdX.toFixed(3);
+            elStdY.innerText = stdY.toFixed(3);
+            elPearson.innerText = isNaN(r) ? "0.000" : r.toFixed(4);
+
+            const absR = Math.abs(r);
+            if (isNaN(absR) || absR < 0.3) {
+                elInterp.innerText = "NO CORRELATION (WEAK VARIANCE)";
+                elInterp.style.color = "#a855f7";
+            } else if (absR <= 0.7) {
+                elInterp.innerText = "MODERATE CORRELATION DETECTED";
+                elInterp.style.color = "#00f0ff";
+            } else {
+                elInterp.innerText = "STRONG CORRELATION CONFIRMED";
+                elInterp.style.color = "#2ed573";
+            }
+
+            drawPlot(xs, ys, m, b);
+            if (window.RelAudio) window.RelAudio.success();
+        });
+
+        function resetResults() {
+            elMeanX.innerText = '--';
+            elMeanY.innerText = '--';
+            elStdX.innerText = '--';
+            elStdY.innerText = '--';
+            elPearson.innerText = '--';
+            elInterp.innerText = 'Awaiting Calculation';
+            elInterp.style.color = '#00f0ff';
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function drawPlot(xs, ys, slope, intercept) {
+            clearCanvas();
+            
+            const pad = 50;
+            const w = canvas.width - pad * 2;
+            const h = canvas.height - pad * 2;
+
+            const minX = Math.min(...xs);
+            const maxX = Math.max(...xs);
+            const minY = Math.min(...ys);
+            const maxY = Math.max(...ys);
+
+            const rangeX = (maxX - minX) === 0 ? 1 : (maxX - minX);
+            const rangeY = (maxY - minY) === 0 ? 1 : (maxY - minY);
+
+            const mapX = (x) => pad + ((x - minX) / rangeX) * w;
+            const mapY = (y) => canvas.height - pad - ((y - minY) / rangeY) * h;
+
+            // Synthwave Outrun Grid Lines
+            ctx.strokeStyle = "rgba(0, 240, 255, 0.08)";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            for (let i = 0; i <= 10; i++) {
+                const gx = pad + (w / 10) * i;
+                const gy = pad + (h / 10) * i;
+                ctx.moveTo(gx, pad);
+                ctx.lineTo(gx, canvas.height - pad);
+                ctx.moveTo(pad, gy);
+                ctx.lineTo(canvas.width - pad, gy);
+            }
+            ctx.stroke();
+
+            // Draw Axes in Outrun Magenta
+            ctx.beginPath();
+            ctx.strokeStyle = "#ff007f";
+            ctx.lineWidth = 2;
+            ctx.moveTo(pad, canvas.height - pad);
+            ctx.lineTo(canvas.width - pad, canvas.height - pad);
+            ctx.moveTo(pad, pad);
+            ctx.lineTo(pad, canvas.height - pad);
+            ctx.stroke();
+
+            // Draw Scatter Points with neon bloom
+            for (let i = 0; i < xs.length; i++) {
+                const cx = mapX(xs[i]);
+                const cy = mapY(ys[i]);
+                
+                ctx.beginPath();
+                ctx.arc(cx, cy, 9, 0, Math.PI * 2);
+                ctx.fillStyle = "rgba(255, 0, 127, 0.35)";
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+                ctx.fillStyle = "#00f0ff";
+                ctx.shadowColor = "#00f0ff";
+                ctx.shadowBlur = 10;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+
+            // Draw Linear Regression Vector Line
+            if (!isNaN(slope)) {
+                const startY = slope * minX + intercept;
+                const endY = slope * maxX + intercept;
+
+                ctx.beginPath();
+                ctx.strokeStyle = "#ff007f";
+                ctx.lineWidth = 3.5;
+                ctx.shadowColor = "#ff007f";
+                ctx.shadowBlur = 14;
+                ctx.setLineDash([8, 6]); 
+                
+                ctx.moveTo(mapX(minX), mapY(startY));
+                ctx.lineTo(mapX(maxX), mapY(endY));
+                ctx.stroke();
+                
+                ctx.setLineDash([]);
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        updateTable();
+    </script>
+</body>
+</html>

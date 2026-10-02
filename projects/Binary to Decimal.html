@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitwise Cyberdeck // Binary to Decimal</title>
+    
+    <link rel="stylesheet" href="css/rel-core.css">
+
+    <style>
+        :root {
+            --term-bg: #040805;
+            --term-card: #09120c;
+            --term-border: #1a3822;
+            --term-lime: #2ed573;
+            --term-lime-glow: rgba(46, 213, 115, 0.4);
+            --term-text: #e6ffed;
+            --term-dim: #487352;
+            --term-input-bg: #030704;
+        }
+
+        body.dark {
+            --term-bg: #030604;
+            --term-card: #070e09;
+            --term-border: #16331e;
+            --term-lime: #2ed573;
+            --term-lime-glow: rgba(46, 213, 115, 0.45);
+            --term-text: #dcfce7;
+            --term-dim: #3f6848;
+            --term-input-bg: #020503;
+        }
+
+        body:not(.dark) {
+            --term-bg: #f0f7f2;
+            --term-card: #ffffff;
+            --term-border: #c3e6cb;
+            --term-lime: #10ac84;
+            --term-lime-glow: rgba(16, 172, 132, 0.25);
+            --term-text: #1a2e1d;
+            --term-dim: #608668;
+            --term-input-bg: #f8faf8;
+        }
+
+        body {
+            background-color: var(--term-bg);
+            background-image: 
+                radial-gradient(ellipse at 50% 10%, rgba(46, 213, 115, 0.08) 0%, transparent 60%),
+                linear-gradient(rgba(46, 213, 115, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(46, 213, 115, 0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 30px 30px, 30px 30px;
+            min-height: 100vh;
+            color: var(--term-text);
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .converter-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - var(--rel-hud-height));
+            padding: 30px 20px;
+        }
+
+        /* --- Hacker Cyberdeck Chassis --- */
+        .converter-card {
+            background: var(--term-card);
+            padding: 36px 38px;
+            border-radius: 20px;
+            border: 2px solid var(--term-border);
+            box-shadow: 
+                0 0 0 1px rgba(46, 213, 115, 0.2),
+                0 0 40px rgba(46, 213, 115, 0.12),
+                0 25px 60px rgba(0, 0, 0, 0.85);
+            width: 100%;
+            max-width: 540px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        /* Brand Header */
+        .brand-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            gap: 15px; 
+            border-bottom: 1.5px solid var(--term-border);
+            padding-bottom: 18px;
+        }
+
+        .brand-logo {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            border: 1.5px solid var(--term-lime);
+            box-shadow: 0 0 14px var(--term-lime-glow);
+            object-fit: cover;
+            background: #000;
+        }
+
+        .brand-text-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cyber-badge {
+            display: inline-block;
+            align-self: flex-start;
+            font-family: var(--rel-font-mono);
+            font-size: 0.62rem;
+            color: var(--term-lime);
+            background: rgba(46, 213, 115, 0.12);
+            padding: 2px 7px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            border: 1px solid rgba(46, 213, 115, 0.3);
+        }
+
+        .brand-title {
+            color: var(--term-text);
+            font-family: var(--rel-font-display);
+            font-size: 1.35rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            line-height: 1.1;
+        }
+
+        .brand-subtitle {
+            color: var(--term-lime);
+            font-family: var(--rel-font-mono);
+            font-size: 0.78rem;
+            letter-spacing: 0.8px;
+            margin-top: 3px;
+        }
+
+        .theme-toggle {
+            padding: 8px 14px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            border: 1.5px solid var(--term-border);
+            background: rgba(46, 213, 115, 0.08);
+            color: var(--term-lime);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle:hover {
+            border-color: var(--term-lime);
+            box-shadow: 0 0 14px var(--term-lime-glow);
+            transform: scale(1.05);
+        }
+
+        /* --- 8-Bit Interactive DIP Switch Register --- */
+        .bit-matrix-panel {
+            background: var(--term-input-bg);
+            border: 1.5px solid var(--term-border);
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 24px;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.6);
+        }
+
+        .bit-matrix-label {
+            font-family: var(--rel-font-mono);
+            font-size: 0.72rem;
+            color: var(--term-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+        }
+
+        .bus-active-indicator {
+            color: var(--term-lime);
+            font-weight: 700;
+        }
+
+        .bit-cells {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 7px;
+        }
+
+        .bit-cell {
+            background: linear-gradient(180deg, #131c15 0%, #080d09 100%);
+            border: 1.5px solid #233727;
+            border-radius: 8px;
+            padding: 10px 4px 8px 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: all 0.12s ease;
+            position: relative;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
+            user-select: none;
+        }
+
+        .bit-cell:hover {
+            border-color: var(--term-lime);
+            transform: translateY(-2px);
+        }
+
+        .bit-cell:active {
+            transform: translateY(2px);
+        }
+
+        .bit-val {
+            font-family: var(--rel-font-mono);
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #3b5340;
+            transition: all 0.15s ease;
+        }
+
+        .bit-weight {
+            font-family: var(--rel-font-mono);
+            font-size: 0.62rem;
+            color: var(--term-dim);
+            font-weight: 600;
+        }
+
+        /* Active DIP switch state */
+        .bit-cell.active {
+            background: linear-gradient(180deg, #0d381c 0%, #061c0e 100%);
+            border-color: var(--term-lime);
+            box-shadow: 
+                0 0 16px var(--term-lime-glow),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .bit-cell.active .bit-val {
+            color: var(--term-lime);
+            text-shadow: 0 0 12px var(--term-lime);
+        }
+
+        .bit-cell.active .bit-weight {
+            color: #bbf7d0;
+        }
+
+        /* Input Controls */
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            font-family: var(--rel-font-mono);
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--term-lime);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 18px;
+            font-family: var(--rel-font-mono);
+            font-size: 1.25rem;
+            font-weight: 600;
+            border: 1.5px solid var(--term-border);
+            border-radius: 10px;
+            background: var(--term-input-bg);
+            color: var(--term-text);
+            transition: all 0.25s ease;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--term-lime);
+            box-shadow: 0 0 0 3px rgba(46, 213, 115, 0.15), 0 0 20px var(--term-lime-glow);
+        }
+
+        input[readonly] {
+            background: var(--term-input-bg);
+            color: #00d2d3;
+            border-color: rgba(0, 210, 211, 0.35);
+            text-shadow: 0 0 10px rgba(0, 210, 211, 0.4);
+            cursor: default;
+        }
+
+        .error {
+            color: #ff4757;
+            font-family: var(--rel-font-mono);
+            font-size: 0.8rem;
+            margin-top: 8px;
+            display: none; 
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* Telemetry Readouts (Hex & Octal) */
+        .telemetry-readouts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+
+        .readout-box {
+            background: var(--term-input-bg);
+            border: 1px solid var(--term-border);
+            border-radius: 10px;
+            padding: 11px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--rel-font-mono);
+        }
+
+        .readout-label {
+            font-size: 0.72rem;
+            color: var(--term-dim);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .readout-val {
+            font-size: 1rem;
+            color: #ffa502;
+            font-weight: 700;
+        }
+
+        .clock-display {
+            text-align: center;
+            color: var(--term-dim);
+            font-size: 0.75rem;
+            margin-top: 20px;
+            font-family: var(--rel-font-mono);
+            background: var(--term-input-bg);
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--term-border);
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="converter-wrapper">
+        <div class="converter-card rel-tactile-surface">
+            
+            <div class="brand-header">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <img src="logo.png" alt="The Rel Works Logo" class="brand-logo" onerror="this.style.display='none'">
+                    <div class="brand-text-container">
+                        <span class="cyber-badge">MATRIX HARDWARE REG</span>
+                        <div class="brand-title">BITWISE CYBERDECK</div>
+                        <div class="brand-subtitle">THE REL WORKS // BINARY TO DECIMAL TRANSLATOR</div>
+                    </div>
+                </div>
+                <button id="themeToggleBtn" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">☀️</button>
+            </div>
+
+            <!-- Visual 8-Bit Hardware Register -->
+            <div class="bit-matrix-panel">
+                <div class="bit-matrix-label">
+                    <span>8-BIT DIP SWITCH REGISTER</span>
+                    <span id="bus-state-label" class="bus-active-indicator">BUS: STANDBY</span>
+                </div>
+                <div class="bit-cells" id="bit-cells-grid">
+                    <div class="bit-cell" onclick="toggleBit(7)"><span class="bit-val">0</span><span class="bit-weight">128</span></div>
+                    <div class="bit-cell" onclick="toggleBit(6)"><span class="bit-val">0</span><span class="bit-weight">64</span></div>
+                    <div class="bit-cell" onclick="toggleBit(5)"><span class="bit-val">0</span><span class="bit-weight">32</span></div>
+                    <div class="bit-cell" onclick="toggleBit(4)"><span class="bit-val">0</span><span class="bit-weight">16</span></div>
+                    <div class="bit-cell" onclick="toggleBit(3)"><span class="bit-val">0</span><span class="bit-weight">8</span></div>
+                    <div class="bit-cell" onclick="toggleBit(2)"><span class="bit-val">0</span><span class="bit-weight">4</span></div>
+                    <div class="bit-cell" onclick="toggleBit(1)"><span class="bit-val">0</span><span class="bit-weight">2</span></div>
+                    <div class="bit-cell" onclick="toggleBit(0)"><span class="bit-val">0</span><span class="bit-weight">1</span></div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="binaryInput">Binary Input (Base 2):</label>
+                <input type="text" id="binaryInput" placeholder="e.g., 101011" oninput="convertBinary()">
+                <div class="error" id="errorMsg">⚠️ Syntax Error: Input requires binary symbols ('0' or '1') only.</div>
+            </div>
+
+            <div class="input-group">
+                <label for="decimalOutput">Decimal Output (Base 10):</label>
+                <input type="text" id="decimalOutput" placeholder="0" readonly>
+            </div>
+
+            <!-- Telemetry readout for Hex & Octal -->
+            <div class="telemetry-readouts">
+                <div class="readout-box">
+                    <span class="readout-label">HEXADECIMAL:</span>
+                    <span class="readout-val" id="hexOutput">0x0</span>
+                </div>
+                <div class="readout-box">
+                    <span class="readout-label">OCTAL:</span>
+                    <span class="readout-val" id="octOutput">0o0</span>
+                </div>
+            </div>
+
+            <div class="clock-display">
+                <span style="color: var(--term-lime);">STATUS: READY</span>
+                <span id="clock">--:--:--</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/rel-audio.js"></script>
+    <script src="js/rel-hud.js"></script>
+    <script>
+        // --- Clock Logic ---
+        const clockEl = document.getElementById('clock');
+
+        function updateClock() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            if (clockEl) clockEl.innerText = `${dateStr} | ${timeStr}`;
+        }
+        
+        setInterval(updateClock, 1000);
+        updateClock(); 
+
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+
+        function applyTheme(theme) {
+            document.body.classList.toggle('dark', theme === 'dark');
+            if (themeToggleBtn) {
+                themeToggleBtn.innerText = theme === 'dark' ? '🌙' : '☀️';
+                themeToggleBtn.setAttribute('aria-label', theme === 'dark' ? 'Dark mode active' : 'Light mode active');
+            }
+            localStorage.setItem('theme', theme);
+        }
+
+        function toggleTheme() {
+            const nextTheme = document.body.classList.contains('dark') ? 'light' : 'dark';
+            applyTheme(nextTheme);
+            if (window.RelAudio) window.RelAudio.click();
+        }
+
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        applyTheme(savedTheme);
+
+        // --- Conversion Logic ---
+        function updateBitMatrix(binaryStr) {
+            const cells = document.querySelectorAll('.bit-cell');
+            const busLabel = document.getElementById('bus-state-label');
+            const clean = binaryStr.slice(-8).padStart(8, '0');
+
+            cells.forEach((cell, idx) => {
+                const bit = clean.charAt(idx);
+                const valEl = cell.querySelector('.bit-val');
+                if (valEl) valEl.textContent = bit;
+                if (bit === '1') {
+                    cell.classList.add('active');
+                } else {
+                    cell.classList.remove('active');
+                }
+            });
+
+            if (busLabel) {
+                busLabel.textContent = binaryStr ? `BUS: ACTIVE (${binaryStr.length} BITS)` : 'BUS: STANDBY';
+            }
+        }
+
+        function toggleBit(power) {
+            const input = document.getElementById('binaryInput');
+            let bin = input.value || '0';
+            let num = parseInt(bin, 2) || 0;
+            num ^= (1 << power);
+            input.value = num.toString(2);
+            convertBinary();
+            if (window.RelAudio) window.RelAudio.snap();
+        }
+
+        function convertBinary() {
+            const binaryStr = document.getElementById('binaryInput').value.trim();
+            const errorEl = document.getElementById('errorMsg');
+            const outputEl = document.getElementById('decimalOutput');
+            const hexEl = document.getElementById('hexOutput');
+            const octEl = document.getElementById('octOutput');
+
+            if (binaryStr === '') {
+                errorEl.style.display = 'none';
+                outputEl.value = '';
+                hexEl.innerText = '0x0';
+                octEl.innerText = '0o0';
+                updateBitMatrix('');
+                return;
+            }
+
+            const isValidBinary = /^[01]+$/.test(binaryStr);
+            
+            if (!isValidBinary) {
+                errorEl.style.display = 'block';
+                outputEl.value = '';
+                hexEl.innerText = 'ERR';
+                octEl.innerText = 'ERR';
+                if (window.RelAudio) window.RelAudio.error();
+                return;
+            } else {
+                errorEl.style.display = 'none';
+            }
+
+            let decimalValue = 0;
+            const length = binaryStr.length;
+
+            for (let i = 0; i < length; i++) {
+                const digit = parseInt(binaryStr.charAt(i), 10);
+                const position = length - 1 - i;
+                decimalValue += digit * Math.pow(2, position);
+            }
+
+            outputEl.value = decimalValue;
+            hexEl.innerText = '0x' + decimalValue.toString(16).toUpperCase();
+            octEl.innerText = '0o' + decimalValue.toString(8);
+            updateBitMatrix(binaryStr);
+        }
+    </script>
+</body>
+</html>

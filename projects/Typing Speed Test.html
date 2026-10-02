@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Tachometer // Mechanical Speed Typer</title>
+    
+    <link rel="stylesheet" href="css/rel-core.css">
+
+    <style>
+        :root {
+            --speed-red: #ff3838;
+            --speed-yellow: #ffd32a;
+            --speed-green: #0be881;
+            --speed-cyan: #00f3ff;
+            --speed-dark: #0a0c12;
+            --speed-card: rgba(14, 18, 28, 0.9);
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 12%, #22080a 0%, #0d0608 50%, #040203 100%);
+            min-height: 100vh;
+            color: #f1f2f6;
+            user-select: none;
+        }
+
+        .typer-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: calc(100vh - var(--rel-hud-height));
+            padding: 30px 20px;
+        }
+
+        .typer-container {
+            width: 100%;
+            max-width: 1100px;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        /* --- Header Deck --- */
+        .typer-header {
+            background: linear-gradient(160deg, #260a0f 0%, #150609 60%, #080204 100%);
+            padding: 24px 34px;
+            border-radius: 20px;
+            border: 2px solid #4a151d;
+            box-shadow: 
+                0 0 0 1px rgba(255, 56, 56, 0.3),
+                0 0 40px rgba(255, 56, 56, 0.15),
+                0 20px 50px rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            position: relative;
+        }
+
+        .typer-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 25px;
+            right: 25px;
+            height: 3px;
+            background: linear-gradient(90deg, #ff3838, #ffd32a, #ff3838);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 0 16px rgba(255, 56, 56, 0.8);
+        }
+
+        .typer-brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .typer-logo-badge {
+            width: 52px;
+            height: 52px;
+            background: rgba(255, 56, 56, 0.1);
+            border: 2px solid var(--speed-red);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            box-shadow: 0 0 20px rgba(255, 56, 56, 0.4);
+        }
+
+        .typer-title {
+            font-family: var(--rel-font-display);
+            font-size: 1.6rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: #ffffff;
+            margin: 0;
+            text-shadow: 0 0 15px rgba(255, 56, 56, 0.4);
+        }
+
+        .typer-subtitle {
+            font-family: var(--rel-font-sans);
+            font-size: 0.88rem;
+            color: #ffd32a;
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        /* --- Config Control Ribbon --- */
+        .typer-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: var(--speed-card);
+            padding: 14px 24px;
+            border-radius: 14px;
+            border: 1px solid #3d141b;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-label {
+            font-family: var(--rel-font-mono);
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #a4b0be;
+            text-transform: uppercase;
+        }
+
+        .pill-btn-group {
+            display: flex;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 3px;
+            border: 1px solid #331218;
+        }
+
+        .pill-btn {
+            background: transparent;
+            border: none;
+            color: #8c98a8;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .pill-btn:hover {
+            color: #ffffff;
+        }
+
+        .pill-btn.active {
+            background: var(--speed-red);
+            color: #ffffff;
+            box-shadow: 0 0 12px rgba(255, 56, 56, 0.5);
+        }
+
+        /* --- Telemetry Dashboard & Tachometer --- */
+        .telemetry-row {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 820px) {
+            .telemetry-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Tachometer Gauge Card */
+        .tachometer-card {
+            background: var(--speed-card);
+            border-radius: 20px;
+            border: 2px solid #3d141b;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+        }
+
+        .gauge-svg {
+            width: 180px;
+            height: 180px;
+            transform: rotate(-90deg);
+        }
+
+        .gauge-bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.08);
+            stroke-width: 14;
+        }
+
+        .gauge-val {
+            fill: none;
+            stroke: url(#speedGradient);
+            stroke-width: 14;
+            stroke-linecap: round;
+            stroke-dasharray: 440;
+            stroke-dashoffset: 440;
+            transition: stroke-dashoffset 0.15s ease-out;
+            filter: drop-shadow(0 0 8px rgba(255, 56, 56, 0.7));
+        }
+
+        .gauge-center-content {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .wpm-big-val {
+            font-family: var(--rel-font-display);
+            font-size: 3.2rem;
+            font-weight: 900;
+            color: #ffffff;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(255, 56, 56, 0.5);
+        }
+
+        .wpm-label {
+            font-family: var(--rel-font-mono);
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            color: var(--speed-red);
+            margin-top: 4px;
+        }
+
+        /* Real-Time Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 14px;
+        }
+
+        .stat-block {
+            background: var(--speed-card);
+            border-radius: 14px;
+            border: 1px solid #3d141b;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .stat-name {
+            font-family: var(--rel-font-mono);
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #8c98a8;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+        }
+
+        .stat-number {
+            font-family: var(--rel-font-mono);
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #ffffff;
+        }
+
+        /* --- Words Arena --- */
+        .typing-arena-card {
+            background: linear-gradient(160deg, #18090d 0%, #0d0407 100%);
+            border-radius: 20px;
+            border: 2px solid #4a151d;
+            padding: 36px 42px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+            position: relative;
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            cursor: text;
+        }
+
+        .words-display {
+            font-family: 'Consolas', 'Fira Code', var(--rel-font-mono);
+            font-size: 1.45rem;
+            line-height: 2.1;
+            color: #4b6584;
+            max-height: 180px;
+            overflow: hidden;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            position: relative;
+        }
+
+        .word {
+            display: inline-flex;
+            position: relative;
+            transition: color 0.1s ease;
+        }
+
+        .word.active {
+            color: #d1d8e0;
+        }
+
+        .char {
+            position: relative;
+        }
+
+        .char.correct {
+            color: var(--speed-green);
+            text-shadow: 0 0 8px rgba(11, 232, 129, 0.4);
+        }
+
+        .char.incorrect {
+            color: var(--speed-red);
+            background: rgba(255, 56, 56, 0.2);
+            border-radius: 2px;
+            text-shadow: 0 0 8px rgba(255, 56, 56, 0.6);
+        }
+
+        .caret {
+            position: absolute;
+            left: 0;
+            top: 2px;
+            bottom: 2px;
+            width: 2.5px;
+            background: var(--speed-yellow);
+            box-shadow: 0 0 10px var(--speed-yellow);
+            border-radius: 2px;
+            animation: caretBlink 0.9s infinite ease-in-out;
+            pointer-events: none;
+            transition: left 0.08s ease-out;
+        }
+
+        @keyframes caretBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Hidden Master Input */
+        #hidden-input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Post-Test Report Overlay Modal */
+        .report-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(4, 2, 4, 0.85);
+            backdrop-filter: blur(14px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            padding: 20px;
+        }
+
+        .report-overlay.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .report-card {
+            background: linear-gradient(160deg, #240a10 0%, #120407 100%);
+            border: 2px solid var(--speed-red);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 580px;
+            box-shadow: 0 0 60px rgba(255, 56, 56, 0.3), 0 30px 70px rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            text-align: center;
+        }
+
+        .report-title {
+            font-family: var(--rel-font-display);
+            font-size: 2rem;
+            font-weight: 900;
+            color: #ffffff;
+            margin: 0;
+        }
+
+        .report-score-box {
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            gap: 12px;
+        }
+
+        .report-wpm {
+            font-family: var(--rel-font-display);
+            font-size: 4.5rem;
+            font-weight: 900;
+            color: var(--speed-yellow);
+            text-shadow: 0 0 25px rgba(255, 211, 42, 0.5);
+            line-height: 1;
+        }
+
+        .report-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-top: 10px;
+        }
+
+        .report-stat-item {
+            background: rgba(10, 4, 6, 0.8);
+            border: 1px solid #3d141b;
+            padding: 14px;
+            border-radius: 12px;
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #ff3838 0%, #c23616 100%);
+            color: #ffffff;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-family: var(--rel-font-mono);
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(255, 56, 56, 0.4);
+            transition: all 0.2s ease;
+            margin-top: 10px;
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(255, 56, 56, 0.6);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="typer-wrapper">
+        <div class="typer-container">
+            
+            <!-- Header Deck -->
+            <header class="typer-header">
+                <div class="typer-brand">
+                    <div class="typer-logo-badge">⚡</div>
+                    <div>
+                        <h1 class="typer-title">QUANTUM TACHOMETER</h1>
+                        <div class="typer-subtitle">Cherry-MX Mechanical Typing Benchmark // Real-Time Telemetry</div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <span class="control-label">CLICK FEEDBACK</span>
+                    <button class="pill-btn active" id="btn-sound-switch">🔊 THOCK ON</button>
+                </div>
+            </header>
+
+            <!-- Mode Ribbon -->
+            <div class="typer-controls">
+                <div class="control-group">
+                    <span class="control-label">DURATION:</span>
+                    <div class="pill-btn-group" id="group-duration">
+                        <button class="pill-btn active" data-time="15">15s</button>
+                        <button class="pill-btn" data-time="30">30s</button>
+                        <button class="pill-btn" data-time="60">60s</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <span class="control-label">CORPUS MODE:</span>
+                    <div class="pill-btn-group" id="group-mode">
+                        <button class="pill-btn active" data-mode="quotes">WISDOM</button>
+                        <button class="pill-btn" data-mode="js">JAVASCRIPT</button>
+                        <button class="pill-btn" data-mode="python">PYTHON</button>
+                        <button class="pill-btn" data-mode="words">VOCAB</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <button class="pill-btn" id="btn-quick-reset" style="border: 1px solid #ff3838; color: #ff3838;">↺ RESTART (TAB+ENTER)</button>
+                </div>
+            </div>
+
+            <!-- Telemetry & Live Gauge -->
+            <div class="telemetry-row">
+                
+                <!-- Circular Tachometer -->
+                <div class="tachometer-card">
+                    <svg class="gauge-svg" viewBox="0 0 160 160">
+                        <defs>
+                            <linearGradient id="speedGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#ffd32a" />
+                                <stop offset="60%" stop-color="#ff3838" />
+                                <stop offset="100%" stop-color="#ff0055" />
+                            </linearGradient>
+                        </defs>
+                        <circle class="gauge-bg" cx="80" cy="80" r="70" />
+                        <circle class="gauge-val" id="gauge-circle" cx="80" cy="80" r="70" />
+                    </svg>
+
+                    <div class="gauge-center-content">
+                        <div class="wpm-big-val" id="display-wpm">0</div>
+                        <div class="wpm-label">WPM SPEED</div>
+                    </div>
+                </div>
+
+                <!-- Stats Blocks -->
+                <div class="stats-grid">
+                    <div class="stat-block">
+                        <span class="stat-name">TIME REMAINING</span>
+                        <span class="stat-number" id="stat-time" style="color: var(--speed-yellow);">15s</span>
+                    </div>
+                    <div class="stat-block">
+                        <span class="stat-name">ACCURACY</span>
+                        <span class="stat-number" id="stat-acc" style="color: var(--speed-green);">100%</span>
+                    </div>
+                    <div class="stat-block">
+                        <span class="stat-name">RAW KEYSTROKES</span>
+                        <span class="stat-number" id="stat-chars">0</span>
+                    </div>
+                    <div class="stat-block">
+                        <span class="stat-name">MISTAKES</span>
+                        <span class="stat-number" id="stat-errors" style="color: var(--speed-red);">0</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Words Arena -->
+            <div class="typing-arena-card" id="arena-card">
+                <input type="text" id="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                <div class="words-display" id="words-display">
+                    <!-- Injected via JavaScript -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Final Telemetry Report Modal -->
+    <div class="report-overlay" id="report-modal">
+        <div class="report-card">
+            <h2 class="report-title">SESSION TELEMETRY COMPLETE</h2>
+            
+            <div class="report-score-box">
+                <div class="report-wpm" id="rep-wpm">0</div>
+                <div style="font-family: var(--rel-font-mono); font-size: 1.2rem; color: #a4b0be; font-weight: 700;">NET WPM</div>
+            </div>
+
+            <div class="report-stats-grid">
+                <div class="report-stat-item">
+                    <div class="stat-name">ACCURACY</div>
+                    <div class="stat-number" id="rep-acc" style="color: var(--speed-green);">0%</div>
+                </div>
+                <div class="report-stat-item">
+                    <div class="stat-name">RAW CHARS</div>
+                    <div class="stat-number" id="rep-chars">0</div>
+                </div>
+                <div class="report-stat-item">
+                    <div class="stat-name">ERRORS</div>
+                    <div class="stat-number" id="rep-errors" style="color: var(--speed-red);">0</div>
+                </div>
+            </div>
+
+            <button class="restart-btn" id="btn-modal-restart">PRACTICE AGAIN</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/rel-audio.js"></script>
+    <script src="js/rel-hud.js"></script>
+    <script>
+        const CORPUS = {
+            quotes: [
+                "Simplicity is prerequisite for reliability and elegance.",
+                "First make it work then make it right and finally make it fast.",
+                "Programs must be written for people to read and only incidentally for machines to execute.",
+                "Good code is its own best documentation as you become seasoned.",
+                "Any fool can write code that a computer can understand good programmers write code humans can understand.",
+                "Premature optimization is the root of all evil in programming.",
+                "Talk is cheap show me the code and let the benchmarks speak.",
+                "Computers are fast programmers keep them slow by overcomplicating systems."
+            ],
+            js: [
+                "const observer = new ResizeObserver(entries => entries.forEach(e => updateLayout(e.target)));",
+                "const pipeline = async (data) => await Promise.all(data.map(transformItem));",
+                "export function debounce(fn, ms) { let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); }; }",
+                "const unique = Array.from(new Set(items.filter(x => Boolean(x.isActive))));",
+                "document.querySelectorAll('.active').forEach(node => node.classList.remove('active'));"
+            ],
+            python: [
+                "def calculate_entropy(stream): return -sum(p * math.log2(p) for p in probabilities if p > 0)",
+                "with open('telemetry.log', mode='a', encoding='utf-8') as f: f.write(f'{timestamp}: OK\\n')",
+                "results = [val ** 2 for val in dataset if val % 2 == 0 and val > threshold]",
+                "class QuantumNode(nn.Module): def __init__(self, channels): super().__init__(); self.fc = nn.Linear(channels, channels)"
+            ],
+            words: [
+                "circuit", "quantum", "gravity", "matrix", "vector", "photon", "neutron", "compile",
+                "runtime", "reactor", "pipeline", "transistor", "silicon", "hardware", "terminal",
+                "algorithm", "bandwidth", "frequency", "protocol", "resonance", "telemetry", "velocity"
+            ]
+        };
+
+        let selectedDuration = 15;
+        let selectedMode = 'quotes';
+        let wordsList = [];
+        let currentWordIndex = 0;
+        let currentCharIndex = 0;
+        let timer = null;
+        let timeLeft = selectedDuration;
+        let isStarted = false;
+        let isFinished = false;
+
+        let totalCorrectChars = 0;
+        let totalTypedChars = 0;
+        let totalErrors = 0;
+        let soundEnabled = true;
+
+        // Elements
+        const arena = document.getElementById('arena-card');
+        const wordsDisplay = document.getElementById('words-display');
+        const hiddenInput = document.getElementById('hidden-input');
+
+        const displayWpm = document.getElementById('display-wpm');
+        const statTime = document.getElementById('stat-time');
+        const statAcc = document.getElementById('stat-acc');
+        const statChars = document.getElementById('stat-chars');
+        const statErrors = document.getElementById('stat-errors');
+        const gaugeCircle = document.getElementById('gauge-circle');
+
+        const reportModal = document.getElementById('report-modal');
+        const repWpm = document.getElementById('rep-wpm');
+        const repAcc = document.getElementById('rep-acc');
+        const repChars = document.getElementById('rep-chars');
+        const repErrors = document.getElementById('rep-errors');
+
+        // Tactile Mechanical Key Thock Synthesizer
+        function playThock(isError = false) {
+            if (!soundEnabled) return;
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return;
+            const c = new AudioCtx();
+            const t = c.currentTime;
+
+            if (isError) {
+                const osc = c.createOscillator();
+                const gain = c.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(120, t);
+                gain.gain.setValueAtTime(0.15, t);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+                osc.connect(gain);
+                gain.connect(c.destination);
+                osc.start(t);
+                osc.stop(t + 0.08);
+                return;
+            }
+
+            // Mechanical Cherry Blue/Brown switch click
+            const osc = c.createOscillator();
+            const gain = c.createGain();
+            const filter = c.createBiquadFilter();
+
+            const pitch = 300 + Math.random() * 80;
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(pitch, t);
+            osc.frequency.exponentialRampToValueAtTime(80, t + 0.025);
+
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(1400, t);
+
+            gain.gain.setValueAtTime(0.18, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(c.destination);
+
+            osc.start(t);
+            osc.stop(t + 0.035);
+        }
+
+        function initTest() {
+            clearInterval(timer);
+            isStarted = false;
+            isFinished = false;
+            timeLeft = selectedDuration;
+            currentWordIndex = 0;
+            currentCharIndex = 0;
+            totalCorrectChars = 0;
+            totalTypedChars = 0;
+            totalErrors = 0;
+
+            statTime.textContent = `${timeLeft}s`;
+            statAcc.textContent = '100%';
+            statChars.textContent = '0';
+            statErrors.textContent = '0';
+            displayWpm.textContent = '0';
+            updateGauge(0);
+            reportModal.classList.remove('open');
+
+            // Build word corpus
+            const pool = CORPUS[selectedMode];
+            let rawText = '';
+            if (selectedMode === 'words') {
+                const shuffled = [...pool].sort(() => 0.5 - Math.random());
+                rawText = shuffled.slice(0, 50).join(' ');
+            } else {
+                rawText = pool[Math.floor(Math.random() * pool.length)];
+                while (rawText.split(' ').length < 35) {
+                    rawText += ' ' + pool[Math.floor(Math.random() * pool.length)];
+                }
+            }
+
+            wordsList = rawText.split(/\s+/).filter(Boolean);
+            renderWords();
+            hiddenInput.value = '';
+            hiddenInput.focus();
+        }
+
+        function renderWords() {
+            wordsDisplay.innerHTML = '';
+            wordsList.forEach((w, wIdx) => {
+                const wSpan = document.createElement('span');
+                wSpan.className = `word ${wIdx === 0 ? 'active' : ''}`;
+                wSpan.id = `word-${wIdx}`;
+
+                for (let i = 0; i < w.length; i++) {
+                    const cSpan = document.createElement('span');
+                    cSpan.className = 'char';
+                    cSpan.textContent = w[i];
+                    wSpan.appendChild(cSpan);
+                }
+                wordsDisplay.appendChild(wSpan);
+            });
+
+            // Insert Caret
+            updateCaret();
+        }
+
+        function updateCaret() {
+            let caret = document.getElementById('typer-caret');
+            if (!caret) {
+                caret = document.createElement('div');
+                caret.id = 'typer-caret';
+                caret.className = 'caret';
+                wordsDisplay.appendChild(caret);
+            }
+
+            const currentWordEl = document.getElementById(`word-${currentWordIndex}`);
+            if (!currentWordEl) return;
+
+            const chars = currentWordEl.querySelectorAll('.char');
+            if (currentCharIndex < chars.length) {
+                const targetChar = chars[currentCharIndex];
+                caret.style.left = `${targetChar.offsetLeft}px`;
+                caret.style.top = `${targetChar.offsetTop}px`;
+                caret.style.height = `${targetChar.offsetHeight}px`;
+            } else {
+                // At word end
+                const lastChar = chars[chars.length - 1];
+                if (lastChar) {
+                    caret.style.left = `${lastChar.offsetLeft + lastChar.offsetWidth}px`;
+                    caret.style.top = `${lastChar.offsetTop}px`;
+                    caret.style.height = `${lastChar.offsetHeight}px`;
+                }
+            }
+        }
+
+        function startTimer() {
+            isStarted = true;
+            timer = setInterval(() => {
+                timeLeft--;
+                statTime.textContent = `${timeLeft}s`;
+
+                // Calculate ongoing WPM
+                const elapsedMin = (selectedDuration - timeLeft) / 60;
+                const grossWpm = elapsedMin > 0 ? Math.round((totalCorrectChars / 5) / elapsedMin) : 0;
+                displayWpm.textContent = grossWpm;
+                updateGauge(grossWpm);
+
+                if (timeLeft <= 0) {
+                    endTest();
+                }
+            }, 1000);
+        }
+
+        function updateGauge(wpm) {
+            // Gauge max scale 160 WPM
+            const max = 150;
+            const pct = Math.min(wpm / max, 1);
+            const totalDash = 440;
+            const offset = totalDash - (pct * totalDash);
+            gaugeCircle.style.strokeDashoffset = offset;
+        }
+
+        function endTest() {
+            clearInterval(timer);
+            isFinished = true;
+            if (window.RelAudio) window.RelAudio.alarm(0.8);
+
+            const elapsedMin = selectedDuration / 60;
+            const finalWpm = Math.max(0, Math.round((totalCorrectChars / 5) / elapsedMin));
+            const accuracy = totalTypedChars > 0 ? Math.round((totalCorrectChars / totalTypedChars) * 100) : 100;
+
+            repWpm.textContent = finalWpm;
+            repAcc.textContent = `${accuracy}%`;
+            repChars.textContent = totalTypedChars;
+            repErrors.textContent = totalErrors;
+
+            reportModal.classList.add('open');
+        }
+
+        // Input & Typing Listener
+        arena.addEventListener('click', () => hiddenInput.focus());
+
+        hiddenInput.addEventListener('keydown', (e) => {
+            if (isFinished) return;
+
+            // Start on first key
+            if (!isStarted && e.key.length === 1) {
+                startTimer();
+            }
+
+            const currentWord = wordsList[currentWordIndex];
+            const currentWordEl = document.getElementById(`word-${currentWordIndex}`);
+            if (!currentWordEl) return;
+            const charEls = currentWordEl.querySelectorAll('.char');
+
+            // Handle Backspace
+            if (e.key === 'Backspace') {
+                if (currentCharIndex > 0) {
+                    currentCharIndex--;
+                    const prevChar = charEls[currentCharIndex];
+                    if (prevChar) {
+                        if (prevChar.classList.contains('correct')) totalCorrectChars--;
+                        prevChar.className = 'char';
+                    }
+                    updateCaret();
+                    playThock();
+                }
+                return;
+            }
+
+            // Handle Space (submit word)
+            if (e.key === ' ') {
+                e.preventDefault();
+                if (currentCharIndex > 0) {
+                    currentWordEl.classList.remove('active');
+                    currentWordIndex++;
+                    currentCharIndex = 0;
+
+                    if (currentWordIndex >= wordsList.length) {
+                        endTest();
+                        return;
+                    }
+
+                    const nextWordEl = document.getElementById(`word-${currentWordIndex}`);
+                    if (nextWordEl) nextWordEl.classList.add('active');
+                    updateCaret();
+                    playThock();
+                }
+                return;
+            }
+
+            // Only single printable characters
+            if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+                totalTypedChars++;
+                statChars.textContent = totalTypedChars;
+
+                const expectedChar = currentWord[currentCharIndex];
+
+                if (currentCharIndex < charEls.length) {
+                    const charEl = charEls[currentCharIndex];
+                    if (e.key === expectedChar) {
+                        charEl.className = 'char correct';
+                        totalCorrectChars++;
+                        playThock(false);
+                    } else {
+                        charEl.className = 'char incorrect';
+                        totalErrors++;
+                        statErrors.textContent = totalErrors;
+                        playThock(true);
+                    }
+                }
+
+                currentCharIndex++;
+                updateCaret();
+
+                // Live accuracy
+                const acc = Math.round((totalCorrectChars / totalTypedChars) * 100);
+                statAcc.textContent = `${acc}%`;
+            }
+        });
+
+        // Config buttons
+        document.querySelectorAll('#group-duration .pill-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#group-duration .pill-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedDuration = parseInt(btn.getAttribute('data-time'));
+                initTest();
+                if (window.RelAudio) window.RelAudio.click();
+            });
+        });
+
+        document.querySelectorAll('#group-mode .pill-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#group-mode .pill-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedMode = btn.getAttribute('data-mode');
+                initTest();
+                if (window.RelAudio) window.RelAudio.click();
+            });
+        });
+
+        document.getElementById('btn-sound-switch').addEventListener('click', (e) => {
+            soundEnabled = !soundEnabled;
+            e.currentTarget.textContent = soundEnabled ? '🔊 THOCK ON' : '🔇 MUTED';
+            e.currentTarget.classList.toggle('active', soundEnabled);
+        });
+
+        document.getElementById('btn-quick-reset').addEventListener('click', () => {
+            initTest();
+            if (window.RelAudio) window.RelAudio.snap();
+        });
+
+        document.getElementById('btn-modal-restart').addEventListener('click', () => {
+            initTest();
+            if (window.RelAudio) window.RelAudio.success();
+        });
+
+        // Global Tab+Enter Shortcut
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                initTest();
+            }
+        });
+
+        // Init on load
+        initTest();
+    </script>
+</body>
+</html>

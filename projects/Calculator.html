@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REL-800 Arcade Calculator // The Rel Works</title>
+    
+    <link rel="stylesheet" href="css/rel-core.css">
+
+    <style>
+        body {
+            background: radial-gradient(circle at 50% 20%, #171828 0%, #0a0b12 75%, #05060a 100%);
+            min-height: 100vh;
+        }
+
+        .calc-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - var(--rel-hud-height));
+            padding: 30px 20px;
+        }
+
+        /* --- Akihabara Cyber Arcade Chassis --- */
+        .calculator {
+            background: linear-gradient(160deg, #181c2b 0%, #0f121d 60%, #090b12 100%);
+            padding: 30px 26px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 380px;
+            border: 2px solid #232a40;
+            box-shadow: 
+                0 0 0 1px rgba(255, 71, 87, 0.25),
+                0 0 35px rgba(255, 71, 87, 0.15),
+                0 25px 60px rgba(0, 0, 0, 0.9),
+                0 2px 0 rgba(255, 255, 255, 0.15) inset,
+                0 -4px 0 rgba(0, 0, 0, 0.8) inset;
+            position: relative;
+            user-select: none;
+        }
+
+        /* Top neon arcade accent bar */
+        .calculator::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 20px;
+            right: 20px;
+            height: 3px;
+            background: linear-gradient(90deg, #ff4757, #ffa502, #00d2d3);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 0 12px rgba(255, 71, 87, 0.8);
+        }
+
+        /* Brand Header */
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .brand-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: 1.5px solid #ff4757;
+            box-shadow: 0 0 14px rgba(255, 71, 87, 0.35);
+            object-fit: cover;
+            background: #000;
+        }
+
+        .brand-text-container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .brand-badge {
+            display: inline-block;
+            align-self: flex-start;
+            font-family: var(--rel-font-mono);
+            font-size: 0.62rem;
+            color: #ff4757;
+            background: rgba(255, 71, 87, 0.12);
+            padding: 2px 6px;
+            border-radius: 4px;
+            letter-spacing: 0.8px;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .brand-title {
+            color: #ffffff;
+            font-family: var(--rel-font-display);
+            font-size: 1.25rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            line-height: 1.1;
+        }
+
+        .brand-subtitle {
+            color: #00d2d3;
+            font-family: var(--rel-font-mono);
+            font-size: 0.72rem;
+            letter-spacing: 0.5px;
+            margin-top: 3px;
+        }
+
+        /* --- Vacuum Fluorescent / Amber Nixie Display Chamber --- */
+        .display-container {
+            position: relative;
+            background: radial-gradient(circle at 50% 30%, #151009 0%, #080503 100%);
+            border: 2px solid rgba(255, 165, 2, 0.3);
+            border-radius: 14px;
+            padding: 22px 18px 14px 18px;
+            margin-bottom: 22px;
+            text-align: right;
+            box-shadow: 
+                inset 0 4px 16px rgba(0, 0, 0, 0.95),
+                0 0 25px rgba(255, 165, 2, 0.1);
+            overflow: hidden;
+        }
+
+        /* CRT Raster overlay */
+        .display-container::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%);
+            background-size: 100% 3px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Top display status ribbon */
+        .display-ribbon {
+            position: absolute;
+            top: 8px;
+            left: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #2ed573;
+            box-shadow: 0 0 8px #2ed573;
+            animation: pulse-dot 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+        }
+
+        .status-label {
+            font-family: var(--rel-font-mono);
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 0.5px;
+        }
+
+        .history-wrapper {
+            position: absolute;
+            top: 7px;
+            right: 12px;
+            z-index: 10;
+        }
+
+        .history-btn {
+            background: rgba(255, 165, 2, 0.12);
+            border: 1px solid rgba(255, 165, 2, 0.4);
+            color: #ffa502;
+            font-family: var(--rel-font-mono);
+            font-size: 0.68rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .history-btn:hover {
+            background: #ffa502;
+            color: #0d0903;
+            box-shadow: 0 0 12px rgba(255, 165, 2, 0.6);
+        }
+
+        .history-panel {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 300px;
+            background: #0d101a;
+            border: 1.5px solid #ffa502;
+            border-radius: 10px;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.9), 0 0 20px rgba(255, 165, 2, 0.2);
+            padding: 12px;
+            overflow-y: auto;
+            max-height: 190px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+            text-align: left;
+            z-index: 30;
+        }
+
+        .history-wrapper:hover .history-panel,
+        .history-panel:hover {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .history-entry {
+            font-family: var(--rel-font-mono);
+            font-size: 0.75rem;
+            color: #f1f2f6;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 5px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-time {
+            font-size: 0.65rem;
+            color: #ffa502;
+            margin-right: 8px;
+            opacity: 0.85;
+            white-space: nowrap;
+        }
+
+        .display {
+            font-family: var(--rel-font-mono);
+            font-size: 2.6rem;
+            font-weight: 800;
+            color: #ff9f43;
+            margin: 10px 0 0 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            text-shadow: 0 0 18px rgba(255, 159, 67, 0.6), 0 0 35px rgba(255, 159, 67, 0.25);
+            letter-spacing: 1.5px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* --- Mechanical Arcade Double-Shot Keypad --- */
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 11px;
+        }
+
+        button.key {
+            padding: 16px 8px;
+            font-family: var(--rel-font-display);
+            font-size: 1.25rem;
+            font-weight: 800;
+            border: 1px solid #283149;
+            border-radius: 12px;
+            cursor: pointer;
+            background: linear-gradient(180deg, #242c42 0%, #151a28 100%);
+            color: #f1f2f6;
+            box-shadow: 
+                0 1px 0 rgba(255, 255, 255, 0.15) inset,
+                0 5px 0 #0d101a,
+                0 8px 14px rgba(0, 0, 0, 0.6);
+            transition: transform 0.07s ease, box-shadow 0.07s ease, background 0.15s ease;
+            position: relative;
+            outline: none;
+        }
+
+        button.key:hover {
+            background: linear-gradient(180deg, #2d3752 0%, #1a2133 100%);
+            border-color: #00d2d3;
+            color: #00d2d3;
+            box-shadow: 
+                0 1px 0 rgba(255, 255, 255, 0.2) inset,
+                0 5px 0 #0d101a,
+                0 0 15px rgba(0, 210, 211, 0.35);
+        }
+
+        button.key:active {
+            transform: translateY(4px);
+            box-shadow: 
+                0 1px 0 rgba(255, 255, 255, 0.1) inset,
+                0 1px 0 #0d101a,
+                0 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Operator Keys (Electric Cyan) */
+        button.btn-operator {
+            background: linear-gradient(180deg, #0e2a3a 0%, #081a24 100%);
+            color: #00d2d3;
+            border-color: rgba(0, 210, 211, 0.4);
+            box-shadow: 
+                0 1px 0 rgba(0, 210, 211, 0.3) inset,
+                0 5px 0 #041017,
+                0 8px 14px rgba(0, 0, 0, 0.6);
+        }
+
+        button.btn-operator:hover {
+            background: #00d2d3;
+            color: #051015;
+            box-shadow: 
+                0 5px 0 #008f91,
+                0 0 20px rgba(0, 210, 211, 0.7);
+        }
+
+        /* Action Keys (Hot Coral / Crimson) */
+        button.btn-action {
+            background: linear-gradient(180deg, #44141e 0%, #290a11 100%);
+            color: #ff4757;
+            border-color: rgba(255, 71, 87, 0.45);
+            box-shadow: 
+                0 1px 0 rgba(255, 71, 87, 0.3) inset,
+                0 5px 0 #180308,
+                0 8px 14px rgba(0, 0, 0, 0.6);
+        }
+
+        button.btn-action:hover {
+            background: #ff4757;
+            color: #ffffff;
+            box-shadow: 
+                0 5px 0 #b32230,
+                0 0 20px rgba(255, 71, 87, 0.75);
+        }
+
+        /* Equals Key (Radiant Akihabara Gold / Emerald Bar) */
+        button.btn-equals {
+            grid-column: span 2;
+            background: linear-gradient(180deg, #104229 0%, #072718 100%);
+            color: #2ed573;
+            border-color: rgba(46, 213, 115, 0.5);
+            box-shadow: 
+                0 1px 0 rgba(46, 213, 115, 0.3) inset,
+                0 5px 0 #03150b,
+                0 8px 14px rgba(0, 0, 0, 0.6);
+        }
+
+        button.btn-equals:hover {
+            background: #2ed573;
+            color: #031309;
+            box-shadow: 
+                0 5px 0 #1e8f4c,
+                0 0 24px rgba(46, 213, 115, 0.85);
+        }
+
+        .clock-display {
+            text-align: center;
+            color: #747d8c;
+            font-size: 0.75rem;
+            margin-top: 18px;
+            font-family: var(--rel-font-mono);
+            letter-spacing: 1px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .clock-tag {
+            color: #00d2d3;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="calc-wrapper">
+        <div class="calculator rel-tactile-surface">
+            
+            <div class="brand-header">
+                <img src="logo.png" alt="The Rel Works Logo" class="brand-logo" onerror="this.style.display='none'">
+                <div class="brand-text-container">
+                    <span class="brand-badge">DESKTOP HARDWARE</span>
+                    <div class="brand-title">REL-800 ARCADE</div>
+                    <div class="brand-subtitle">THE REL WORKS // TACTILE MECHANICAL CONSOLE</div>
+                </div>
+            </div>
+
+            <div class="display-container">
+                <div class="display-ribbon">
+                    <div class="status-dot"></div>
+                    <span class="status-label">NIXIE CORE ACTIVE</span>
+                </div>
+
+                <div class="history-wrapper">
+                    <button class="history-btn">HISTORY ▾</button>
+                    <div class="history-panel" id="history">
+                        <!-- Calculation history will dynamically append here -->
+                    </div>
+                </div>
+                
+                <div class="display" id="display">0</div>
+            </div>
+
+            <div class="keypad">
+                <button class="key btn-action" onclick="handleAC()">AC</button>
+                <button class="key btn-action" onclick="handleC()">C</button>
+                <button class="key btn-operator" onclick="toggleSign()">+/-</button>
+                <button class="key btn-operator" onclick="handleOperator('/')">/</button>
+
+                <button class="key" onclick="handleNumber('7')">7</button>
+                <button class="key" onclick="handleNumber('8')">8</button>
+                <button class="key" onclick="handleNumber('9')">9</button>
+                <button class="key btn-operator" onclick="handleOperator('*')">*</button>
+
+                <button class="key" onclick="handleNumber('4')">4</button>
+                <button class="key" onclick="handleNumber('5')">5</button>
+                <button class="key" onclick="handleNumber('6')">6</button>
+                <button class="key btn-operator" onclick="handleOperator('-')">-</button>
+
+                <button class="key" onclick="handleNumber('1')">1</button>
+                <button class="key" onclick="handleNumber('2')">2</button>
+                <button class="key" onclick="handleNumber('3')">3</button>
+                <button class="key btn-operator" onclick="handleOperator('+')">+</button>
+
+                <button class="key" onclick="handleNumber('0')">0</button>
+                <button class="key" onclick="handleNumber('.')">.</button>
+                <button class="key btn-equals" onclick="handleEquals()">=</button>
+            </div>
+            
+            <div class="clock-display">
+                <span class="clock-tag">STATUS: READY</span>
+                <span id="clock">--:--:--</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/rel-audio.js"></script>
+    <script src="js/rel-hud.js"></script>
+    <script>
+        let currentInput = '0';
+        let previousInput = null;
+        let operator = null;
+        let isError = false;
+        let lastAction = null; 
+
+        const MAX_DIGITS = 8;
+        const displayEl = document.getElementById('display');
+        const historyEl = document.getElementById('history');
+        const clockEl = document.getElementById('clock');
+
+        function updateClock() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            if (clockEl) clockEl.innerText = `${dateStr} | ${timeStr}`;
+        }
+        
+        setInterval(updateClock, 1000);
+        updateClock(); 
+
+        function updateDisplay(value) {
+            if (isError) {
+                displayEl.innerText = 'ERR';
+                if (window.RelAudio) window.RelAudio.error();
+                return;
+            }
+            displayEl.innerText = value;
+        }
+
+        function addHistoryEntry(equation) {
+            const entry = document.createElement('div');
+            entry.className = 'history-entry';
+            
+            const now = new Date();
+            const dateStr = now.toLocaleDateString([], { month: 'short', day: 'numeric' }); 
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            
+            entry.innerHTML = `<span class="history-time">[${dateStr} | ${timeStr}]</span> <span>${equation}</span>`;
+            
+            historyEl.appendChild(entry);
+            historyEl.scrollTop = historyEl.scrollHeight;
+        }
+
+        function getDigitCount(numStr) {
+            return numStr.replace('-', '').replace('.', '').length;
+        }
+
+        function handleNumber(num) {
+            if (window.RelAudio) window.RelAudio.click();
+            if (isError) handleAC();
+
+            if (lastAction === 'operator' || lastAction === 'equals') {
+                currentInput = '0';
+            }
+
+            if (num === '.') {
+                if (currentInput.includes('.')) return; 
+                currentInput += '.';
+            } else {
+                if (getDigitCount(currentInput) >= MAX_DIGITS) return;
+
+                if (currentInput.includes('.')) {
+                    const decimalPart = currentInput.split('.')[1];
+                    if (decimalPart && decimalPart.length >= 3) return;
+                }
+
+                if (currentInput === '0') {
+                    currentInput = num;
+                } else {
+                    currentInput += num;
+                }
+            }
+
+            lastAction = 'number';
+            updateDisplay(currentInput);
+        }
+
+        function handleOperator(op) {
+            if (window.RelAudio) window.RelAudio.snap();
+            if (isError) return;
+
+            if (operator && lastAction !== 'operator' && lastAction !== 'equals') {
+                calculate();
+            } else {
+                previousInput = currentInput;
+            }
+
+            operator = op;
+            lastAction = 'operator';
+        }
+
+        function calculate() {
+            if (isError || !operator || previousInput === null) return;
+
+            let num1 = parseFloat(previousInput);
+            let num2 = parseFloat(currentInput);
+            let result = 0;
+            let equationString = `${num1} ${operator} ${num2} =`;
+
+            switch (operator) {
+                case '+': result = num1 + num2; break;
+                case '-': result = num1 - num2; break;
+                case '*': result = num1 * num2; break;
+                case '/': 
+                    if (num2 === 0) {
+                        isError = true;
+                        addHistoryEntry(`${equationString} ERR`);
+                        updateDisplay();
+                        return;
+                    }
+                    result = num1 / num2; 
+                    break;
+            }
+
+            result = Math.round(result * 1000) / 1000;
+            
+            if (getDigitCount(result.toString()) > MAX_DIGITS) {
+                result = result.toExponential(2);
+            }
+
+            addHistoryEntry(`${equationString} ${result}`);
+            currentInput = result.toString();
+            previousInput = currentInput;
+            updateDisplay(currentInput);
+            if (window.RelAudio) window.RelAudio.chirp(1100);
+        }
+
+        function handleEquals() {
+            if (isError || !operator || previousInput === null) return;
+            calculate();
+            operator = null;
+            lastAction = 'equals';
+        }
+
+        function handleAC() {
+            currentInput = '0';
+            previousInput = null;
+            operator = null;
+            isError = false;
+            lastAction = null;
+            updateDisplay(currentInput);
+            if (window.RelAudio) window.RelAudio.snap();
+        }
+
+        function handleC() {
+            if (isError) {
+                handleAC();
+                return;
+            }
+            currentInput = '0';
+            updateDisplay(currentInput);
+            if (window.RelAudio) window.RelAudio.click();
+        }
+
+        function toggleSign() {
+            if (isError || currentInput === '0') return;
+            currentInput = (parseFloat(currentInput) * -1).toString();
+            updateDisplay(currentInput);
+            if (window.RelAudio) window.RelAudio.click();
+        }
+
+        // Keyboard Support
+        window.addEventListener('keydown', (e) => {
+            if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+            if (e.key >= '0' && e.key <= '9') handleNumber(e.key);
+            else if (e.key === '.') handleNumber('.');
+            else if (e.key === '+') handleOperator('+');
+            else if (e.key === '-') handleOperator('-');
+            else if (e.key === '*') handleOperator('*');
+            else if (e.key === '/') { e.preventDefault(); handleOperator('/'); }
+            else if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); handleEquals(); }
+            else if (e.key === 'Escape') handleAC();
+            else if (e.key === 'Backspace') handleC();
+        });
+    </script>
+</body>
+</html>

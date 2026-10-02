@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candy Bauhaus // Palette Generator</title>
+    
+    <link rel="stylesheet" href="css/rel-core.css">
+
+    <style>
+        body {
+            background: radial-gradient(circle at 50% 15%, #251029 0%, #130717 50%, #08030b 100%);
+            min-height: 100vh;
+            color: #fdf4ff;
+        }
+
+        .palette-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - var(--rel-hud-height));
+            padding: 30px 20px;
+        }
+
+        /* --- Candy Bauhaus Studio Chassis --- */
+        .app-card {
+            background: linear-gradient(160deg, #1f0b24 0%, #110414 60%, #08020a 100%);
+            padding: 36px 42px;
+            border-radius: 24px;
+            box-shadow: 
+                0 0 0 1px rgba(255, 107, 129, 0.3),
+                0 0 45px rgba(255, 107, 129, 0.15),
+                0 25px 60px rgba(0, 0, 0, 0.9);
+            border: 2px solid #3d1447;
+            width: 100%;
+            max-width: 980px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            position: relative;
+        }
+
+        /* Candy chromatic top bar */
+        .app-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 30px;
+            right: 30px;
+            height: 3px;
+            background: linear-gradient(90deg, #ff4757, #ffa502, #2ed573, #00d2d3, #a55eea);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 0 16px rgba(255, 71, 87, 0.8);
+        }
+
+        /* Brand Header */
+        .brand-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1.5px solid rgba(255, 107, 129, 0.25);
+            padding-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .brand-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            border: 1.5px solid #ff4757;
+            box-shadow: 0 0 16px rgba(255, 71, 87, 0.4);
+            object-fit: cover;
+            background: #000;
+        }
+
+        .brand-text-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .candy-badge {
+            display: inline-block;
+            align-self: flex-start;
+            font-family: var(--rel-font-mono);
+            font-size: 0.62rem;
+            color: #ff4757;
+            background: rgba(255, 71, 87, 0.15);
+            padding: 2px 7px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            border: 1px solid rgba(255, 71, 87, 0.35);
+        }
+
+        .brand-title {
+            color: #ffffff;
+            font-family: var(--rel-font-display);
+            font-size: 1.45rem; 
+            font-weight: 900;
+            letter-spacing: 1px;
+            line-height: 1.1;
+            text-transform: uppercase;
+            margin: 0;
+        }
+
+        .brand-subtitle {
+            color: #ffa502; 
+            font-family: var(--rel-font-mono);
+            font-size: 0.8rem; 
+            font-weight: 600;
+            margin-top: 3px;
+            letter-spacing: 0.6px;
+        }
+
+        .spacebar-tag {
+            font-family: var(--rel-font-mono);
+            font-size: 0.75rem;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 6px 12px;
+            border-radius: 8px;
+            color: #f1f2f6;
+            letter-spacing: 0.5px;
+        }
+
+        .spacebar-tag span {
+            color: #00d2d3;
+            font-weight: 800;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #0d0411;
+            padding: 16px 24px;
+            border-radius: 14px;
+            border: 1.5px solid #2d0e36;
+            gap: 20px;
+            flex-wrap: wrap;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .control-group label {
+            font-family: var(--rel-font-mono);
+            font-size: 0.82rem;
+            color: #f472b6;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        select {
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: 1.5px solid #3d1447;
+            background-color: #17071c;
+            color: white;
+            font-family: var(--rel-font-mono);
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        select:focus {
+            border-color: #ff4757;
+            box-shadow: 0 0 16px rgba(255, 71, 87, 0.4);
+        }
+
+        .btn-generate {
+            background: linear-gradient(180deg, #ff4757 0%, #d63031 100%);
+            color: #ffffff;
+            border: 1.5px solid rgba(255, 71, 87, 0.6);
+            padding: 13px 28px;
+            border-radius: 12px;
+            font-family: var(--rel-font-display);
+            font-size: 0.95rem;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 0 20px rgba(255, 71, 87, 0.4);
+            outline: none;
+        }
+
+        .btn-generate:hover {
+            background: #ff6b81;
+            box-shadow: 0 0 28px rgba(255, 71, 87, 0.7);
+            transform: translateY(-2px);
+        }
+
+        /* Palette Display */
+        #palette-container {
+            display: flex;
+            gap: 16px;
+            height: 300px;
+            width: 100%;
+        }
+
+        .color-card {
+            flex-grow: 1; 
+            flex-basis: 0;
+            display: flex;
+            flex-direction: column;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            transition: transform 0.25s ease, flex-grow 0.3s ease, box-shadow 0.25s ease;
+            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.12);
+            position: relative;
+        }
+
+        .color-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 18px 40px rgba(0,0,0,0.9), 0 0 25px rgba(255, 255, 255, 0.25);
+            flex-grow: 1.35;
+            border-color: #ffffff;
+        }
+
+        .color-swatch {
+            flex-grow: 1;
+            width: 100%;
+            transition: background-color 0.4s ease;
+            position: relative;
+        }
+
+        /* Glass highlight */
+        .color-swatch::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .color-info {
+            background-color: #0b030e;
+            padding: 16px 10px;
+            text-align: center;
+            border-top: 1.5px solid #23082b;
+        }
+
+        .hex-code {
+            font-family: var(--rel-font-mono);
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 1px;
+        }
+
+        .copy-hint {
+            font-family: var(--rel-font-mono);
+            font-size: 0.65rem;
+            color: #a4b0be;
+            text-transform: uppercase;
+            margin-top: 4px;
+            letter-spacing: 0.8px;
+            font-weight: 700;
+        }
+
+        /* Toast Notification */
+        #toast {
+            position: absolute;
+            bottom: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(90deg, #ff4757, #ffa502);
+            color: #ffffff;
+            padding: 12px 28px;
+            border-radius: 30px;
+            font-family: var(--rel-font-mono);
+            font-weight: 800;
+            font-size: 0.9rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 30px rgba(255, 71, 87, 0.6);
+            z-index: 100;
+            letter-spacing: 1px;
+        }
+
+        #toast.show {
+            bottom: 25px;
+            opacity: 1;
+            visibility: visible;
+        }
+
+        @media (max-width: 650px) {
+            #palette-container {
+                flex-direction: column;
+                height: 520px;
+            }
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .btn-generate {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="palette-wrapper">
+        <div class="app-card rel-tactile-surface">
+            
+            <div class="brand-header">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <img src="logo.png" alt="The Rel Works Logo" class="brand-logo" onerror="this.style.display='none'">
+                    <div class="brand-text-container">
+                        <span class="candy-badge">CANDY BAUHAUS SPECTRUM</span>
+                        <h1 class="brand-title">CANDY BAUHAUS PALETTES</h1>
+                        <p class="brand-subtitle">THE REL WORKS // VIBRANT CHROMATIC HARMONY ENGINE</p>
+                    </div>
+                </div>
+
+                <div class="spacebar-tag">TIP: PRESS <span>SPACEBAR</span> TO CYCLE</div>
+            </div>
+
+            <div class="controls">
+                <div class="control-group">
+                    <label for="color-count">Aperture Swatches:</label>
+                    <select id="color-count">
+                        <option value="3">Tri-Chromatic (3)</option>
+                        <option value="4">Tetra-Chromatic (4)</option>
+                        <option value="5" selected>Penta-Chromatic (5)</option>
+                    </select>
+                </div>
+                <button class="btn-generate" id="generate-btn">SYNTHESIZE PALETTE</button>
+            </div>
+
+            <div id="palette-container"></div>
+
+            <div id="toast">Color Copied!</div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/rel-audio.js"></script>
+    <script src="js/rel-hud.js"></script>
+    <script>
+        const paletteContainer = document.getElementById('palette-container');
+        const generateBtn = document.getElementById('generate-btn');
+        const colorCountSelect = document.getElementById('color-count');
+        const toast = document.getElementById('toast');
+        
+        let toastTimeout;
+
+        function generateRandomHex() {
+            const randomColor = Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+            return `#${randomColor.toUpperCase()}`;
+        }
+
+        function copyToClipboard(hexCode) {
+            navigator.clipboard.writeText(hexCode).then(() => {
+                showToast(`COPIED ${hexCode} TO BUFFER`);
+                if (window.RelAudio) window.RelAudio.chirp(1300);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        }
+
+        function showToast(message) {
+            toast.innerText = message;
+            toast.classList.add('show');
+            
+            clearTimeout(toastTimeout);
+            
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        function generatePalette() {
+            paletteContainer.innerHTML = '';
+            
+            const count = parseInt(colorCountSelect.value);
+
+            for (let i = 0; i < count; i++) {
+                const hexColor = generateRandomHex();
+
+                const card = document.createElement('div');
+                card.className = 'color-card rel-tactile-surface';
+                card.title = "Click to copy hex buffer";
+                
+                const swatch = document.createElement('div');
+                swatch.className = 'color-swatch';
+                swatch.style.backgroundColor = hexColor;
+
+                const info = document.createElement('div');
+                info.className = 'color-info';
+                
+                const hexText = document.createElement('div');
+                hexText.className = 'hex-code';
+                hexText.innerText = hexColor;
+
+                const hintText = document.createElement('div');
+                hintText.className = 'copy-hint';
+                hintText.innerText = 'CLICK TO COPY';
+
+                info.appendChild(hexText);
+                info.appendChild(hintText);
+                card.appendChild(swatch);
+                card.appendChild(info);
+
+                card.addEventListener('click', () => copyToClipboard(hexColor));
+
+                paletteContainer.appendChild(card);
+            }
+        }
+
+        generateBtn.addEventListener('click', () => {
+            generatePalette();
+            if (window.RelAudio) window.RelAudio.snap();
+        });
+
+        colorCountSelect.addEventListener('change', () => {
+            generatePalette();
+            if (window.RelAudio) window.RelAudio.click();
+        });
+
+        // Spacebar to re-generate
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && e.target.tagName !== 'INPUT') {
+                e.preventDefault();
+                generatePalette();
+                if (window.RelAudio) window.RelAudio.chirp(1100);
+            }
+        });
+
+        generatePalette();
+    </script>
+</body>
+</html>

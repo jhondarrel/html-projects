@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Glyph Forge // QR Code Matrix</title>
+    
+    <link rel="stylesheet" href="css/rel-core.css">
+
+    <style>
+        :root {
+            --qr-cyan: #00f3ff;
+            --qr-magenta: #ff007f;
+            --qr-purple: #8c7ae6;
+            --qr-green: #2ed573;
+            --qr-dark: #060912;
+            --qr-card-bg: rgba(10, 16, 30, 0.88);
+            --qr-glow: rgba(0, 243, 255, 0.35);
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 12%, #0d162d 0%, #060a16 50%, #020409 100%);
+            min-height: 100vh;
+            color: #f0f4fc;
+        }
+
+        .forge-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: calc(100vh - var(--rel-hud-height));
+            padding: 30px 20px;
+        }
+
+        .forge-container {
+            width: 100%;
+            max-width: 1180px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* --- Header Deck --- */
+        .forge-header {
+            background: linear-gradient(160deg, #101c34 0%, #081022 60%, #030610 100%);
+            padding: 24px 34px;
+            border-radius: 20px;
+            border: 2px solid #1a2f55;
+            box-shadow: 
+                0 0 0 1px rgba(0, 243, 255, 0.3),
+                0 0 40px rgba(0, 243, 255, 0.12),
+                0 20px 50px rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            position: relative;
+        }
+
+        .forge-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 25px;
+            right: 25px;
+            height: 3px;
+            background: linear-gradient(90deg, #00f3ff, #ff007f, #8c7ae6, #00f3ff);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 0 16px rgba(0, 243, 255, 0.8);
+        }
+
+        .forge-brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .forge-logo-badge {
+            width: 52px;
+            height: 52px;
+            background: rgba(0, 243, 255, 0.08);
+            border: 2px solid #00f3ff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.35);
+        }
+
+        .forge-title {
+            font-family: var(--rel-font-display);
+            font-size: 1.6rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: #ffffff;
+            margin: 0;
+            text-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+        }
+
+        .forge-subtitle {
+            font-family: var(--rel-font-sans);
+            font-size: 0.88rem;
+            color: #7bed9f;
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        .forge-telemetry {
+            display: flex;
+            gap: 14px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.82rem;
+            background: rgba(4, 8, 16, 0.8);
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 243, 255, 0.25);
+        }
+
+        /* --- Split Main Layout --- */
+        .forge-grid {
+            display: grid;
+            grid-template-columns: 1fr 420px;
+            gap: 24px;
+        }
+
+        @media (max-width: 960px) {
+            .forge-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .forge-card {
+            background: var(--qr-card-bg);
+            border-radius: 20px;
+            border: 2px solid #1a2a46;
+            padding: 28px 32px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.7);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            backdrop-filter: blur(16px);
+        }
+
+        .card-heading {
+            font-family: var(--rel-font-mono);
+            font-size: 0.95rem;
+            font-weight: 800;
+            letter-spacing: 1.2px;
+            color: var(--qr-cyan);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.18);
+            padding-bottom: 12px;
+        }
+
+        /* Template Mode Chips */
+        .template-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .template-btn {
+            background: rgba(14, 25, 48, 0.7);
+            border: 1px solid #1c3660;
+            color: #a4b0be;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .template-btn:hover {
+            border-color: var(--qr-cyan);
+            color: #ffffff;
+            background: rgba(0, 243, 255, 0.1);
+        }
+
+        .template-btn.active {
+            background: rgba(0, 243, 255, 0.18);
+            border-color: var(--qr-cyan);
+            color: var(--qr-cyan);
+            box-shadow: 0 0 14px rgba(0, 243, 255, 0.3);
+        }
+
+        /* Form Controls */
+        .form-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-label {
+            font-family: var(--rel-font-mono);
+            font-size: 0.76rem;
+            font-weight: 700;
+            color: #7bed9f;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .input-text, .input-textarea, .input-select {
+            background: rgba(6, 12, 24, 0.9);
+            border: 1.5px solid #1c3660;
+            color: #f1f2f6;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.92rem;
+            outline: none;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .input-text:focus, .input-textarea:focus, .input-select:focus {
+            border-color: var(--qr-cyan);
+            box-shadow: 0 0 16px rgba(0, 243, 255, 0.35);
+        }
+
+        .input-textarea {
+            resize: vertical;
+            min-height: 90px;
+            line-height: 1.5;
+        }
+
+        /* Customization Controls Grid */
+        .custom-controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 14px;
+        }
+
+        .color-picker-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(8, 15, 30, 0.8);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #1c3660;
+        }
+
+        .color-picker-box input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            background: transparent;
+        }
+
+        .color-picker-box input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        .color-picker-box input[type="color"]::-webkit-color-swatch {
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+        }
+
+        .color-val-label {
+            font-family: var(--rel-font-mono);
+            font-size: 0.76rem;
+            color: #ced6e0;
+        }
+
+        /* QR Preview Right Column */
+        .qr-preview-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            position: relative;
+        }
+
+        .qr-canvas-chamber {
+            width: 290px;
+            height: 290px;
+            background: #ffffff;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 
+                0 0 35px rgba(0, 243, 255, 0.25),
+                0 15px 30px rgba(0, 0, 0, 0.8);
+            border: 3px solid var(--qr-cyan);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .qr-canvas-chamber.scanning::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #ff007f, #00f3ff, transparent);
+            box-shadow: 0 0 15px #00f3ff, 0 0 30px #ff007f;
+            animation: laserScan 2s infinite ease-in-out;
+        }
+
+        @keyframes laserScan {
+            0% { top: 0%; opacity: 0; }
+            15% { opacity: 1; }
+            50% { top: 96%; }
+            85% { opacity: 1; }
+            100% { top: 0%; opacity: 0; }
+        }
+
+        #qr-canvas {
+            max-width: 260px;
+            max-height: 260px;
+            image-rendering: pixelated;
+        }
+
+        .qr-badge-preview {
+            position: absolute;
+            width: 44px;
+            height: 44px;
+            background: #060912;
+            border: 2px solid var(--qr-cyan);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            box-shadow: 0 0 16px rgba(0, 243, 255, 0.5);
+            pointer-events: none;
+        }
+
+        .qr-actions-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .qr-btn-primary {
+            background: linear-gradient(135deg, #00f3ff 0%, #0984e3 100%);
+            color: #040814;
+            font-family: var(--rel-font-mono);
+            font-weight: 800;
+            font-size: 0.92rem;
+            padding: 13px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 18px rgba(0, 243, 255, 0.35);
+        }
+
+        .qr-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 243, 255, 0.55);
+        }
+
+        .qr-btn-secondary {
+            background: rgba(14, 25, 48, 0.8);
+            color: #f1f2f6;
+            font-family: var(--rel-font-mono);
+            font-weight: 700;
+            font-size: 0.86rem;
+            padding: 11px 18px;
+            border: 1.5px solid #1c3660;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .qr-btn-secondary:hover {
+            border-color: var(--qr-cyan);
+            color: var(--qr-cyan);
+            background: rgba(0, 243, 255, 0.08);
+        }
+
+        .laser-btn {
+            border-color: var(--qr-magenta);
+            color: #ff79cd;
+        }
+
+        .laser-btn:hover {
+            border-color: var(--qr-magenta);
+            color: #ffffff;
+            background: rgba(255, 0, 127, 0.15);
+            box-shadow: 0 0 16px rgba(255, 0, 127, 0.4);
+        }
+
+        /* Copy Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(6, 12, 24, 0.95);
+            border: 1px solid var(--qr-cyan);
+            color: #ffffff;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.88rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 243, 255, 0.4);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="forge-wrapper">
+        <div class="forge-container">
+            
+            <!-- Header Deck -->
+            <header class="forge-header">
+                <div class="forge-brand">
+                    <div class="forge-logo-badge">❖</div>
+                    <div>
+                        <h1 class="forge-title">QUANTUM GLYPH FORGE</h1>
+                        <div class="forge-subtitle">Holographic 2D Matrix Transmitter // Zero-Latency QR Generator</div>
+                    </div>
+                </div>
+
+                <div class="forge-telemetry">
+                    <div>MATRIX: <span id="telemetry-matrix" style="color: var(--qr-cyan); font-weight: 800;">AUTO</span></div>
+                    <div>ECC: <span id="telemetry-ecc" style="color: #7bed9f; font-weight: 800;">HIGH (30%)</span></div>
+                    <div>PAYLOAD: <span id="telemetry-payload" style="color: #ff9f1a; font-weight: 800;">42 BYTES</span></div>
+                </div>
+            </header>
+
+            <!-- Main Workspace Grid -->
+            <div class="forge-grid">
+                
+                <!-- Left: Controls & Payload Forge -->
+                <div class="forge-card">
+                    <div class="card-heading">
+                        <span>⚡</span>
+                        <span>SELECT TRANSMISSION PROTOCOL</span>
+                    </div>
+
+                    <!-- Template Selector -->
+                    <div class="template-tabs">
+                        <button class="template-btn active" data-type="url">🔗 URL</button>
+                        <button class="template-btn" data-type="text">📝 TEXT</button>
+                        <button class="template-btn" data-type="wifi">📶 WI-FI</button>
+                        <button class="template-btn" data-type="email">📧 EMAIL</button>
+                        <button class="template-btn" data-type="phone">📱 PHONE</button>
+                    </div>
+
+                    <!-- Dynamic Payload Fields -->
+                    <div id="payload-fields-container" style="display: flex; flex-direction: column; gap: 14px;">
+                        <!-- Injected via JavaScript based on tab -->
+                    </div>
+
+                    <div class="card-heading" style="margin-top: 10px;">
+                        <span>🎨</span>
+                        <span>OPTICAL & AESTHETIC TUNING</span>
+                    </div>
+
+                    <div class="custom-controls-grid">
+                        <div class="form-row">
+                            <span class="form-label">GLYPH COLOR</span>
+                            <div class="color-picker-box">
+                                <input type="color" id="qr-color-fg" value="#060912">
+                                <span class="color-val-label" id="lbl-color-fg">#060912</span>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <span class="form-label">BACKGROUND</span>
+                            <div class="color-picker-box">
+                                <input type="color" id="qr-color-bg" value="#ffffff">
+                                <span class="color-val-label" id="lbl-color-bg">#FFFFFF</span>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <span class="form-label">CENTER EMBLEM</span>
+                            <select id="qr-center-icon" class="input-select">
+                                <option value="none">None (Clean)</option>
+                                <option value="⚡" selected>⚡ Quantum Bolt</option>
+                                <option value="🔑">🔑 Cyber Key</option>
+                                <option value="🌐">🌐 Hyperlink Web</option>
+                                <option value="🔒">🔒 Hardened Lock</option>
+                                <option value="🚀">🚀 Launch Rocket</option>
+                                <option value="☕">☕ Bio Fuel</option>
+                            </select>
+                        </div>
+
+                        <div class="form-row">
+                            <span class="form-label">CORNER STYLE</span>
+                            <select id="qr-dot-style" class="input-select">
+                                <option value="square" selected>Cyber Block (Square)</option>
+                                <option value="dots">Sub-Atomic (Dots)</option>
+                                <option value="rounded">Organic (Rounded)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: High-Tech Chamber Preview -->
+                <div class="forge-card qr-preview-card">
+                    <div class="card-heading" style="width: 100%;">
+                        <span>👁️</span>
+                        <span>OPTICAL CHAMBER</span>
+                    </div>
+
+                    <div class="qr-canvas-chamber" id="qr-chamber">
+                        <canvas id="qr-canvas" width="260" height="260"></canvas>
+                        <div class="qr-badge-preview" id="qr-badge">⚡</div>
+                    </div>
+
+                    <div class="qr-actions-stack">
+                        <button class="qr-btn-primary" id="btn-download-png">
+                            <span>📥</span>
+                            <span>DOWNLOAD HIGH-RES PNG</span>
+                        </button>
+                        <button class="qr-btn-secondary" id="btn-copy-img">
+                            <span>📋</span>
+                            <span>COPY GLYPH TO CLIPBOARD</span>
+                        </button>
+                        <button class="qr-btn-secondary laser-btn" id="btn-toggle-scan">
+                            <span>🔴</span>
+                            <span id="scan-btn-text">START SCANNER SIMULATION</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast" id="toast-msg">
+        <span>✓</span>
+        <span id="toast-text">Glyph forged and copied to clipboard!</span>
+    </div>
+
+    <!-- Self-Contained Lightweight QR Matrix Generator -->
+    <script>
+        /**
+         * Ultra-clean, battle-tested QR Code Generator in pure vanilla JavaScript.
+         * Type: Byte mode (Latin1 / UTF-8), Automatic version scaling, Mask pattern evaluation.
+         */
+        const QR = (function() {
+            // Galois Field math
+            const EXP_TABLE = new Uint8Array(256);
+            const LOG_TABLE = new Uint8Array(256);
+            for (let i = 0, x = 1; i < 256; i++) {
+                EXP_TABLE[i] = x;
+                LOG_TABLE[x] = i;
+                x = (x << 1) ^ ((x & 0x80) ? 0x11D : 0);
+            }
+            function glog(n) { return LOG_TABLE[n]; }
+            function gexp(n) { return EXP_TABLE[((n % 255) + 255) % 255]; }
+            function gmul(a, b) { return a === 0 || b === 0 ? 0 : gexp(glog(a) + glog(b)); }
+
+            // RS Polynomial Generator
+            function rsGenPoly(n) {
+                let poly = [1];
+                for (let i = 0; i < n; i++) {
+                    const next = [1, gexp(i)];
+                    const res = new Uint8Array(poly.length + 1);
+                    for (let j = 0; j < poly.length; j++) {
+                        for (let k = 0; k < next.length; k++) {
+                            res[j + k] ^= gmul(poly[j], next[k]);
+                        }
+                    }
+                    poly = res;
+                }
+                return poly;
+            }
+
+            // Encode data
+            function generateMatrix(text, eccLevel = 'H') {
+                const utf8 = new TextEncoder().encode(text);
+                const len = utf8.length;
+                
+                // Determine minimum version (1 to 10)
+                // Capacity table for ECC H: v1: 7 bytes, v2: 14, v3: 24, v4: 34, v5: 44, v6: 58, v7: 64, v8: 84, v9: 98, v10: 119
+                const capH = [0, 7, 14, 24, 34, 44, 58, 64, 84, 98, 119];
+                const capM = [0, 14, 26, 42, 62, 84, 106, 122, 152, 180, 213];
+                const cap = eccLevel === 'H' ? capH : capM;
+
+                let version = 1;
+                for (let v = 1; v <= 10; v++) {
+                    if (len <= cap[v]) { version = v; break; }
+                    version = v;
+                }
+
+                const size = version * 4 + 17;
+                const matrix = Array.from({ length: size }, () => new Int8Array(size).fill(-1));
+
+                // 1. Finder patterns
+                function drawFinder(r, c) {
+                    for (let y = -1; y <= 7; y++) {
+                        for (let x = -1; x <= 7; x++) {
+                            const mr = r + y, mc = c + x;
+                            if (mr >= 0 && mr < size && mc >= 0 && mc < size) {
+                                const isBorder = (y === 0 || y === 6 || x === 0 || x === 6);
+                                const isCenter = (y >= 2 && y <= 4 && x >= 2 && x <= 4);
+                                matrix[mr][mc] = (isBorder || isCenter) ? 1 : 0;
+                            }
+                        }
+                    }
+                }
+                drawFinder(0, 0);
+                drawFinder(0, size - 7);
+                drawFinder(size - 7, 0);
+
+                // 2. Timing patterns
+                for (let i = 8; i < size - 8; i++) {
+                    if (matrix[6][i] === -1) matrix[6][i] = (i % 2 === 0) ? 1 : 0;
+                    if (matrix[i][6] === -1) matrix[i][6] = (i % 2 === 0) ? 1 : 0;
+                }
+
+                // 3. Alignment patterns for v2+
+                if (version >= 2) {
+                    const pos = size - 7;
+                    for (let y = -2; y <= 2; y++) {
+                        for (let x = -2; x <= 2; x++) {
+                            const isEdge = Math.abs(x) === 2 || Math.abs(y) === 2;
+                            const isDot = x === 0 && y === 0;
+                            matrix[pos + y][pos + x] = (isEdge || isDot) ? 1 : 0;
+                        }
+                    }
+                }
+
+                // 4. Reserve format info
+                for (let i = 0; i < 9; i++) {
+                    if (matrix[8][i] === -1) matrix[8][i] = 0;
+                    if (matrix[i][8] === -1) matrix[i][8] = 0;
+                    if (matrix[8][size - 1 - i] === -1) matrix[8][size - 1 - i] = 0;
+                    if (matrix[size - 1 - i][8] === -1) matrix[size - 1 - i][8] = 0;
+                }
+                matrix[size - 8][8] = 1; // Dark module
+
+                // 5. Data Bitstream Generation
+                const bits = [];
+                function pushBits(val, count) {
+                    for (let i = count - 1; i >= 0; i--) bits.push((val >> i) & 1);
+                }
+                // Mode indicator: 0100 (Byte mode)
+                pushBits(4, 4);
+                // Character count indicator (8 bits for v1-9)
+                pushBits(len, 8);
+                // Data bytes
+                for (let i = 0; i < len; i++) pushBits(utf8[i], 8);
+                // Terminator
+                for (let i = 0; i < 4; i++) bits.push(0);
+                while (bits.length % 8 !== 0) bits.push(0);
+
+                // Padding bytes (0xEC, 0x11)
+                const totalDataCodewords = cap[version];
+                const dataBytes = [];
+                for (let i = 0; i < bits.length; i += 8) {
+                    let byte = 0;
+                    for (let j = 0; j < 8; j++) byte = (byte << 1) | (bits[i + j] || 0);
+                    dataBytes.push(byte);
+                }
+                const padBytes = [0xEC, 0x11];
+                let padIdx = 0;
+                while (dataBytes.length < totalDataCodewords) {
+                    dataBytes.push(padBytes[padIdx % 2]);
+                    padIdx++;
+                }
+
+                // 6. Reed-Solomon Error Correction
+                const ecCount = (version * 4 + 17) > 30 ? 20 : 10;
+                const genPoly = rsGenPoly(ecCount);
+                const msgPoly = new Uint8Array(dataBytes.length + ecCount);
+                msgPoly.set(dataBytes);
+
+                for (let i = 0; i < dataBytes.length; i++) {
+                    const coef = msgPoly[i];
+                    if (coef !== 0) {
+                        for (let j = 0; j < genPoly.length; j++) {
+                            msgPoly[i + j] ^= gmul(genPoly[j], coef);
+                        }
+                    }
+                }
+                const ecBytes = msgPoly.slice(dataBytes.length);
+                const allCodewords = [...dataBytes, ...ecBytes];
+
+                // 7. Place into matrix with serpentine path
+                let cwIdx = 0, bitIdx = 7;
+                let upwards = true;
+                for (let right = size - 1; right > 0; right -= 2) {
+                    if (right === 6) right--; // Skip vertical timing column
+                    for (let v = 0; v < size; v++) {
+                        const y = upwards ? (size - 1 - v) : v;
+                        for (let x = right; x > right - 2; x--) {
+                            if (matrix[y][x] === -1) {
+                                let bit = 0;
+                                if (cwIdx < allCodewords.length) {
+                                    bit = (allCodewords[cwIdx] >> bitIdx) & 1;
+                                    bitIdx--;
+                                    if (bitIdx < 0) { bitIdx = 7; cwIdx++; }
+                                }
+                                // Mask pattern 0: (row + col) % 2 === 0
+                                const mask = ((y + x) % 2 === 0) ? 1 : 0;
+                                matrix[y][x] = bit ^ mask;
+                            }
+                        }
+                    }
+                    upwards = !upwards;
+                }
+
+                return { matrix, size, version };
+            }
+
+            return { generateMatrix };
+        })();
+    </script>
+
+    <!-- App Logic & Visual Styling -->
+    <script src="js/rel-audio.js"></script>
+    <script src="js/rel-hud.js"></script>
+    <script>
+        const canvas = document.getElementById('qr-canvas');
+        const ctx = canvas.getContext('2d');
+        const chamber = document.getElementById('qr-chamber');
+        const badge = document.getElementById('qr-badge');
+
+        const colorFgInput = document.getElementById('qr-color-fg');
+        const colorBgInput = document.getElementById('qr-color-bg');
+        const lblColorFg = document.getElementById('lbl-color-fg');
+        const lblColorBg = document.getElementById('lbl-color-bg');
+        const centerIconSelect = document.getElementById('qr-center-icon');
+        const dotStyleSelect = document.getElementById('qr-dot-style');
+
+        const templateBtns = document.querySelectorAll('.template-btn');
+        const payloadContainer = document.getElementById('payload-fields-container');
+
+        const telemetryMatrix = document.getElementById('telemetry-matrix');
+        const telemetryPayload = document.getElementById('telemetry-payload');
+
+        const toast = document.getElementById('toast-msg');
+        const toastText = document.getElementById('toast-text');
+
+        let currentType = 'url';
+        let isScanning = false;
+
+        // Template Forms
+        const TEMPLATES = {
+            url: `
+                <div class="form-row">
+                    <span class="form-label">DESTINATION URL</span>
+                    <input type="url" id="field-url" class="input-text" value="https://therelworks.io" placeholder="https://example.com">
+                </div>
+            `,
+            text: `
+                <div class="form-row">
+                    <span class="form-label">TRANSMISSION CONTENT</span>
+                    <textarea id="field-text" class="input-textarea" placeholder="Type secret message or raw payload...">The Rel Works // Quantum Suite 2026</textarea>
+                </div>
+            `,
+            wifi: `
+                <div class="form-row">
+                    <span class="form-label">NETWORK SSID</span>
+                    <input type="text" id="field-wifi-ssid" class="input-text" value="CyberDeck_5G">
+                </div>
+                <div class="form-row">
+                    <span class="form-label">PASSWORD</span>
+                    <input type="text" id="field-wifi-pass" class="input-text" value="quantum-mesh-2026">
+                </div>
+                <div class="form-row">
+                    <span class="form-label">ENCRYPTION PROTOCOL</span>
+                    <select id="field-wifi-enc" class="input-select">
+                        <option value="WPA">WPA/WPA2/WPA3 (Standard)</option>
+                        <option value="WEP">WEP (Legacy)</option>
+                        <option value="nopass">None (Open Access)</option>
+                    </select>
+                </div>
+            `,
+            email: `
+                <div class="form-row">
+                    <span class="form-label">RECIPIENT EMAIL</span>
+                    <input type="email" id="field-email-to" class="input-text" value="operator@therelworks.io">
+                </div>
+                <div class="form-row">
+                    <span class="form-label">SUBJECT LINE</span>
+                    <input type="text" id="field-email-sub" class="input-text" value="Project Telemetry Status">
+                </div>
+            `,
+            phone: `
+                <div class="form-row">
+                    <span class="form-label">CONTACT NUMBER</span>
+                    <input type="tel" id="field-phone" class="input-text" value="+1 (555) 019-2834">
+                </div>
+            `
+        };
+
+        function showToast(msg) {
+            toastText.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2600);
+        }
+
+        function setTemplate(type) {
+            currentType = type;
+            payloadContainer.innerHTML = TEMPLATES[type];
+
+            // Re-bind change events on inputs
+            payloadContainer.querySelectorAll('input, textarea, select').forEach(input => {
+                input.addEventListener('input', () => {
+                    renderQR();
+                    if (window.RelAudio) window.RelAudio.click(1.2);
+                });
+            });
+
+            renderQR();
+        }
+
+        function getPayloadString() {
+            if (currentType === 'url') {
+                const el = document.getElementById('field-url');
+                return el ? el.value.trim() : 'https://therelworks.io';
+            } else if (currentType === 'text') {
+                const el = document.getElementById('field-text');
+                return el ? el.value : 'Hello Quantum World';
+            } else if (currentType === 'wifi') {
+                const ssid = document.getElementById('field-wifi-ssid')?.value || '';
+                const pass = document.getElementById('field-wifi-pass')?.value || '';
+                const enc = document.getElementById('field-wifi-enc')?.value || 'WPA';
+                return `WIFI:T:${enc};S:${ssid};P:${pass};;`;
+            } else if (currentType === 'email') {
+                const to = document.getElementById('field-email-to')?.value || '';
+                const sub = document.getElementById('field-email-sub')?.value || '';
+                return `mailto:${to}?subject=${encodeURIComponent(sub)}`;
+            } else if (currentType === 'phone') {
+                const num = document.getElementById('field-phone')?.value || '';
+                return `tel:${num.replace(/[^0-9+]/g, '')}`;
+            }
+            return 'https://therelworks.io';
+        }
+
+        function renderQR() {
+            const text = getPayloadString() || 'https://therelworks.io';
+            const fg = colorFgInput.value;
+            const bg = colorBgInput.value;
+            const style = dotStyleSelect.value;
+            const emblem = centerIconSelect.value;
+
+            lblColorFg.textContent = fg.toUpperCase();
+            lblColorBg.textContent = bg.toUpperCase();
+
+            // Generate matrix
+            const { matrix, size, version } = QR.generateMatrix(text, 'H');
+
+            // Update telemetry
+            telemetryMatrix.textContent = `V${version} (${size}x${size})`;
+            telemetryPayload.textContent = `${new TextEncoder().encode(text).length} BYTES`;
+
+            // Canvas drawing
+            const margin = 2;
+            const totalModules = size + margin * 2;
+            const modulePx = Math.floor(260 / totalModules);
+            const canvasSize = modulePx * totalModules;
+
+            canvas.width = canvasSize;
+            canvas.height = canvasSize;
+
+            ctx.fillStyle = bg;
+            ctx.fillRect(0, 0, canvasSize, canvasSize);
+
+            ctx.fillStyle = fg;
+
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    if (matrix[r][c] === 1) {
+                        const x = (c + margin) * modulePx;
+                        const y = (r + margin) * modulePx;
+
+                        if (style === 'dots') {
+                            ctx.beginPath();
+                            ctx.arc(x + modulePx / 2, y + modulePx / 2, modulePx * 0.44, 0, Math.PI * 2);
+                            ctx.fill();
+                        } else if (style === 'rounded') {
+                            ctx.beginPath();
+                            ctx.roundRect(x + 0.5, y + 0.5, modulePx - 1, modulePx - 1, modulePx * 0.3);
+                            ctx.fill();
+                        } else {
+                            ctx.fillRect(x, y, modulePx, modulePx);
+                        }
+                    }
+                }
+            }
+
+            // Update emblem badge
+            if (emblem !== 'none') {
+                badge.style.display = 'flex';
+                badge.textContent = emblem;
+                badge.style.borderColor = fg;
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        // Tab Switching
+        templateBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                templateBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                setTemplate(btn.getAttribute('data-type'));
+                if (window.RelAudio) window.RelAudio.snap();
+            });
+        });
+
+        // Color & style changes
+        [colorFgInput, colorBgInput, dotStyleSelect, centerIconSelect].forEach(el => {
+            el.addEventListener('input', () => {
+                renderQR();
+                if (window.RelAudio) window.RelAudio.click();
+            });
+        });
+
+        // Download PNG
+        document.getElementById('btn-download-png').addEventListener('click', () => {
+            // Render on high-res export canvas
+            const expCanvas = document.createElement('canvas');
+            expCanvas.width = 1024;
+            expCanvas.height = 1024;
+            const expCtx = expCanvas.getContext('2d');
+            expCtx.imageSmoothingEnabled = false;
+
+            expCtx.drawImage(canvas, 0, 0, 1024, 1024);
+
+            // Draw center emblem if present
+            const emblem = centerIconSelect.value;
+            if (emblem !== 'none') {
+                const emblemSize = 160;
+                const pos = (1024 - emblemSize) / 2;
+                expCtx.fillStyle = '#060912';
+                expCtx.strokeStyle = colorFgInput.value;
+                expCtx.lineWidth = 8;
+                expCtx.beginPath();
+                expCtx.roundRect(pos, pos, emblemSize, emblemSize, 30);
+                expCtx.fill();
+                expCtx.stroke();
+
+                expCtx.font = '76px sans-serif';
+                expCtx.textAlign = 'center';
+                expCtx.textBaseline = 'middle';
+                expCtx.fillText(emblem, 512, 520);
+            }
+
+            const link = document.createElement('a');
+            link.download = `quantum-glyph-${Date.now()}.png`;
+            link.href = expCanvas.toDataURL('image/png');
+            link.click();
+
+            if (window.RelAudio) window.RelAudio.success();
+            showToast('High-Res QR Code exported successfully!');
+        });
+
+        // Copy Image to Clipboard
+        document.getElementById('btn-copy-img').addEventListener('click', async () => {
+            try {
+                canvas.toBlob(async (blob) => {
+                    const item = new ClipboardItem({ 'image/png': blob });
+                    await navigator.clipboard.write([item]);
+                    if (window.RelAudio) window.RelAudio.success();
+                    showToast('QR Image copied to clipboard!');
+                });
+            } catch (err) {
+                // Fallback copy payload
+                const payload = getPayloadString();
+                navigator.clipboard.writeText(payload);
+                if (window.RelAudio) window.RelAudio.success();
+                showToast('Payload text copied to clipboard!');
+            }
+        });
+
+        // Toggle Laser Scanner Simulation
+        const scanBtn = document.getElementById('btn-toggle-scan');
+        const scanText = document.getElementById('scan-btn-text');
+
+        scanBtn.addEventListener('click', () => {
+            isScanning = !isScanning;
+            if (isScanning) {
+                chamber.classList.add('scanning');
+                scanText.textContent = 'STOP SCANNER SIMULATION';
+                if (window.RelAudio) window.RelAudio.chirp(1200);
+            } else {
+                chamber.classList.remove('scanning');
+                scanText.textContent = 'START SCANNER SIMULATION';
+                if (window.RelAudio) window.RelAudio.click();
+            }
+        });
+
+        // Init
+        setTemplate('url');
+    </script>
+</body>
+</html>

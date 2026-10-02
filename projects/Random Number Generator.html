@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vegas Quantum Casino // Random Number Generator</title>
+    
+    <link rel="stylesheet" href="css/rel-core.css">
+
+    <style>
+        :root {
+            --casino-jade: #00b894; 
+            --casino-gold: #fdcb6e;
+            --casino-glow: rgba(0, 184, 148, 0.4);
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 15%, #08291b 0%, #04160e 50%, #020906 100%);
+            min-height: 100vh;
+            color: #f0fdf4;
+        }
+
+        .rng-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - var(--rel-hud-height));
+            padding: 30px 20px;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 640px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        /* --- Vegas Quantum Casino Chassis --- */
+        .app-card {
+            background: linear-gradient(160deg, #092116 0%, #05140d 60%, #020905 100%);
+            padding: 38px 44px;
+            border-radius: 24px;
+            border: 2px solid #14422c;
+            box-shadow: 
+                0 0 0 1px rgba(0, 184, 148, 0.3),
+                0 0 45px rgba(0, 184, 148, 0.15),
+                0 25px 60px rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            position: relative;
+        }
+
+        /* Gold casino marquee top bar */
+        .app-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 30px;
+            right: 30px;
+            height: 3px;
+            background: linear-gradient(90deg, #00b894, #fdcb6e, #2ed573, #00b894);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 0 16px rgba(253, 203, 110, 0.8);
+        }
+
+        /* Brand Header */
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 16px; 
+            border-bottom: 1.5px solid rgba(0, 184, 148, 0.25);
+            padding-bottom: 20px;
+        }
+
+        .brand-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            border: 1.5px solid #fdcb6e;
+            box-shadow: 0 0 16px rgba(253, 203, 110, 0.4);
+            object-fit: cover;
+            background: #000;
+        }
+
+        .brand-text-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .casino-badge {
+            display: inline-block;
+            align-self: flex-start;
+            font-family: var(--rel-font-mono);
+            font-size: 0.62rem;
+            color: #fdcb6e;
+            background: rgba(253, 203, 110, 0.15);
+            padding: 2px 7px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            border: 1px solid rgba(253, 203, 110, 0.35);
+        }
+
+        .brand-title {
+            color: #ffffff; 
+            font-family: var(--rel-font-display);
+            font-size: 1.45rem; 
+            font-weight: 900;
+            text-transform: uppercase;
+            margin: 0;
+            line-height: 1.1;
+            letter-spacing: 1px;
+        }
+
+        .brand-subtitle {
+            color: #00b894; 
+            font-family: var(--rel-font-mono);
+            font-size: 0.8rem; 
+            font-weight: 600;
+            margin-top: 3px;
+            letter-spacing: 0.6px;
+        }
+
+        /* --- Quantum Entropy Slot Chamber --- */
+        .result-display {
+            background: radial-gradient(circle at 50% 30%, #082116 0%, #020a06 100%);
+            border: 2px solid rgba(253, 203, 110, 0.4);
+            border-radius: 16px;
+            padding: 38px 20px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 150px;
+            box-shadow: 
+                inset 0 4px 20px rgba(0,0,0,0.9),
+                0 0 30px rgba(0, 184, 148, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-display::before {
+            content: 'QUANTUM CASINO REEL';
+            position: absolute;
+            top: 12px;
+            left: 18px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.68rem;
+            color: #fdcb6e;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        .result-number {
+            font-size: 4.8rem;
+            font-weight: 900;
+            color: #fdcb6e;
+            font-family: var(--rel-font-mono);
+            margin: 0;
+            line-height: 1;
+            text-shadow: 0 0 25px rgba(253, 203, 110, 0.6);
+            transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+            letter-spacing: 2px;
+        }
+
+        /* Input Controls */
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-family: var(--rel-font-mono);
+            font-size: 0.78rem;
+            color: #a7f3d0;
+            font-weight: 700;
+            margin-bottom: 7px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 13px;
+            border-radius: 10px;
+            border: 1.5px solid #1a422d;
+            background-color: #040f09;
+            color: white;
+            font-size: 1.15rem;
+            font-weight: 800;
+            outline: none;
+            transition: all 0.2s ease;
+            text-align: center;
+            font-family: var(--rel-font-mono);
+            box-sizing: border-box;
+        }
+
+        input[type="number"]:focus { 
+            border-color: #00b894; 
+            box-shadow: 0 0 16px var(--casino-glow);
+        }
+
+        /* Checkbox Options */
+        .options-group {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            background-color: #040e08;
+            padding: 18px;
+            border-radius: 12px;
+            border: 1.5px solid #163a28;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            font-family: var(--rel-font-mono);
+            font-size: 0.85rem;
+            color: #ecfdf5;
+            font-weight: 600;
+        }
+
+        .checkbox-container input {
+            accent-color: #00b894;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        /* Mechanical Spin Lever Button */
+        .btn-generate {
+            background: linear-gradient(180deg, #00b894 0%, #008f72 100%);
+            color: #020905;
+            border: 1.5px solid rgba(253, 203, 110, 0.6);
+            padding: 17px;
+            border-radius: 14px;
+            font-family: var(--rel-font-display);
+            font-size: 1.15rem;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 0 25px rgba(0, 184, 148, 0.4), 0 5px 0 #005947;
+            outline: none;
+        }
+
+        .btn-generate:hover { 
+            background: #20c997; 
+            box-shadow: 0 0 35px rgba(0, 184, 148, 0.8), 0 5px 0 #005947;
+            transform: translateY(-2px);
+        }
+
+        .btn-generate:active {
+            transform: translateY(3px);
+            box-shadow: 0 0 15px rgba(0, 184, 148, 0.6), 0 1px 0 #005947;
+        }
+
+        .error-message {
+            color: #ff4757;
+            font-family: var(--rel-font-mono);
+            font-size: 0.8rem;
+            text-align: center;
+            font-weight: 700;
+            min-height: 18px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="rng-wrapper">
+        <div class="app-container">
+            
+            <div class="app-card rel-tactile-surface">
+                
+                <div class="brand-header">
+                    <img src="logo.png" alt="The Rel Works Logo" class="brand-logo" onerror="this.style.display='none'">
+                    <div class="brand-text-container">
+                        <span class="casino-badge">VEGAS QUANTUM ENTROPY</span>
+                        <div class="brand-title">QUANTUM CASINO REEL</div>
+                        <div class="brand-subtitle">THE REL WORKS // RANDOM NUMBER SYNTHESIZER</div>
+                    </div>
+                </div>
+
+                <div class="result-display">
+                    <div class="result-number" id="result-number">0</div>
+                </div>
+
+                <div class="input-grid">
+                    <div class="control-group">
+                        <label for="min-val">Minimum Bound</label>
+                        <input type="number" id="min-val" value="1" min="0">
+                    </div>
+                    <div class="control-group">
+                        <label for="max-val">Maximum Bound</label>
+                        <input type="number" id="max-val" value="100" min="0">
+                    </div>
+                </div>
+
+                <div class="error-message" id="error-msg"></div>
+
+                <div class="options-group">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="allow-negative">
+                        Allow Negative Values (Signed Integers)
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="allow-decimal">
+                        Allow Decimal Numbers (Floating-Point Precision)
+                    </label>
+                </div>
+
+                <button class="btn-generate" id="btn-generate">SPIN REEL (OR SPACEBAR) 🎰</button>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/rel-audio.js"></script>
+    <script src="js/rel-hud.js"></script>
+    <script>
+        const minInput = document.getElementById('min-val');
+        const maxInput = document.getElementById('max-val');
+        const allowNegCheckbox = document.getElementById('allow-negative');
+        const allowDecCheckbox = document.getElementById('allow-decimal');
+        const generateBtn = document.getElementById('btn-generate');
+        const resultNumber = document.getElementById('result-number');
+        const errorMsg = document.getElementById('error-msg');
+
+        allowNegCheckbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                minInput.removeAttribute('min');
+                maxInput.removeAttribute('min');
+            } else {
+                minInput.setAttribute('min', '0');
+                maxInput.setAttribute('min', '0');
+                if (parseFloat(minInput.value) < 0) minInput.value = 0;
+                if (parseFloat(maxInput.value) < 0) maxInput.value = 0;
+            }
+        });
+
+        function generateNumber() {
+            errorMsg.innerText = '';
+
+            let min = parseFloat(minInput.value);
+            let max = parseFloat(maxInput.value);
+
+            if (isNaN(min) || isNaN(max)) {
+                errorMsg.innerText = "Warning: Please enter valid bounds.";
+                if (window.RelAudio) window.RelAudio.error();
+                return;
+            }
+
+            if (!allowNegCheckbox.checked && (min < 0 || max < 0)) {
+                errorMsg.innerText = "Warning: Negative bounds disabled in options.";
+                if (window.RelAudio) window.RelAudio.error();
+                return;
+            }
+
+            if (min > max) {
+                errorMsg.innerText = "Warning: Minimum bound cannot exceed Maximum.";
+                if (window.RelAudio) window.RelAudio.error();
+                return;
+            }
+
+            // Rapid Roll Animation
+            let rollTicks = 0;
+            const rollInterval = setInterval(() => {
+                const tempRoll = Math.floor(Math.random() * (max - min + 1)) + min;
+                resultNumber.innerText = tempRoll;
+                if (window.RelAudio) window.RelAudio.tick();
+                rollTicks++;
+
+                if (rollTicks >= 6) {
+                    clearInterval(rollInterval);
+
+                    let result;
+                    if (allowDecCheckbox.checked) {
+                        result = (Math.random() * (max - min) + min);
+                        result = parseFloat(result.toFixed(4)); 
+                    } else {
+                        min = Math.ceil(min);
+                        max = Math.floor(max);
+                        result = Math.floor(Math.random() * (max - min + 1)) + min;
+                    }
+
+                    resultNumber.innerText = result;
+                    resultNumber.style.transform = 'scale(1.15)';
+                    if (window.RelAudio) window.RelAudio.chirp(1300);
+                    setTimeout(() => {
+                        resultNumber.style.transform = 'scale(1)';
+                    }, 140);
+                }
+            }, 30);
+        }
+
+        generateBtn.addEventListener('click', () => {
+            generateNumber();
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && e.target.tagName !== 'INPUT') {
+                e.preventDefault();
+                generateNumber();
+            }
+        });
+    </script>
+</body>
+</html>

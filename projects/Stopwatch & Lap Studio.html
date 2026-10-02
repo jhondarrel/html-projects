@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aerospace Chronograph // Stopwatch & Lap Studio</title>
+    
+    <link rel="stylesheet" href="css/rel-core.css">
+
+    <style>
+        :root {
+            --chrono-emerald: #0be881;
+            --chrono-cyan: #00f3ff;
+            --chrono-orange: #ff7f50;
+            --chrono-red: #ff4757;
+            --chrono-titanium: #718093;
+            --chrono-dark: #070b12;
+            --chrono-card-bg: rgba(11, 16, 26, 0.88);
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 12%, #101c2b 0%, #080e18 50%, #03050a 100%);
+            min-height: 100vh;
+            color: #f1f2f6;
+        }
+
+        .chrono-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: calc(100vh - var(--rel-hud-height));
+            padding: 30px 20px;
+        }
+
+        .chrono-container {
+            width: 100%;
+            max-width: 1080px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* --- Header Deck --- */
+        .chrono-header {
+            background: linear-gradient(160deg, #101e30 0%, #091220 60%, #03070f 100%);
+            padding: 24px 34px;
+            border-radius: 20px;
+            border: 2px solid #1c3554;
+            box-shadow: 
+                0 0 0 1px rgba(11, 232, 129, 0.3),
+                0 0 40px rgba(11, 232, 129, 0.12),
+                0 20px 50px rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            position: relative;
+        }
+
+        .chrono-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 25px;
+            right: 25px;
+            height: 3px;
+            background: linear-gradient(90deg, #0be881, #00f3ff, #ff7f50, #0be881);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 0 16px rgba(11, 232, 129, 0.8);
+        }
+
+        .chrono-brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .chrono-logo-badge {
+            width: 52px;
+            height: 52px;
+            background: rgba(11, 232, 129, 0.1);
+            border: 2px solid var(--chrono-emerald);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            box-shadow: 0 0 20px rgba(11, 232, 129, 0.35);
+        }
+
+        .chrono-title {
+            font-family: var(--rel-font-display);
+            font-size: 1.6rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: #ffffff;
+            margin: 0;
+            text-shadow: 0 0 15px rgba(11, 232, 129, 0.4);
+        }
+
+        .chrono-subtitle {
+            font-family: var(--rel-font-sans);
+            font-size: 0.88rem;
+            color: #0be881;
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        /* --- Main Dual Deck --- */
+        .chrono-grid {
+            display: grid;
+            grid-template-columns: 460px 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 960px) {
+            .chrono-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Chronometer Face Card */
+        .chronometer-face-card {
+            background: linear-gradient(160deg, #101c2d 0%, #08101a 100%);
+            border-radius: 24px;
+            border: 2px solid #1a324f;
+            padding: 34px 28px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 26px;
+            box-shadow: 0 15px 45px rgba(0,0,0,0.85);
+            position: relative;
+        }
+
+        /* Analog Circular Sweep Bezel */
+        .analog-bezel {
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #0e1826 60%, #060a12 100%);
+            border: 4px solid #1f3d61;
+            box-shadow: 
+                inset 0 0 25px rgba(0, 0, 0, 0.9),
+                0 0 35px rgba(11, 232, 129, 0.15);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sweep-hand {
+            position: absolute;
+            width: 2px;
+            height: 85px;
+            background: var(--chrono-emerald);
+            bottom: 50%;
+            left: calc(50% - 1px);
+            transform-origin: bottom center;
+            transform: rotate(0deg);
+            box-shadow: 0 0 10px var(--chrono-emerald);
+            border-radius: 2px 2px 0 0;
+            transition: transform 0.05s linear;
+        }
+
+        .bezel-center-cap {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #ffffff;
+            box-shadow: 0 0 10px var(--chrono-emerald);
+            z-index: 2;
+        }
+
+        .bezel-ticks {
+            position: absolute;
+            inset: 8px;
+            border-radius: 50%;
+            border: 1px dashed rgba(255, 255, 255, 0.15);
+        }
+
+        /* Digital Digits Display */
+        .digits-readout-box {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 4px;
+            font-family: var(--rel-font-display);
+            background: #04070e;
+            padding: 14px 24px;
+            border-radius: 14px;
+            border: 1.5px solid #1a324f;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.9);
+            width: 100%;
+        }
+
+        .time-unit-big {
+            font-size: 2.8rem;
+            font-weight: 900;
+            color: #ffffff;
+            letter-spacing: 1px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .time-sep {
+            font-size: 2.4rem;
+            font-weight: 700;
+            color: var(--chrono-emerald);
+            opacity: 0.8;
+            margin: 0 2px;
+        }
+
+        .time-millis {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--chrono-cyan);
+            margin-left: 4px;
+            width: 60px;
+        }
+
+        /* Action Buttons */
+        .chrono-actions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .btn-chrono {
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.95rem;
+            font-weight: 800;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #0be881 0%, #05c46b 100%);
+            color: #03140a;
+            box-shadow: 0 4px 18px rgba(11, 232, 129, 0.35);
+        }
+
+        .btn-start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(11, 232, 129, 0.55);
+        }
+
+        .btn-pause {
+            background: linear-gradient(135deg, #ff7f50 0%, #ff6348 100%);
+            color: #1a0804;
+            box-shadow: 0 4px 18px rgba(255, 127, 80, 0.35);
+        }
+
+        .btn-lap {
+            background: rgba(16, 28, 46, 0.8);
+            border: 1.5px solid #23436a;
+            color: var(--chrono-cyan);
+        }
+
+        .btn-lap:hover {
+            border-color: var(--chrono-cyan);
+            background: rgba(0, 243, 255, 0.1);
+        }
+
+        .btn-reset {
+            background: rgba(22, 12, 16, 0.8);
+            border: 1.5px solid #571e27;
+            color: var(--chrono-red);
+        }
+
+        .btn-reset:hover {
+            border-color: var(--chrono-red);
+            background: rgba(255, 71, 87, 0.15);
+        }
+
+        /* --- Right Column: Lap Matrix --- */
+        .lap-matrix-card {
+            background: var(--chrono-card-bg);
+            border-radius: 24px;
+            border: 2px solid #1a324f;
+            padding: 26px 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            box-shadow: 0 15px 45px rgba(0,0,0,0.85);
+        }
+
+        .lap-matrix-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(11, 232, 129, 0.2);
+            padding-bottom: 12px;
+        }
+
+        .lap-title {
+            font-family: var(--rel-font-mono);
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--chrono-emerald);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 1px;
+        }
+
+        /* Statistics Ribbon */
+        .lap-stats-ribbon {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        @media (max-width: 600px) {
+            .lap-stats-ribbon {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .lap-stat-box {
+            background: rgba(6, 11, 20, 0.8);
+            border: 1px solid #1a324f;
+            padding: 10px 14px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .lap-stat-lbl {
+            font-family: var(--rel-font-mono);
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #8c98a8;
+            text-transform: uppercase;
+        }
+
+        .lap-stat-val {
+            font-family: var(--rel-font-mono);
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #ffffff;
+        }
+
+        /* Laps Table */
+        .lap-table-wrap {
+            max-height: 310px;
+            overflow-y: auto;
+            border-radius: 12px;
+            border: 1px solid #1a324f;
+            background: #060a12;
+        }
+
+        .lap-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--rel-font-mono);
+            font-size: 0.84rem;
+            text-align: left;
+        }
+
+        .lap-table th {
+            background: rgba(14, 25, 42, 0.95);
+            color: #8c98a8;
+            font-weight: 800;
+            padding: 10px 14px;
+            border-bottom: 1px solid #1a324f;
+            position: sticky;
+            top: 0;
+            letter-spacing: 0.5px;
+        }
+
+        .lap-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(26, 50, 79, 0.5);
+            color: #dcdde1;
+        }
+
+        .lap-row.fastest {
+            background: rgba(11, 232, 129, 0.12);
+        }
+
+        .lap-row.fastest td.lap-time-cell {
+            color: var(--chrono-emerald);
+            font-weight: 800;
+        }
+
+        .lap-row.slowest {
+            background: rgba(255, 71, 87, 0.12);
+        }
+
+        .lap-row.slowest td.lap-time-cell {
+            color: var(--chrono-red);
+            font-weight: 800;
+        }
+
+        .export-row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .export-btn {
+            background: rgba(16, 28, 46, 0.8);
+            border: 1px solid #23436a;
+            color: #a4b0be;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .export-btn:hover {
+            color: #ffffff;
+            border-color: var(--chrono-emerald);
+            background: rgba(11, 232, 129, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="chrono-wrapper">
+        <div class="chrono-container">
+            
+            <!-- Header Deck -->
+            <header class="chrono-header">
+                <div class="chrono-brand">
+                    <div class="chrono-logo-badge">⏱️</div>
+                    <div>
+                        <h1 class="chrono-title">AEROSPACE CHRONOGRAPH</h1>
+                        <div class="chrono-subtitle">Titanium Split-Second Precision Chronometer // Lap Studio</div>
+                    </div>
+                </div>
+
+                <div style="font-family: var(--rel-font-mono); font-size: 0.82rem; color: #a4b0be;">
+                    KEYS: <kbd>SPACE</kbd> (Start/Stop) • <kbd>L</kbd> (Lap) • <kbd>R</kbd> (Reset)
+                </div>
+            </header>
+
+            <!-- Main Dual Column Layout -->
+            <div class="chrono-grid">
+                
+                <!-- Left: Master Stopwatch Display -->
+                <div class="chronometer-face-card">
+                    
+                    <!-- Analog Sweep Bezel -->
+                    <div class="analog-bezel">
+                        <div class="bezel-ticks"></div>
+                        <div class="sweep-hand" id="sweep-hand"></div>
+                        <div class="bezel-center-cap"></div>
+                    </div>
+
+                    <!-- Digital Digits Readout -->
+                    <div class="digits-readout-box">
+                        <span class="time-unit-big" id="disp-min">00</span>
+                        <span class="time-sep">:</span>
+                        <span class="time-unit-big" id="disp-sec">00</span>
+                        <span class="time-sep">.</span>
+                        <span class="time-millis" id="disp-ms">000</span>
+                    </div>
+
+                    <!-- Interactive Controls -->
+                    <div class="chrono-actions-grid">
+                        <button class="btn-chrono btn-start" id="btn-toggle-run">
+                            <span id="run-icon">▶</span>
+                            <span id="run-text">START</span>
+                        </button>
+                        <button class="btn-chrono btn-lap" id="btn-record-lap" disabled>
+                            <span>⏱️</span>
+                            <span>RECORD LAP</span>
+                        </button>
+                    </div>
+
+                    <div style="width: 100%;">
+                        <button class="btn-chrono btn-reset" id="btn-reset-chrono" style="width: 100%;">
+                            <span>↺</span>
+                            <span>RESET ALL TIMERS</span>
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- Right: Laps Matrix & Delta Telemetry -->
+                <div class="lap-matrix-card">
+                    <div class="lap-matrix-header">
+                        <div class="lap-title">
+                            <span>📋</span>
+                            <span>SPLIT-LAP TELEMETRY MATRIX</span>
+                        </div>
+                        <span id="total-laps-badge" style="font-family: var(--rel-font-mono); font-size: 0.82rem; color: var(--chrono-cyan);">0 LAPS RECORDED</span>
+                    </div>
+
+                    <!-- Stats Ribbon -->
+                    <div class="lap-stats-ribbon">
+                        <div class="lap-stat-box">
+                            <span class="lap-stat-lbl">BEST LAP</span>
+                            <span class="lap-stat-val" id="stat-best-lap" style="color: var(--chrono-emerald);">--:--.--</span>
+                        </div>
+                        <div class="lap-stat-box">
+                            <span class="lap-stat-lbl">WORST LAP</span>
+                            <span class="lap-stat-val" id="stat-worst-lap" style="color: var(--chrono-red);">--:--.--</span>
+                        </div>
+                        <div class="lap-stat-box">
+                            <span class="lap-stat-lbl">AVERAGE</span>
+                            <span class="lap-stat-val" id="stat-avg-lap">--:--.--</span>
+                        </div>
+                        <div class="lap-stat-box">
+                            <span class="lap-stat-lbl">TOTAL TIME</span>
+                            <span class="lap-stat-val" id="stat-total-time">00:00.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Laps Table -->
+                    <div class="lap-table-wrap">
+                        <table class="lap-table">
+                            <thead>
+                                <tr>
+                                    <th>LAP #</th>
+                                    <th>LAP TIME</th>
+                                    <th>SPLIT OVERALL</th>
+                                    <th>DELTA</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lap-table-body">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; color: #57606f; padding: 30px;">
+                                        No laps recorded yet. Press Start then Record Lap!
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Export Actions -->
+                    <div class="export-row">
+                        <button class="export-btn" id="btn-copy-laps">📋 COPY LAPS</button>
+                        <button class="export-btn" id="btn-export-csv">📥 EXPORT CSV</button>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/rel-audio.js"></script>
+    <script src="js/rel-hud.js"></script>
+    <script>
+        let startTime = 0;
+        let elapsedTime = 0;
+        let animFrameId = null;
+        let isRunning = false;
+
+        let laps = []; // { lapIndex, lapDuration, splitTime }
+        let lastLapTimestamp = 0;
+
+        // Elements
+        const dispMin = document.getElementById('disp-min');
+        const dispSec = document.getElementById('disp-sec');
+        const dispMs = document.getElementById('disp-ms');
+        const sweepHand = document.getElementById('sweep-hand');
+
+        const btnToggleRun = document.getElementById('btn-toggle-run');
+        const runIcon = document.getElementById('run-icon');
+        const runText = document.getElementById('run-text');
+        const btnRecordLap = document.getElementById('btn-record-lap');
+        const btnReset = document.getElementById('btn-reset-chrono');
+
+        const lapTableBody = document.getElementById('lap-table-body');
+        const totalLapsBadge = document.getElementById('total-laps-badge');
+        const statBestLap = document.getElementById('stat-best-lap');
+        const statWorstLap = document.getElementById('stat-worst-lap');
+        const statAvgLap = document.getElementById('stat-avg-lap');
+        const statTotalTime = document.getElementById('stat-total-time');
+
+        function formatTime(ms) {
+            const totalSec = Math.floor(ms / 1000);
+            const m = Math.floor(totalSec / 60);
+            const s = totalSec % 60;
+            const millis = Math.floor(ms % 1000);
+
+            return {
+                min: String(m).padStart(2, '0'),
+                sec: String(s).padStart(2, '0'),
+                ms: String(millis).padStart(3, '0'),
+                formatted: `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(millis).padStart(3, '0')}`
+            };
+        }
+
+        function updateDisplay() {
+            const now = performance.now();
+            const currentTotal = elapsedTime + (isRunning ? (now - startTime) : 0);
+
+            const t = formatTime(currentTotal);
+            dispMin.textContent = t.min;
+            dispSec.textContent = t.sec;
+            dispMs.textContent = t.ms;
+
+            // Rotate analog sweep hand (1 full turn per 60 seconds)
+            const secFraction = (currentTotal % 60000) / 60000;
+            sweepHand.style.transform = `rotate(${secFraction * 360}deg)`;
+
+            statTotalTime.textContent = `${t.min}:${t.sec}.${t.ms.substring(0, 2)}`;
+
+            if (isRunning) {
+                animFrameId = requestAnimationFrame(updateDisplay);
+            }
+        }
+
+        function startStopwatch() {
+            isRunning = true;
+            startTime = performance.now();
+            btnRecordLap.disabled = false;
+
+            btnToggleRun.className = 'btn-chrono btn-pause';
+            runIcon.textContent = '❚❚';
+            runText.textContent = 'PAUSE';
+
+            if (window.RelAudio) window.RelAudio.click(1.4);
+            updateDisplay();
+        }
+
+        function pauseStopwatch() {
+            isRunning = false;
+            elapsedTime += performance.now() - startTime;
+            cancelAnimationFrame(animFrameId);
+
+            btnToggleRun.className = 'btn-chrono btn-start';
+            runIcon.textContent = '▶';
+            runText.textContent = 'RESUME';
+
+            if (window.RelAudio) window.RelAudio.click(0.8);
+        }
+
+        function recordLap() {
+            if (!isRunning && elapsedTime === 0) return;
+
+            const now = performance.now();
+            const currentTotal = elapsedTime + (isRunning ? (now - startTime) : 0);
+            const lapDuration = currentTotal - lastLapTimestamp;
+            lastLapTimestamp = currentTotal;
+
+            const lapNum = laps.length + 1;
+            laps.unshift({
+                lapIndex: lapNum,
+                lapDuration: lapDuration,
+                splitTime: currentTotal
+            });
+
+            renderLaps();
+            if (window.RelAudio) window.RelAudio.chirp(1600);
+        }
+
+        function renderLaps() {
+            if (laps.length === 0) {
+                lapTableBody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #57606f; padding: 30px;">No laps recorded yet.</td></tr>`;
+                totalLapsBadge.textContent = '0 LAPS RECORDED';
+                statBestLap.textContent = '--:--.--';
+                statWorstLap.textContent = '--:--.--';
+                statAvgLap.textContent = '--:--.--';
+                return;
+            }
+
+            totalLapsBadge.textContent = `${laps.length} LAPS RECORDED`;
+
+            // Calculate min, max, avg
+            let minDuration = Infinity;
+            let maxDuration = -Infinity;
+            let totalDur = 0;
+
+            laps.forEach(l => {
+                if (l.lapDuration < minDuration) minDuration = l.lapDuration;
+                if (l.lapDuration > maxDuration) maxDuration = l.lapDuration;
+                totalDur += l.lapDuration;
+            });
+
+            const avgDur = totalDur / laps.length;
+
+            statBestLap.textContent = formatTime(minDuration).formatted;
+            statWorstLap.textContent = formatTime(maxDuration).formatted;
+            statAvgLap.textContent = formatTime(avgDur).formatted;
+
+            let html = '';
+            laps.forEach((lap, idx) => {
+                const isFastest = laps.length > 1 && lap.lapDuration === minDuration;
+                const isSlowest = laps.length > 1 && lap.lapDuration === maxDuration;
+                const rowClass = isFastest ? 'lap-row fastest' : (isSlowest ? 'lap-row slowest' : 'lap-row');
+
+                // Delta compared to next older lap
+                let deltaStr = '—';
+                if (idx < laps.length - 1) {
+                    const prevLapDur = laps[idx + 1].lapDuration;
+                    const diff = lap.lapDuration - prevLapDur;
+                    const sign = diff > 0 ? '+' : '-';
+                    const diffSec = (Math.abs(diff) / 1000).toFixed(2);
+                    const deltaColor = diff > 0 ? '#ff4757' : '#0be881';
+                    deltaStr = `<span style="color: ${deltaColor}; font-weight: 700;">${sign}${diffSec}s</span>`;
+                }
+
+                html += `
+                    <tr class="${rowClass}">
+                        <td style="font-weight: 800; color: #a4b0be;">LAP ${lap.lapIndex}</td>
+                        <td class="lap-time-cell">${formatTime(lap.lapDuration).formatted}</td>
+                        <td style="color: #70a1ff;">${formatTime(lap.splitTime).formatted}</td>
+                        <td>${deltaStr}</td>
+                    </tr>
+                `;
+            });
+
+            lapTableBody.innerHTML = html;
+        }
+
+        function resetAll() {
+            isRunning = false;
+            cancelAnimationFrame(animFrameId);
+            startTime = 0;
+            elapsedTime = 0;
+            lastLapTimestamp = 0;
+            laps = [];
+
+            dispMin.textContent = '00';
+            dispSec.textContent = '00';
+            dispMs.textContent = '000';
+            sweepHand.style.transform = 'rotate(0deg)';
+
+            btnToggleRun.className = 'btn-chrono btn-start';
+            runIcon.textContent = '▶';
+            runText.textContent = 'START';
+            btnRecordLap.disabled = true;
+
+            renderLaps();
+            statTotalTime.textContent = '00:00.00';
+            if (window.RelAudio) window.RelAudio.snap();
+        }
+
+        // Event Listeners
+        btnToggleRun.addEventListener('click', () => {
+            if (isRunning) pauseStopwatch();
+            else startStopwatch();
+        });
+
+        btnRecordLap.addEventListener('click', recordLap);
+        btnReset.addEventListener('click', resetAll);
+
+        // Copy Laps to Clipboard
+        document.getElementById('btn-copy-laps').addEventListener('click', () => {
+            if (laps.length === 0) return;
+            const lines = laps.map(l => `Lap ${l.lapIndex}: ${formatTime(l.lapDuration).formatted} (Split: ${formatTime(l.splitTime).formatted})`);
+            navigator.clipboard.writeText(lines.join('\n'));
+            if (window.RelAudio) window.RelAudio.success();
+            alert('Laps copied to clipboard!');
+        });
+
+        // Export Laps to CSV
+        document.getElementById('btn-export-csv').addEventListener('click', () => {
+            if (laps.length === 0) return;
+            let csv = 'Lap Number,Lap Time,Split Time\n';
+            laps.forEach(l => {
+                csv += `${l.lapIndex},"${formatTime(l.lapDuration).formatted}","${formatTime(l.splitTime).formatted}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const link = document.createElement('a');
+            link.download = `aerospace-chrono-laps-${Date.now()}.csv`;
+            link.href = URL.createObjectURL(blob);
+            link.click();
+            if (window.RelAudio) window.RelAudio.success();
+        });
+
+        // Keyboard Shortcuts
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (isRunning) pauseStopwatch();
+                else startStopwatch();
+            } else if (e.key.toLowerCase() === 'l') {
+                if (isRunning) recordLap();
+            } else if (e.key.toLowerCase() === 'r') {
+                resetAll();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Cyber Notebook // Notes App</title>
+    
+    <link rel="stylesheet" href="css/rel-core.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        :root {
+            --neon-mint: #0be881;
+            --neon-mint-glow: rgba(11, 232, 129, 0.4);
+            --note-bg: #09120c;
+        }
+
+        body {
+            background-color: #040906;
+            background-image: 
+                radial-gradient(ellipse at 50% 15%, rgba(11, 232, 129, 0.08) 0%, transparent 60%),
+                linear-gradient(rgba(11, 232, 129, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(11, 232, 129, 0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 28px 28px, 28px 28px;
+            min-height: 100vh;
+            color: #ecfdf5;
+        }
+
+        .notes-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: calc(100vh - var(--rel-hud-height));
+            padding: 30px 20px;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 1080px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        /* --- Header Card --- */
+        .header-card {
+            background: linear-gradient(160deg, #0e1e14 0%, #08130c 60%, #040a06 100%);
+            padding: 26px 36px;
+            border-radius: 20px;
+            border: 2px solid #1a3825;
+            box-shadow: 
+                0 0 0 1px rgba(11, 232, 129, 0.3),
+                0 0 45px rgba(11, 232, 129, 0.12),
+                0 20px 50px rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            position: relative;
+        }
+
+        /* Top mint accent bar */
+        .header-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 25px;
+            right: 25px;
+            height: 3px;
+            background: linear-gradient(90deg, #0be881, #00d2d3, #ffd32a, #0be881);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 0 14px rgba(11, 232, 129, 0.8);
+        }
+
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 16px; 
+        }
+
+        .brand-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            border: 1.5px solid #0be881;
+            box-shadow: 0 0 16px var(--neon-mint-glow);
+            object-fit: cover;
+            background: #000;
+        }
+
+        .brand-text-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .notebook-badge {
+            display: inline-block;
+            align-self: flex-start;
+            font-family: var(--rel-font-mono);
+            font-size: 0.62rem;
+            color: #0be881;
+            background: rgba(11, 232, 129, 0.15);
+            padding: 2px 7px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            border: 1px solid rgba(11, 232, 129, 0.35);
+        }
+
+        .brand-title {
+            color: #ffffff; 
+            font-family: var(--rel-font-display);
+            font-size: 1.45rem; 
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0;
+            line-height: 1.1;
+        }
+
+        .brand-subtitle {
+            color: #0be881; 
+            font-family: var(--rel-font-mono);
+            font-size: 0.8rem; 
+            font-weight: 600;
+            margin-top: 3px;
+            letter-spacing: 0.6px;
+        }
+
+        .btn-add {
+            background: linear-gradient(180deg, #1b6338 0%, #0d381e 100%);
+            color: #0be881;
+            border: 1.5px solid rgba(11, 232, 129, 0.5);
+            padding: 13px 26px;
+            border-radius: 10px;
+            font-family: var(--rel-font-display);
+            font-size: 0.95rem;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 0 20px var(--neon-mint-glow);
+            outline: none;
+        }
+
+        .btn-add:hover { 
+            background: #0be881; 
+            color: #030805; 
+            box-shadow: 0 0 28px rgba(11, 232, 129, 0.8);
+            transform: translateY(-2px);
+        }
+
+        /* Notes Grid */
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+            gap: 24px;
+        }
+
+        .note-card {
+            background: linear-gradient(160deg, #0e1c12 0%, #07120a 100%);
+            border: 1.5px solid #1a3824;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: all 0.25s ease;
+            height: 390px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
+            position: relative;
+        }
+
+        .note-card:hover {
+            transform: translateY(-4px);
+            border-color: #0be881;
+            box-shadow: 0 16px 40px rgba(11, 232, 129, 0.2);
+        }
+
+        .note-header {
+            background-color: #050c07;
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1.5px solid #142a1c;
+        }
+
+        .note-date {
+            font-size: 0.72rem;
+            color: #6ee7b7;
+            font-weight: 700;
+            font-family: var(--rel-font-mono);
+            letter-spacing: 0.5px;
+        }
+
+        .note-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 1.15rem;
+            transition: all 0.15s ease;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-icon:hover { color: #0be881; transform: scale(1.15); }
+        .btn-delete:hover { color: #ff4757; }
+        .btn-save { color: #0be881; display: none; }
+
+        .note-body {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* View Mode */
+        .view-mode {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .note-subject-display {
+            color: #ffffff;
+            font-family: var(--rel-font-display);
+            font-size: 1.2rem;
+            margin: 0 0 10px 0;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid rgba(11, 232, 129, 0.25);
+            padding-bottom: 8px;
+        }
+
+        .markdown-view {
+            font-size: 0.92rem;
+            color: #d1fae5;
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+        
+        .markdown-view h1, .markdown-view h2, .markdown-view h3 { 
+            color: #0be881; 
+            margin-top: 0; 
+            font-family: var(--rel-font-display);
+            font-weight: 800;
+        }
+        .markdown-view a { color: #00d2d3; text-decoration: underline; }
+        .markdown-view code { 
+            background-color: #030805; 
+            color: #0be881; 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            font-family: var(--rel-font-mono); 
+            font-size: 0.82rem; 
+            border: 1px solid #142a1c;
+        }
+        .markdown-view pre { 
+            background-color: #030805; 
+            padding: 12px; 
+            border-radius: 8px; 
+            overflow-x: auto; 
+            border: 1px solid #142a1c;
+        }
+        .markdown-view pre code { border: none; padding: 0; }
+
+        /* Edit Mode */
+        .edit-mode {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            gap: 12px;
+        }
+
+        .edit-subject {
+            width: 100%;
+            background: #040906;
+            border: 1.5px solid #1b3824;
+            border-radius: 8px;
+            color: #0be881;
+            padding: 11px 14px;
+            font-size: 1rem;
+            font-weight: 700;
+            outline: none;
+            font-family: var(--rel-font-mono);
+            box-sizing: border-box;
+            transition: all 0.2s;
+        }
+
+        .edit-subject:focus { border-color: #0be881; box-shadow: 0 0 14px var(--neon-mint-glow); }
+
+        .edit-textarea {
+            width: 100%;
+            flex-grow: 1;
+            background: #040906;
+            border: 1.5px solid #1b3824;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 0.92rem;
+            resize: none;
+            outline: none;
+            font-family: var(--rel-font-mono);
+            line-height: 1.5;
+            padding: 12px 14px;
+            box-sizing: border-box;
+            transition: all 0.2s;
+        }
+
+        .edit-textarea:focus { border-color: #0be881; box-shadow: 0 0 14px var(--neon-mint-glow); }
+        
+        ::placeholder {
+            color: #4b6b55;
+        }
+
+        .note-card.editing .view-mode { display: none; }
+        .note-card.editing .edit-mode { display: flex; }
+        .note-card.editing .btn-edit { display: none; }
+        .note-card.editing .btn-save { display: block; }
+        
+        .note-card.editing {
+            border-color: #0be881;
+            box-shadow: 0 0 25px var(--neon-mint-glow);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="notes-wrapper">
+        <div class="app-container">
+            
+            <div class="header-card rel-tactile-surface">
+                <div class="brand-header">
+                    <img src="logo.png" alt="The Rel Works Logo" class="brand-logo" onerror="this.style.display='none'">
+                    <div class="brand-text-container">
+                        <span class="notebook-badge">NEON CYBER NOTEBOOK</span>
+                        <div class="brand-title">NEURAL LOGS WORKSTATION</div>
+                        <div class="brand-subtitle">THE REL WORKS // ENCRYPTED MARKDOWN NOTEBOOK</div>
+                    </div>
+                </div>
+
+                <button class="btn-add" id="btn-add">
+                    <span>+</span> NEW NOTE LOG
+                </button>
+            </div>
+
+            <div class="notes-grid" id="notes-grid"></div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/rel-audio.js"></script>
+    <script src="js/rel-hud.js"></script>
+    <script>
+        const notesGrid = document.getElementById('notes-grid');
+        const btnAdd = document.getElementById('btn-add');
+
+        let notes = JSON.parse(localStorage.getItem('relWorksNotes_SubjectFormat')) || [];
+
+        function saveNotes() {
+            localStorage.setItem('relWorksNotes_SubjectFormat', JSON.stringify(notes));
+        }
+
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric',
+                hour: '2-digit', 
+                minute: '2-digit'
+            });
+        }
+
+        function addNote() {
+            const newNote = {
+                id: Date.now().toString(),
+                subject: '', 
+                text: '',    
+                date: Date.now()
+            };
+            
+            notes.unshift(newNote); 
+            saveNotes();
+            
+            const noteEl = createNoteElement(newNote);
+            notesGrid.prepend(noteEl);
+            toggleEditMode(noteEl, newNote.id);
+            if (window.RelAudio) window.RelAudio.chirp(1200);
+        }
+
+        function deleteNote(id, noteElement) {
+            if (confirm("PURGE CONFIRMATION: Remove this note log permanently?")) {
+                notes = notes.filter(note => note.id !== id);
+                saveNotes();
+                noteElement.remove();
+                if (window.RelAudio) window.RelAudio.error();
+            }
+        }
+
+        function updateNoteData(id, newSubject, newText) {
+            const note = notes.find(n => n.id === id);
+            if (note) {
+                note.subject = newSubject;
+                note.text = newText;
+                saveNotes();
+            }
+        }
+
+        function toggleEditMode(noteElement, id) {
+            noteElement.classList.toggle('editing');
+            
+            const isEditing = noteElement.classList.contains('editing');
+            
+            const subjectInput = noteElement.querySelector('.edit-subject');
+            const textarea = noteElement.querySelector('.edit-textarea');
+            
+            const subjectDisplay = noteElement.querySelector('.note-subject-display');
+            const markdownView = noteElement.querySelector('.markdown-view');
+            
+            if (isEditing) {
+                subjectInput.focus();
+                if (window.RelAudio) window.RelAudio.click();
+            } else {
+                const newSubject = subjectInput.value.trim() || "Untitled Mission Log";
+                const newText = textarea.value;
+                
+                updateNoteData(id, newSubject, newText);
+                
+                subjectDisplay.innerText = newSubject;
+                markdownView.innerHTML = marked.parse(newText);
+                if (window.RelAudio) window.RelAudio.success();
+            }
+        }
+
+        function createNoteElement(note) {
+            const noteCard = document.createElement('div');
+            noteCard.className = 'note-card rel-tactile-surface';
+            noteCard.dataset.id = note.id;
+
+            noteCard.innerHTML = `
+                <div class="note-header">
+                    <div class="note-date">LOG_STAMP: ${formatDate(note.date)}</div>
+                    <div class="note-actions">
+                        <button class="btn-icon btn-edit" title="Edit Log">✎</button>
+                        <button class="btn-icon btn-save" title="Save Log">✔</button>
+                        <button class="btn-icon btn-delete" title="Purge Log">✖</button>
+                    </div>
+                </div>
+                <div class="note-body">
+                    
+                    <div class="view-mode">
+                        <h3 class="note-subject-display">${note.subject || 'Untitled Mission Log'}</h3>
+                        <div class="markdown-view">${marked.parse(note.text || '')}</div>
+                    </div>
+
+                    <div class="edit-mode">
+                        <input type="text" class="edit-subject" value="${note.subject}" placeholder="Mission Subject...">
+                        <textarea class="edit-textarea" placeholder="Input markdown notes...">${note.text}</textarea>
+                    </div>
+
+                </div>
+            `;
+
+            const editBtn = noteCard.querySelector('.btn-edit');
+            const saveBtn = noteCard.querySelector('.btn-save');
+            const deleteBtn = noteCard.querySelector('.btn-delete');
+            const textarea = noteCard.querySelector('.edit-textarea');
+
+            editBtn.addEventListener('click', () => toggleEditMode(noteCard, note.id));
+            saveBtn.addEventListener('click', () => toggleEditMode(noteCard, note.id));
+            deleteBtn.addEventListener('click', () => deleteNote(note.id, noteCard));
+
+            // Typewriter click on typing
+            textarea.addEventListener('keydown', (e) => {
+                if (e.key.length === 1 && window.RelAudio) {
+                    window.RelAudio.tick();
+                }
+            });
+
+            return noteCard;
+        }
+
+        function renderNotes() {
+            notesGrid.innerHTML = '';
+            notes.forEach(note => {
+                const noteEl = createNoteElement(note);
+                notesGrid.appendChild(noteEl);
+            });
+        }
+
+        btnAdd.addEventListener('click', addNote);
+
+        renderNotes();
+    </script>
+</body>
+</html>

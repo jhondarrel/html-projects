@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imperial Roman Cipher // The Rel Works</title>
+    
+    <link rel="stylesheet" href="css/rel-core.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --roman-gold: #f1c40f;
+            --roman-purple: #8e44ad;
+            --roman-gold-glow: rgba(241, 196, 15, 0.45);
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 15%, #2a0b38 0%, #15051d 50%, #08020c 100%);
+            min-height: 100vh;
+            color: #fdf4ff;
+        }
+
+        .roman-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - var(--rel-hud-height));
+            padding: 30px 20px;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 660px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        /* --- Imperial Roman Sunstone Tablet Chassis --- */
+        .app-card {
+            background: linear-gradient(160deg, #1c0826 0%, #110418 60%, #08020c 100%);
+            padding: 40px 46px;
+            border-radius: 24px;
+            border: 2px solid #3d1552;
+            box-shadow: 
+                0 0 0 1px rgba(241, 196, 15, 0.35),
+                0 0 45px rgba(241, 196, 15, 0.15),
+                0 25px 60px rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            position: relative;
+        }
+
+        /* Classical Roman Corner Ornaments */
+        .app-card::before, .app-card::after {
+            content: '';
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            border: 2px solid var(--roman-gold);
+            opacity: 0.7;
+        }
+        .app-card::before { top: 12px; left: 12px; border-right: none; border-bottom: none; }
+        .app-card::after { bottom: 12px; right: 12px; border-left: none; border-top: none; }
+
+        /* Brand Header */
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 16px; 
+            border-bottom: 1.5px solid rgba(241, 196, 15, 0.25);
+            padding-bottom: 20px;
+        }
+
+        .brand-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            border: 1.5px solid var(--roman-gold);
+            box-shadow: 0 0 16px var(--roman-gold-glow);
+            object-fit: cover;
+            background: #000;
+        }
+
+        .brand-text-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .roman-badge {
+            display: inline-block;
+            align-self: flex-start;
+            font-family: var(--rel-font-mono);
+            font-size: 0.62rem;
+            color: var(--roman-gold);
+            background: rgba(241, 196, 15, 0.15);
+            padding: 2px 7px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            border: 1px solid rgba(241, 196, 15, 0.35);
+        }
+
+        .brand-title {
+            color: #ffffff; 
+            font-size: 1.45rem; 
+            font-weight: 900;
+            font-family: 'Cinzel', serif;
+            text-transform: uppercase;
+            letter-spacing: 2px; 
+            margin: 0;
+            line-height: 1.1;
+        }
+
+        .brand-subtitle {
+            color: var(--roman-gold); 
+            font-size: 0.8rem; 
+            font-weight: 600;
+            margin-top: 4px;
+            letter-spacing: 0.8px;
+            font-family: var(--rel-font-mono);
+        }
+
+        /* Input Controls */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+        }
+
+        label {
+            font-size: 0.78rem;
+            color: var(--roman-gold);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-family: var(--rel-font-mono);
+        }
+
+        input {
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1.5px solid #3d1552;
+            background-color: #09020e;
+            color: #ffffff;
+            font-size: 1.7rem;
+            font-family: 'Cinzel', serif;
+            font-weight: 800;
+            outline: none;
+            transition: all 0.25s ease;
+            text-align: center;
+            letter-spacing: 4px;
+            box-sizing: border-box;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
+        }
+
+        input:focus { 
+            border-color: var(--roman-gold); 
+            box-shadow: 0 0 20px var(--roman-gold-glow);
+        }
+
+        input::placeholder {
+            color: #58336d;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+        }
+
+        .conversion-icon {
+            text-align: center;
+            color: var(--roman-gold);
+            font-size: 1.8rem;
+            margin: -6px 0;
+            animation: pulse-icon 2s ease infinite;
+            text-shadow: 0 0 12px var(--roman-gold-glow);
+        }
+
+        @keyframes pulse-icon {
+            0%, 100% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.15); opacity: 1; }
+        }
+
+        .error-message {
+            color: #ff4757;
+            font-family: var(--rel-font-mono);
+            font-size: 0.8rem;
+            text-align: center;
+            font-weight: 700;
+            min-height: 18px;
+        }
+
+        /* Legend/Helper Table */
+        .legend {
+            display: flex;
+            justify-content: space-between;
+            background-color: #0b0212;
+            border: 1.5px solid #330e47;
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin-top: 6px;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
+        }
+
+        .legend-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            padding: 4px 8px;
+            border-radius: 8px;
+        }
+
+        .legend-item:hover {
+            transform: translateY(-3px) scale(1.1);
+            background: rgba(241, 196, 15, 0.15);
+        }
+
+        .legend-symbol {
+            color: var(--roman-gold);
+            font-weight: 900;
+            font-size: 1.25rem;
+            font-family: 'Cinzel', serif;
+            text-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+        }
+
+        .legend-value {
+            color: #d8b4e2;
+            font-size: 0.75rem;
+            font-family: var(--rel-font-mono);
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="roman-wrapper">
+        <div class="app-container">
+            
+            <div class="app-card rel-tactile-surface">
+                
+                <div class="brand-header">
+                    <img src="logo.png" alt="The Rel Works Logo" class="brand-logo" onerror="this.style.display='none'">
+                    <div class="brand-text-container">
+                        <span class="roman-badge">IMPERIAL SOLARPUNK TABLET</span>
+                        <div class="brand-title">IMPERIAL ROMAN CIPHER</div>
+                        <div class="brand-subtitle">THE REL WORKS // ANTIQUITY NUMERAL DECODER</div>
+                    </div>
+                </div>
+
+                <div class="error-message" id="error-msg"></div>
+
+                <div class="input-group">
+                    <label for="roman-input">Roman Numeral Cipher (I, V, X, L, C, D, M)</label>
+                    <input type="text" id="roman-input" placeholder="e.g. XIV" autocomplete="off">
+                </div>
+
+                <div class="conversion-icon">⇅</div>
+
+                <div class="input-group">
+                    <label for="decimal-input">Decimal Standard (1 to 3999)</label>
+                    <input type="number" id="decimal-input" placeholder="e.g. 14" min="1" max="3999">
+                </div>
+
+                <div class="legend">
+                    <div class="legend-item" onclick="insertSymbol('I')"><span class="legend-symbol">I</span><span class="legend-value">1</span></div>
+                    <div class="legend-item" onclick="insertSymbol('V')"><span class="legend-symbol">V</span><span class="legend-value">5</span></div>
+                    <div class="legend-item" onclick="insertSymbol('X')"><span class="legend-symbol">X</span><span class="legend-value">10</span></div>
+                    <div class="legend-item" onclick="insertSymbol('L')"><span class="legend-symbol">L</span><span class="legend-value">50</span></div>
+                    <div class="legend-item" onclick="insertSymbol('C')"><span class="legend-symbol">C</span><span class="legend-value">100</span></div>
+                    <div class="legend-item" onclick="insertSymbol('D')"><span class="legend-symbol">D</span><span class="legend-value">500</span></div>
+                    <div class="legend-item" onclick="insertSymbol('M')"><span class="legend-symbol">M</span><span class="legend-value">1000</span></div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/rel-audio.js"></script>
+    <script src="js/rel-hud.js"></script>
+    <script>
+        const romanInput = document.getElementById('roman-input');
+        const decInput = document.getElementById('decimal-input');
+        const errorMsg = document.getElementById('error-msg');
+
+        const romanRegex = /^(M{0,3})(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/i;
+
+        function romanToInt(str) {
+            const map = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
+            let res = 0;
+            
+            for (let i = 0; i < str.length; i++) {
+                const current = map[str[i]];
+                const next = map[str[i + 1]];
+                
+                if (next && current < next) {
+                    res -= current;
+                } else {
+                    res += current;
+                }
+            }
+            return res;
+        }
+
+        function intToRoman(num) {
+            const values = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+            const symbols = ["M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"];
+            let res = "";
+            
+            for (let i = 0; i < values.length; i++) {
+                while (num >= values[i]) {
+                    res += symbols[i];
+                    num -= values[i];
+                }
+            }
+            return res;
+        }
+
+        function insertSymbol(sym) {
+            romanInput.value += sym;
+            romanInput.dispatchEvent(new Event('input'));
+            if (window.RelAudio) window.RelAudio.click();
+        }
+
+        romanInput.addEventListener('input', (e) => {
+            let val = e.target.value.toUpperCase();
+            romanInput.value = val; 
+
+            if (val === '') {
+                decInput.value = '';
+                errorMsg.innerText = '';
+                return;
+            }
+
+            if (!/^[IVXLCDM]+$/.test(val)) {
+                errorMsg.innerText = "Error: Invalid glyphs. Allowed: I, V, X, L, C, D, M.";
+                decInput.value = '';
+                if (window.RelAudio) window.RelAudio.error();
+                return;
+            }
+
+            if (!romanRegex.test(val)) {
+                errorMsg.innerText = "Error: Invalid syntax sequence (e.g. IIII is illegal in subtractive notation).";
+                decInput.value = '';
+                if (window.RelAudio) window.RelAudio.error();
+                return;
+            }
+
+            errorMsg.innerText = '';
+            decInput.value = romanToInt(val);
+            if (window.RelAudio) window.RelAudio.chirp(1200);
+        });
+
+        decInput.addEventListener('input', (e) => {
+            let val = parseInt(e.target.value);
+
+            if (isNaN(val) || e.target.value === '') {
+                romanInput.value = '';
+                errorMsg.innerText = '';
+                return;
+            }
+
+            if (val < 1 || val > 3999) {
+                errorMsg.innerText = "Error: Standard Roman numerals support integers strictly from 1 to 3999.";
+                romanInput.value = '';
+                if (window.RelAudio) window.RelAudio.error();
+                return;
+            }
+
+            errorMsg.innerText = '';
+            romanInput.value = intToRoman(val);
+            if (window.RelAudio) window.RelAudio.chirp(1200);
+        });
+    </script>
+</body>
+</html>

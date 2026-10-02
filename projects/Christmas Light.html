@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Festive Spectrum Overdrive // Christmas Lights</title>
+    
+    <link rel="stylesheet" href="css/rel-core.css">
+
+    <style>
+        :root {
+            --light-size: 46px;
+            --light-intensity: 1;
+            --base-opacity: 0.2;
+            --transition-speed: 240ms;
+            --bulb-red: #ff3838;
+            --bulb-green: #2ed573;
+            --bulb-gold: #ffd32a;
+            --bulb-cyan: #00d2d3;
+            --bulb-purple: #9b59b6;
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 20%, #0d2218 0%, #07130d 50%, #030806 100%);
+            min-height: 100vh;
+            color: #f1f2f6;
+        }
+
+        .simulator-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - var(--rel-hud-height));
+            padding: 30px 20px;
+        }
+
+        /* --- Festive Spectrum Holiday Workshop Chassis --- */
+        .simulator-card {
+            background: linear-gradient(160deg, #122319 0%, #0a1610 60%, #050c08 100%);
+            padding: 36px 42px;
+            border-radius: 24px;
+            border: 2px solid #1c3827;
+            box-shadow: 
+                0 0 0 1px rgba(255, 56, 56, 0.3),
+                0 0 45px rgba(46, 213, 115, 0.15),
+                0 25px 60px rgba(0, 0, 0, 0.9);
+            width: 100%;
+            max-width: 860px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            position: relative;
+        }
+
+        /* Festive garland accent bar */
+        .simulator-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 30px;
+            right: 30px;
+            height: 3px;
+            background: linear-gradient(90deg, #ff3838, #ffd32a, #2ed573, #ff3838);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 0 16px rgba(255, 56, 56, 0.8);
+        }
+
+        /* Brand Header */
+        .brand-header {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 16px; 
+            border-bottom: 1.5px solid rgba(255, 56, 56, 0.25);
+            padding-bottom: 20px;
+        }
+
+        .brand-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            border: 1.5px solid #ff3838;
+            box-shadow: 0 0 16px rgba(255, 56, 56, 0.4);
+            object-fit: cover;
+            background: #000;
+        }
+
+        .brand-text-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .holiday-badge {
+            display: inline-block;
+            align-self: flex-start;
+            font-family: var(--rel-font-mono);
+            font-size: 0.62rem;
+            color: #ffd32a;
+            background: rgba(255, 211, 42, 0.15);
+            padding: 2px 7px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            border: 1px solid rgba(255, 211, 42, 0.3);
+        }
+
+        .brand-title {
+            color: #ffffff;
+            font-family: var(--rel-font-display);
+            font-size: 1.45rem; 
+            font-weight: 900;
+            letter-spacing: 1px;
+            line-height: 1.2;
+            text-transform: uppercase;
+        }
+
+        .brand-subtitle {
+            color: #2ed573; 
+            font-family: var(--rel-font-mono);
+            font-size: 0.82rem; 
+            font-weight: 600;
+            margin-top: 3px;
+            letter-spacing: 0.6px;
+        }
+
+        /* Hardware Control Deck */
+        .controls {
+            background: #040906;
+            padding: 24px;
+            border-radius: 16px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            border: 1.5px solid #14281c;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.8);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-group label {
+            font-family: var(--rel-font-mono);
+            font-size: 0.75rem;
+            color: #a4b0be;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .control-group label span {
+            color: #ffd32a;
+            font-weight: 800;
+        }
+
+        /* Range Slider Styling */
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #0a150e;
+            border-radius: 4px;
+            border: 1px solid #1d3626;
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ff3838;
+            box-shadow: 0 0 12px rgba(255, 56, 56, 0.8);
+            border: 2px solid #ffffff;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.25);
+            background: #2ed573;
+            box-shadow: 0 0 14px rgba(46, 213, 115, 0.9);
+        }
+
+        select {
+            width: 100%;
+            padding: 11px 16px;
+            border: 1.5px solid #1d3626;
+            border-radius: 10px;
+            cursor: pointer;
+            background: #07100b;
+            color: #ffffff;
+            font-family: var(--rel-font-mono);
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        select:focus {
+            border-color: #2ed573;
+            box-shadow: 0 0 14px rgba(46, 213, 115, 0.35);
+        }
+
+        .btn-play {
+            grid-column: span 2;
+            background: linear-gradient(180deg, #1b6338 0%, #0d381e 100%);
+            color: #2ed573;
+            border: 1.5px solid rgba(46, 213, 115, 0.5);
+            padding: 15px;
+            border-radius: 12px;
+            font-family: var(--rel-font-display);
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 25px rgba(46, 213, 115, 0.25);
+            text-transform: uppercase;
+            outline: none;
+        }
+
+        .btn-play:hover {
+            background: #2ed573;
+            color: #030805;
+            box-shadow: 0 0 30px rgba(46, 213, 115, 0.7);
+            transform: translateY(-2px);
+        }
+
+        .btn-play.stop {
+            background: linear-gradient(180deg, #59161e 0%, #300a0f 100%);
+            color: #ff3838;
+            border-color: rgba(255, 56, 56, 0.6);
+            box-shadow: 0 0 25px rgba(255, 56, 56, 0.35);
+        }
+
+        .btn-play.stop:hover {
+            background: #ff3838;
+            color: #ffffff;
+            box-shadow: 0 0 30px rgba(255, 56, 56, 0.8);
+        }
+
+        /* --- Festive Bulb Bay & Realistic Wiring --- */
+        #display-board {
+            background: radial-gradient(ellipse at 50% 50%, #050d09 0%, #020503 100%);
+            border: 1.5px solid #14281c;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 24px;
+            overflow-x: auto; 
+            min-height: 160px;
+            box-shadow: inset 0 4px 24px rgba(0,0,0,0.9);
+            position: relative;
+        }
+
+        .light-row {
+            display: flex;
+            gap: 26px;
+            position: relative;
+            padding: 10px 18px;
+        }
+
+        /* Realistic Twisted Green Cable Conduit */
+        .light-row::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: repeating-linear-gradient(90deg, #0e2b1b 0px, #1a422b 8px, #0e2b1b 16px);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.9);
+            z-index: 0;
+            transform: translateY(-50%);
+            border-radius: 2px;
+        }
+
+        /* Realistic Teardrop Bulb with Brass Collar Socket */
+        .light {
+            width: var(--light-size);
+            height: calc(var(--light-size) * 1.25);
+            border-radius: 50% 50% 45% 45% / 40% 40% 60% 60%;
+            opacity: var(--base-opacity);
+            z-index: 1;
+            transition: opacity var(--transition-speed) ease, box-shadow var(--transition-speed) ease, transform var(--transition-speed) ease;
+            background: radial-gradient(circle at 40% 30%, #ffffff 0%, var(--light-color) 45%, #050505 100%);
+            border: 1px solid rgba(255,255,255,0.2);
+            position: relative;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Brass screw collar top */
+        .light::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40%;
+            height: 8px;
+            background: linear-gradient(90deg, #594a1d 0%, #b8983d 50%, #594a1d 100%);
+            border-radius: 2px 2px 0 0;
+            border: 1px solid #3d3110;
+        }
+
+        /* Multi-chromatic Holiday Lights */
+        .light:nth-child(5n+1) { --light-color: var(--bulb-red); }
+        .light:nth-child(5n+2) { --light-color: var(--bulb-green); }
+        .light:nth-child(5n+3) { --light-color: var(--bulb-gold); }
+        .light:nth-child(5n+4) { --light-color: var(--bulb-cyan); }
+        .light:nth-child(5n+5) { --light-color: var(--bulb-purple); }
+
+        .light.active {
+            opacity: var(--light-intensity);
+            transform: scale(1.12);
+            box-shadow: 
+                0 0 calc(var(--light-size) * 0.9) var(--light-color),
+                0 0 calc(var(--light-size) * 2.2) var(--light-color),
+                inset 0 0 16px rgba(255,255,255,0.9);
+            border-color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="simulator-wrapper">
+        <div class="simulator-card rel-tactile-surface">
+            
+            <div class="brand-header">
+                <img src="logo.png" alt="The Rel Works Logo" class="brand-logo" onerror="this.style.display='none'">
+                <div class="brand-text-container">
+                    <span class="holiday-badge">HOLIDAY OPTICAL WORKSHOP</span>
+                    <div class="brand-title">FESTIVE SPECTRUM OVERDRIVE</div>
+                    <div class="brand-subtitle">THE REL WORKS // MULTI-BULB LUMINESCENCE CASCADE</div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <div class="control-group">
+                    <label for="speed">Clock Interval: <span id="speed-val">300</span>ms</label>
+                    <input type="range" id="speed" min="50" max="1000" step="10" value="300">
+                </div>
+
+                <div class="control-group">
+                    <label for="mode">Array Sequence Mode</label>
+                    <select id="mode">
+                        <option value="sequential">Sequential (Wave Flow)</option>
+                        <option value="random">Random (Quantum Twinkle)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="intensity">Lumen Intensity: <span id="intensity-val">100</span>%</label>
+                    <input type="range" id="intensity" min="0.2" max="1" step="0.1" value="1">
+                </div>
+
+                <div class="control-group">
+                    <label for="size">Aperture Size: <span id="size-val">46</span>px</label>
+                    <input type="range" id="size" min="20" max="80" step="5" value="46">
+                </div>
+
+                <div class="control-group" style="grid-column: span 2;">
+                    <label for="rows">Parallel Bus Rows: <span id="rows-val">1</span></label>
+                    <input type="range" id="rows" min="1" max="7" step="1" value="1">
+                </div>
+
+                <button class="btn-play" id="play-btn">START ARRAY</button>
+            </div>
+
+            <div id="display-board"></div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/rel-audio.js"></script>
+    <script src="js/rel-hud.js"></script>
+    <script>
+        const displayBoard = document.getElementById('display-board');
+        const playBtn = document.getElementById('play-btn');
+        
+        const speedInput = document.getElementById('speed');
+        const modeInput = document.getElementById('mode');
+        const intensityInput = document.getElementById('intensity');
+        const sizeInput = document.getElementById('size');
+        const rowsInput = document.getElementById('rows');
+
+        let isPlaying = false;
+        let timerId = null;
+        let currentLightIndex = 0;
+
+        function buildGrid() {
+            displayBoard.innerHTML = ''; 
+            const rowCount = parseInt(rowsInput.value);
+
+            for (let r = 0; r < rowCount; r++) {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'light-row';
+
+                for (let c = 0; c < 7; c++) {
+                    const light = document.createElement('div');
+                    light.className = 'light';
+                    light.title = `Bulb R${r+1}:C${c+1}`;
+                    light.addEventListener('click', () => {
+                        light.classList.toggle('active');
+                        if (window.RelAudio) window.RelAudio.chirp(1400);
+                    });
+                    rowDiv.appendChild(light);
+                }
+                displayBoard.appendChild(rowDiv);
+            }
+        }
+
+        function updateLights() {
+            const rows = document.querySelectorAll('.light-row');
+            const currentMode = modeInput.value;
+            
+            rows.forEach(row => {
+                const lights = row.querySelectorAll('.light');
+                lights.forEach(light => light.classList.remove('active'));
+                
+                if (currentMode === 'sequential') {
+                    if (lights[currentLightIndex]) {
+                        lights[currentLightIndex].classList.add('active');
+                    }
+                } else if (currentMode === 'random') {
+                    const randomIndex = Math.floor(Math.random() * lights.length);
+                    if (lights[randomIndex]) {
+                        lights[randomIndex].classList.add('active');
+                    }
+                }
+            });
+
+            if (currentMode === 'sequential') {
+                currentLightIndex = (currentLightIndex + 1) % 7;
+            }
+
+            // Audio pulse sync
+            if (isPlaying && window.RelAudio) {
+                window.RelAudio.tick();
+            }
+        }
+
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            
+            if (isPlaying) {
+                playBtn.textContent = 'STOP ARRAY';
+                playBtn.classList.add('stop');
+                
+                updateLights(); 
+                timerId = setInterval(updateLights, parseInt(speedInput.value));
+                if (window.RelAudio) window.RelAudio.success();
+            } else {
+                playBtn.textContent = 'START ARRAY';
+                playBtn.classList.remove('stop');
+                
+                clearInterval(timerId);
+                const allLights = document.querySelectorAll('.light');
+                allLights.forEach(light => light.classList.remove('active'));
+                currentLightIndex = 0; 
+                if (window.RelAudio) window.RelAudio.snap();
+            }
+        }
+
+        function updateInterval() {
+            document.documentElement.style.setProperty('--transition-speed', `${speedInput.value * 0.8}ms`);
+            
+            if (isPlaying) {
+                clearInterval(timerId);
+                timerId = setInterval(updateLights, parseInt(speedInput.value));
+            }
+        }
+
+        speedInput.addEventListener('input', (e) => {
+            document.getElementById('speed-val').innerText = e.target.value;
+            updateInterval();
+        });
+
+        modeInput.addEventListener('change', () => {
+            if (isPlaying) {
+                updateLights();
+            }
+            if (window.RelAudio) window.RelAudio.click();
+        });
+
+        intensityInput.addEventListener('input', (e) => {
+            document.getElementById('intensity-val').innerText = Math.round(e.target.value * 100);
+            document.documentElement.style.setProperty('--light-intensity', e.target.value);
+        });
+
+        sizeInput.addEventListener('input', (e) => {
+            document.getElementById('size-val').innerText = e.target.value;
+            document.documentElement.style.setProperty('--light-size', e.target.value + 'px');
+        });
+
+        rowsInput.addEventListener('input', (e) => {
+            document.getElementById('rows-val').innerText = e.target.value;
+            buildGrid(); 
+            
+            if (isPlaying) {
+                currentLightIndex = currentLightIndex === 0 ? 6 : currentLightIndex - 1; 
+                updateLights();
+            }
+        });
+
+        playBtn.addEventListener('click', togglePlay);
+
+        // Initialize the app
+        buildGrid();
+        document.documentElement.style.setProperty('--transition-speed', `${speedInput.value * 0.8}ms`);
+    </script>
+</body>
+</html>

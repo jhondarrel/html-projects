@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown Live Studio // The Rel Works</title>
+    
+    <link rel="stylesheet" href="css/rel-core.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        :root {
+            --md-gold: #fbc531;
+            --md-green: #4cd137;
+            --md-cyan: #00d2d3;
+            --md-coral: #e84118;
+            --md-glow: rgba(251, 197, 49, 0.35);
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 15%, #1f1a08 0%, #100d04 50%, #050401 100%);
+            min-height: 100vh;
+            color: #fefae0;
+        }
+
+        .studio-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: calc(100vh - var(--rel-hud-height));
+            padding: 24px 20px;
+        }
+
+        .studio-container {
+            width: 100%;
+            max-width: 1280px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        /* --- Header Deck --- */
+        .header-card {
+            background: linear-gradient(160deg, #1b1606 0%, #100d04 60%, #070602 100%);
+            padding: 20px 30px;
+            border-radius: 18px;
+            border: 2px solid #3d320d;
+            box-shadow: 
+                0 0 0 1px rgba(251, 197, 49, 0.3),
+                0 0 40px rgba(251, 197, 49, 0.12),
+                0 20px 50px rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            position: relative;
+        }
+
+        /* Top Gold Accent Bar */
+        .header-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 25px;
+            right: 25px;
+            height: 3px;
+            background: linear-gradient(90deg, #fbc531, #4cd137, #00d2d3, #fbc531);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 0 14px rgba(251, 197, 49, 0.8);
+        }
+
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 16px; 
+        }
+
+        .brand-logo {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            border: 1.5px solid #fbc531;
+            box-shadow: 0 0 14px var(--md-glow);
+            object-fit: cover;
+            background: #000;
+        }
+
+        .brand-text-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .studio-badge {
+            display: inline-block;
+            align-self: flex-start;
+            font-family: var(--rel-font-mono);
+            font-size: 0.62rem;
+            color: #fbc531;
+            background: rgba(251, 197, 49, 0.15);
+            padding: 2px 7px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            border: 1px solid rgba(251, 197, 49, 0.35);
+        }
+
+        .brand-title {
+            color: #ffffff; 
+            font-family: var(--rel-font-display);
+            font-size: 1.35rem; 
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0;
+            line-height: 1.1;
+        }
+
+        .brand-subtitle {
+            color: #fbc531; 
+            font-family: var(--rel-font-mono);
+            font-size: 0.78rem; 
+            font-weight: 600;
+            margin-top: 3px;
+            letter-spacing: 0.6px;
+        }
+
+        /* Action Toolbar */
+        .actions-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-tool {
+            background: #151105;
+            border: 1.5px solid #382d0b;
+            color: #fbc531;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            outline: none;
+        }
+
+        .btn-tool:hover {
+            border-color: #fbc531;
+            background: #2b2308;
+            box-shadow: 0 0 12px var(--md-glow);
+            transform: translateY(-1px);
+        }
+
+        .btn-export {
+            background: linear-gradient(180deg, #fbc531 0%, #c49618 100%);
+            color: #0b0902;
+            border: 1px solid #fbc531;
+            font-weight: 800;
+        }
+
+        .btn-export:hover {
+            background: #fde074;
+            box-shadow: 0 0 20px rgba(251, 197, 49, 0.6);
+        }
+
+        /* Formatting Toolbar Ribbon */
+        .format-ribbon {
+            background: #0d0a03;
+            border: 1.5px solid #292109;
+            padding: 10px 16px;
+            border-radius: 12px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn-format {
+            background: #141005;
+            border: 1px solid #2d240a;
+            color: #cbd5e1;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.12s;
+            font-weight: 700;
+        }
+
+        .btn-format:hover {
+            background: #fbc531;
+            color: #0c0902;
+            border-color: #fbc531;
+        }
+
+        /* Dual Pane Workstation */
+        .workspace-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            min-height: 540px;
+        }
+
+        .pane-card {
+            background: linear-gradient(160deg, #120e04 0%, #0a0802 100%);
+            border: 2px solid #28200a;
+            border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+        }
+
+        .pane-header {
+            background: #080602;
+            padding: 12px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1.5px solid #241c07;
+            font-family: var(--rel-font-mono);
+            font-size: 0.75rem;
+            color: #fbc531;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        /* Editor Textarea */
+        #markdown-input {
+            flex: 1;
+            width: 100%;
+            background: #050401;
+            color: #fdf6e2;
+            border: none;
+            padding: 20px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+            box-sizing: border-box;
+            tab-size: 2;
+        }
+
+        /* Preview Area */
+        #preview-output {
+            flex: 1;
+            padding: 20px 24px;
+            overflow-y: auto;
+            background: #080602;
+            color: #f8fafc;
+            font-family: var(--rel-font-sans);
+            font-size: 0.96rem;
+            line-height: 1.7;
+            box-sizing: border-box;
+        }
+
+        #preview-output h1, #preview-output h2, #preview-output h3 {
+            color: #fbc531;
+            font-family: var(--rel-font-display);
+            margin-top: 0.8em;
+            margin-bottom: 0.4em;
+            letter-spacing: 0.5px;
+        }
+
+        #preview-output h1 { font-size: 1.6rem; border-bottom: 1.5px solid rgba(251, 197, 49, 0.3); padding-bottom: 6px; }
+        #preview-output h2 { font-size: 1.3rem; }
+        #preview-output a { color: #00d2d3; text-decoration: underline; }
+        
+        #preview-output code {
+            background: #040301;
+            color: #4cd137;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.85rem;
+            border: 1px solid #2d240a;
+        }
+
+        #preview-output pre {
+            background: #040301;
+            padding: 14px;
+            border-radius: 10px;
+            overflow-x: auto;
+            border: 1.5px solid #2d240a;
+        }
+
+        #preview-output pre code {
+            border: none;
+            padding: 0;
+        }
+
+        #preview-output blockquote {
+            border-left: 4px solid #fbc531;
+            margin: 1em 0;
+            padding: 4px 16px;
+            color: #cbd5e1;
+            background: rgba(251, 197, 49, 0.05);
+            border-radius: 0 8px 8px 0;
+        }
+
+        #preview-output table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1em 0;
+        }
+
+        #preview-output th, #preview-output td {
+            border: 1px solid #2d240a;
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        #preview-output th {
+            background: #141005;
+            color: #fbc531;
+            font-family: var(--rel-font-mono);
+        }
+
+        /* Metrics Footer Bar */
+        .metrics-bar {
+            background: #0d0a03;
+            border: 1.5px solid #292109;
+            padding: 12px 20px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            font-family: var(--rel-font-mono);
+            font-size: 0.75rem;
+            color: #94a3b8;
+            font-weight: 700;
+        }
+
+        .metrics-bar span {
+            color: #fbc531;
+        }
+
+        @media (max-width: 850px) {
+            .workspace-split { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="studio-wrapper">
+        <div class="studio-container">
+            
+            <div class="header-card rel-tactile-surface">
+                <div class="brand-header">
+                    <img src="logo.png" alt="The Rel Works Logo" class="brand-logo" onerror="this.style.display='none'">
+                    <div class="brand-text-container">
+                        <span class="studio-badge">MARKDOWN LIVE LAB</span>
+                        <h1 class="brand-title">MARKDOWN LIVE STUDIO</h1>
+                        <p class="brand-subtitle">THE REL WORKS // SPLIT-PANE WYSIWYG MARKDOWN WORKSTATION</p>
+                    </div>
+                </div>
+
+                <div class="actions-group">
+                    <button class="btn-tool" onclick="toggleZenMode()">ZEN VIEW</button>
+                    <button class="btn-tool" onclick="downloadFile('md')">SAVE .MD</button>
+                    <button class="btn-tool btn-export" onclick="downloadFile('html')">EXPORT HTML 📥</button>
+                </div>
+            </div>
+
+            <!-- Formatting Ribbon -->
+            <div class="format-ribbon">
+                <button class="btn-format" onclick="insertSyntax('**', '**')"><b>B</b></button>
+                <button class="btn-format" onclick="insertSyntax('*', '*')"><i>I</i></button>
+                <button class="btn-format" onclick="insertSyntax('# ', '')">H1</button>
+                <button class="btn-format" onclick="insertSyntax('## ', '')">H2</button>
+                <button class="btn-format" onclick="insertSyntax('> ', '')">Quote</button>
+                <button class="btn-format" onclick="insertSyntax('```\n', '\n```')">Code</button>
+                <button class="btn-format" onclick="insertSyntax('- [ ] ', '')">Task</button>
+                <button class="btn-format" onclick="insertSyntax('| Col 1 | Col 2 |\n|---|---|\n| Val 1 | Val 2 |', '')">Table</button>
+                <button class="btn-format" onclick="insertSyntax('[Link Text](', 'https://)')">Link</button>
+            </div>
+
+            <!-- Split Pane -->
+            <div class="workspace-split" id="workspace-split">
+                
+                <div class="pane-card" id="pane-editor">
+                    <div class="pane-header">
+                        <span>SOURCE BUFFER (.MD)</span>
+                        <span id="reading-time">1 MIN READ</span>
+                    </div>
+                    <textarea id="markdown-input" placeholder="Compose markdown notes..."></textarea>
+                </div>
+
+                <div class="pane-card" id="pane-preview">
+                    <div class="pane-header">
+                        <span>LIVE HTML RENDER</span>
+                        <span style="color: #4cd137;">REAL-TIME SYNC</span>
+                    </div>
+                    <div id="preview-output"></div>
+                </div>
+
+            </div>
+
+            <!-- Metrics Bar -->
+            <div class="metrics-bar">
+                <div>WORDS: <span id="stat-words">0</span></div>
+                <div>CHARACTERS: <span id="stat-chars">0</span></div>
+                <div>LINES: <span id="stat-lines">0</span></div>
+                <div>STATUS: <span style="color: #4cd137;">BUFFER IN MEMORY</span></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/rel-audio.js"></script>
+    <script src="js/rel-hud.js"></script>
+    <script>
+        const inputEl = document.getElementById('markdown-input');
+        const previewEl = document.getElementById('preview-output');
+        const statWords = document.getElementById('stat-words');
+        const statChars = document.getElementById('stat-chars');
+        const statLines = document.getElementById('stat-lines');
+        const readingTimeEl = document.getElementById('reading-time');
+        const splitEl = document.getElementById('workspace-split');
+        const previewPane = document.getElementById('pane-preview');
+
+        const defaultContent = `# Quantum Mission Directive
+Welcome to the **Markdown Live Studio** // An offline, split-pane markdown workstation built for clear thinking.
+
+### Key Capabilities:
+- [x] High-voltage split pane rendering
+- [x] Synchronous syntax typing with mechanical feedback
+- [x] Export to standard \`.md\` or formatted HTML documents
+- [ ] Connect custom cloud webhooks
+
+### Sample Table:
+| System Metric | Telemetry Level | Status |
+|---|---|---|
+| Core Frequency | 4.8 GHz | Nominal |
+| Memory Buffer | 128 MB Cache | Synchronized |
+
+> *"Simplicity is prerequisite for reliability."* — Edsger W. Dijkstra
+
+\`\`\`javascript
+// High performance procedural audio trigger
+window.RelAudio.chirp(1400);
+\`\`\`
+`;
+
+        inputEl.value = defaultContent;
+
+        function updatePreview() {
+            const raw = inputEl.value;
+            previewEl.innerHTML = marked.parse(raw);
+
+            // Calculate Metrics
+            const chars = raw.length;
+            const words = raw.trim() ? raw.trim().split(/\s+/).length : 0;
+            const lines = raw ? raw.split('\n').length : 0;
+            const readMinutes = Math.max(1, Math.ceil(words / 200));
+
+            statChars.innerText = chars;
+            statWords.innerText = words;
+            statLines.innerText = lines;
+            readingTimeEl.innerText = `${readMinutes} MIN READ`;
+        }
+
+        function insertSyntax(before, after) {
+            const start = inputEl.selectionStart;
+            const end = inputEl.selectionEnd;
+            const text = inputEl.value;
+
+            const selected = text.substring(start, end);
+            const replacement = before + selected + after;
+
+            inputEl.value = text.substring(0, start) + replacement + text.substring(end);
+            inputEl.focus();
+            inputEl.setSelectionRange(start + before.length, end + before.length);
+
+            updatePreview();
+            if (window.RelAudio) window.RelAudio.click();
+        }
+
+        let zenMode = false;
+        function toggleZenMode() {
+            zenMode = !zenMode;
+            if (zenMode) {
+                splitEl.style.gridTemplateColumns = "1fr";
+                previewPane.style.display = "none";
+            } else {
+                splitEl.style.gridTemplateColumns = "1fr 1fr";
+                previewPane.style.display = "flex";
+            }
+            if (window.RelAudio) window.RelAudio.snap();
+        }
+
+        function downloadFile(type) {
+            const content = inputEl.value;
+            let blob, filename;
+
+            if (type === 'md') {
+                blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+                filename = 'document.md';
+            } else {
+                const htmlDoc = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Exported Document</title><style>body{font-family:sans-serif;line-height:1.6;max-width:800px;margin:40px auto;padding:0 20px;}code{background:#f1f5f9;padding:2px 6px;border-radius:4px;}pre{background:#0f172a;color:#f8fafc;padding:16px;border-radius:8px;overflow-x:auto;}</style></head><body>${marked.parse(content)}</body></html>`;
+                blob = new Blob([htmlDoc], { type: 'text/html;charset=utf-8' });
+                filename = 'document.html';
+            }
+
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+            if (window.RelAudio) window.RelAudio.success();
+        }
+
+        inputEl.addEventListener('input', () => {
+            updatePreview();
+        });
+
+        // Typewriter click on keystroke
+        inputEl.addEventListener('keydown', (e) => {
+            if (e.key.length === 1 && window.RelAudio) {
+                window.RelAudio.tick();
+            }
+        });
+
+        updatePreview();
+    </script>
+</body>
+</html>

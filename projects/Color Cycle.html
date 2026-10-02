@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prism Lab // Color Cycle Spectrometer</title>
+    
+    <link rel="stylesheet" href="css/rel-core.css">
+
+    <style>
+        body {
+            background: radial-gradient(circle at 50% 20%, #1a102e 0%, #0d0818 50%, #05030b 100%);
+            min-height: 100vh;
+            color: #f5f3ff;
+        }
+
+        .cycle-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - var(--rel-hud-height));
+            padding: 30px 20px;
+        }
+
+        /* --- Prism Lab Holographic Chassis --- */
+        .app-card {
+            background: linear-gradient(160deg, #1b1230 0%, #110a20 60%, #080410 100%);
+            padding: 36px 42px;
+            border-radius: 24px;
+            box-shadow: 
+                0 0 0 1px rgba(165, 94, 234, 0.3),
+                0 0 45px rgba(165, 94, 234, 0.15),
+                0 25px 60px rgba(0, 0, 0, 0.9);
+            width: 100%;
+            max-width: 840px;
+            border: 2px solid #2b1c4b;
+            position: relative;
+        }
+
+        /* Prismatic top rim bar */
+        .app-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 30px;
+            right: 30px;
+            height: 3px;
+            background: linear-gradient(90deg, #a55eea, #00d2d3, #ffa502, #ff4757, #a55eea);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 0 16px rgba(165, 94, 234, 0.8);
+        }
+
+        /* Branding */
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            border-bottom: 1.5px solid rgba(165, 94, 234, 0.25);
+            padding-bottom: 20px;
+        }
+
+        .brand-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            border: 1.5px solid #a55eea;
+            box-shadow: 0 0 16px rgba(165, 94, 234, 0.4);
+            object-fit: cover;
+            background: #000;
+        }
+
+        .brand-text-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .prism-badge {
+            display: inline-block;
+            align-self: flex-start;
+            font-family: var(--rel-font-mono);
+            font-size: 0.62rem;
+            color: #a55eea;
+            background: rgba(165, 94, 234, 0.15);
+            padding: 2px 7px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            border: 1px solid rgba(165, 94, 234, 0.35);
+        }
+
+        .brand-title {
+            color: #ffffff;
+            font-family: var(--rel-font-display);
+            font-size: 1.45rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0;
+            line-height: 1.1;
+        }
+
+        .brand-subtitle {
+            color: #00d2d3;
+            font-family: var(--rel-font-mono);
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin: 4px 0 0 0;
+            letter-spacing: 0.6px;
+        }
+
+        /* --- Prismatic Liquid Optical Chamber --- */
+        .color-preview {
+            width: 100%;
+            height: 190px;
+            background-color: #000000;
+            border-radius: 16px;
+            margin-bottom: 22px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: var(--rel-font-mono);
+            font-size: 2.3rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8), 0 0 25px rgba(255,255,255,0.6);
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 
+                inset 0 0 50px rgba(0, 0, 0, 0.75), 
+                0 12px 30px rgba(0, 0, 0, 0.6);
+            transition: background-color 0.1s linear, transform 0.15s ease;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+
+        .color-preview:hover {
+            transform: scale(1.01);
+            border-color: #ffffff;
+        }
+
+        .color-preview::before {
+            content: 'CLICK TO COPY COLOR CODE';
+            position: absolute;
+            bottom: 12px;
+            right: 18px;
+            font-size: 0.68rem;
+            letter-spacing: 1px;
+            font-weight: 700;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 3px 8px;
+            border-radius: 4px;
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Controls Grid */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-bottom: 20px;
+            background: #080412;
+            padding: 24px;
+            border-radius: 16px;
+            border: 1.5px solid #23153c;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.8);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-group label {
+            font-family: var(--rel-font-mono);
+            font-size: 0.75rem;
+            color: #a55eea;
+            margin-bottom: 7px;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+        }
+
+        input, select {
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1.5px solid #2d1d4d;
+            background-color: #0d071c;
+            color: #ffffff;
+            font-family: var(--rel-font-mono);
+            font-size: 0.95rem;
+            text-align: center;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        input:focus, select:focus {
+            border-color: #a55eea;
+            box-shadow: 0 0 16px rgba(165, 94, 234, 0.4);
+        }
+
+        input:disabled, select:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            background: #05030a;
+        }
+
+        .full-width {
+            grid-column: span 3;
+        }
+
+        .half-width {
+            grid-column: span 3;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        /* Start / Stop Button */
+        .btn-action {
+            width: 100%;
+            padding: 16px;
+            font-family: var(--rel-font-display);
+            font-size: 1.15rem;
+            font-weight: 900;
+            border: 1.5px solid rgba(46, 213, 115, 0.5);
+            border-radius: 12px;
+            cursor: pointer;
+            background: linear-gradient(180deg, #1b6338 0%, #0d381e 100%);
+            color: #2ed573;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 0 25px rgba(46, 213, 115, 0.25);
+            outline: none;
+        }
+
+        .btn-action:hover {
+            background: #2ed573;
+            color: #030805;
+            box-shadow: 0 0 30px rgba(46, 213, 115, 0.7);
+            transform: translateY(-2px);
+        }
+
+        .btn-action.stop {
+            background: linear-gradient(180deg, #59161e 0%, #300a0f 100%);
+            color: #ff4757;
+            border-color: rgba(255, 71, 87, 0.6);
+            box-shadow: 0 0 25px rgba(255, 71, 87, 0.35);
+        }
+
+        .btn-action.stop:hover {
+            background: #ff4757;
+            color: #ffffff;
+            box-shadow: 0 0 30px rgba(255, 71, 87, 0.8);
+        }
+
+        .error-message {
+            color: #ff4757;
+            font-family: var(--rel-font-mono);
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 15px;
+            min-height: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cycle-wrapper">
+        <div class="app-card rel-tactile-surface">
+            <div class="brand-header">
+                <img src="logo.png" alt="The Rel Works Logo" class="brand-logo" onerror="this.style.display='none'">
+                <div class="brand-text-container">
+                    <span class="prism-badge">PRISM LAB SPECTROMETER</span>
+                    <h1 class="brand-title">COLORCYCLE SPECTROMETER</h1>
+                    <p class="brand-subtitle">THE REL WORKS // LIQUID CHROMATIC OSCILLATOR</p>
+                </div>
+            </div>
+
+            <div class="color-preview" id="color-box" title="Click to copy color code">#000000</div>
+            
+            <div class="error-message" id="error-msg"></div>
+
+            <div class="controls-grid">
+                
+                <div class="half-width">
+                    <div class="control-group">
+                        <label>Color Space Engine</label>
+                        <select id="mode-select">
+                            <option value="rgb">RGB (Hexadecimal Space)</option>
+                            <option value="hsl">HSL (Degrees / Percentages)</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>Cycle Interval (ms)</label>
+                        <input type="number" id="interval-input" value="250" min="50" max="2000" step="50">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label id="lbl-start-1">Red Start (Hex)</label>
+                    <input type="text" id="start-1" value="00" maxlength="3">
+                </div>
+                <div class="control-group">
+                    <label id="lbl-start-2">Green Start (Hex)</label>
+                    <input type="text" id="start-2" value="00" maxlength="3">
+                </div>
+                <div class="control-group">
+                    <label id="lbl-start-3">Blue Start (Hex)</label>
+                    <input type="text" id="start-3" value="00" maxlength="3">
+                </div>
+
+                <div class="control-group">
+                    <label id="lbl-inc-1">Red Increment</label>
+                    <input type="number" id="inc-1" value="5">
+                </div>
+                <div class="control-group">
+                    <label id="lbl-inc-2">Green Increment</label>
+                    <input type="number" id="inc-2" value="5">
+                </div>
+                <div class="control-group">
+                    <label id="lbl-inc-3">Blue Increment</label>
+                    <input type="number" id="inc-3" value="5">
+                </div>
+
+                <div class="full-width">
+                    <button class="btn-action" id="start-btn">Start Oscillator</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/rel-audio.js"></script>
+    <script src="js/rel-hud.js"></script>
+    <script>
+        // DOM Elements
+        const colorBox = document.getElementById('color-box');
+        const errorMsg = document.getElementById('error-msg');
+        const startBtn = document.getElementById('start-btn');
+        const modeSelect = document.getElementById('mode-select');
+        const intervalInput = document.getElementById('interval-input');
+        
+        const inputs = {
+            start: [
+                document.getElementById('start-1'),
+                document.getElementById('start-2'),
+                document.getElementById('start-3')
+            ],
+            inc: [
+                document.getElementById('inc-1'),
+                document.getElementById('inc-2'),
+                document.getElementById('inc-3')
+            ]
+        };
+
+        const labels = {
+            start: [
+                document.getElementById('lbl-start-1'),
+                document.getElementById('lbl-start-2'),
+                document.getElementById('lbl-start-3')
+            ],
+            inc: [
+                document.getElementById('lbl-inc-1'),
+                document.getElementById('lbl-inc-2'),
+                document.getElementById('lbl-inc-3')
+            ]
+        };
+
+        // State Variables
+        let isRunning = false;
+        let timerId = null;
+        let currentValues = [0, 0, 0];
+        let increments = [0, 0, 0];
+        let mode = 'rgb';
+
+        function wrapValue(val, max) {
+            return ((val % max) + max) % max;
+        }
+
+        function toHex(val) {
+            return val.toString(16).padStart(2, '0').toUpperCase();
+        }
+
+        function updateLabels() {
+            mode = modeSelect.value;
+            if (mode === 'rgb') {
+                labels.start[0].innerText = "Red Start (Hex)";
+                labels.start[1].innerText = "Green Start (Hex)";
+                labels.start[2].innerText = "Blue Start (Hex)";
+                labels.inc[0].innerText = "Red Increment";
+                labels.inc[1].innerText = "Green Increment";
+                labels.inc[2].innerText = "Blue Increment";
+                
+                inputs.start.forEach(input => input.type = "text");
+            } else {
+                labels.start[0].innerText = "Hue Start (0-360)";
+                labels.start[1].innerText = "Sat Start (0-100)";
+                labels.start[2].innerText = "Light Start (0-100)";
+                labels.inc[0].innerText = "Hue Increment";
+                labels.inc[1].innerText = "Sat Increment";
+                labels.inc[2].innerText = "Light Increment";
+                
+                inputs.start.forEach(input => {
+                    input.type = "number";
+                    if(input.value === "00") input.value = "0";
+                });
+            }
+            if (window.RelAudio) window.RelAudio.click();
+        }
+
+        function renderColor() {
+            let colorString = "";
+            if (mode === 'rgb') {
+                colorString = `#${toHex(currentValues[0])}${toHex(currentValues[1])}${toHex(currentValues[2])}`;
+            } else {
+                colorString = `hsl(${currentValues[0]}, ${currentValues[1]}%, ${currentValues[2]}%)`;
+            }
+            
+            colorBox.style.backgroundColor = colorString;
+            colorBox.innerText = colorString;
+        }
+
+        function cycleColors() {
+            if (mode === 'rgb') {
+                currentValues[0] = wrapValue(currentValues[0] + increments[0], 256);
+                currentValues[1] = wrapValue(currentValues[1] + increments[1], 256);
+                currentValues[2] = wrapValue(currentValues[2] + increments[2], 256);
+            } else {
+                currentValues[0] = wrapValue(currentValues[0] + increments[0], 360);
+                currentValues[1] = wrapValue(currentValues[1] + increments[1], 101);
+                currentValues[2] = wrapValue(currentValues[2] + increments[2], 101);
+            }
+            renderColor();
+        }
+
+        function validateInputs() {
+            errorMsg.innerText = "";
+            
+            if (mode === 'rgb') {
+                const hexRegex = /^[0-9A-Fa-f]{1,2}$/;
+                for (let i = 0; i < 3; i++) {
+                    if (!hexRegex.test(inputs.start[i].value)) {
+                        errorMsg.innerText = "Warning: Starting colors must be valid 2-digit Hex values (00 - FF).";
+                        if (window.RelAudio) window.RelAudio.error();
+                        return false;
+                    }
+                    currentValues[i] = parseInt(inputs.start[i].value, 16);
+                }
+            } else {
+                for (let i = 0; i < 3; i++) {
+                    currentValues[i] = parseInt(inputs.start[i].value, 10) || 0;
+                }
+            }
+
+            for (let i = 0; i < 3; i++) {
+                increments[i] = parseInt(inputs.inc[i].value, 10) || 0;
+            }
+
+            return true;
+        }
+
+        function toggleApp() {
+            if (isRunning) {
+                clearInterval(timerId);
+                isRunning = false;
+                startBtn.innerText = "Start Oscillator";
+                startBtn.classList.remove('stop');
+                
+                [...inputs.start, ...inputs.inc, modeSelect, intervalInput].forEach(el => el.disabled = false);
+                if (window.RelAudio) window.RelAudio.snap();
+            } else {
+                if (!validateInputs()) return;
+
+                isRunning = true;
+                startBtn.innerText = "Stop Oscillator";
+                startBtn.classList.add('stop');
+                
+                [...inputs.start, ...inputs.inc, modeSelect, intervalInput].forEach(el => el.disabled = true);
+
+                renderColor();
+                const interval = parseInt(intervalInput.value, 10) || 250;
+                timerId = setInterval(cycleColors, interval);
+                if (window.RelAudio) window.RelAudio.success();
+            }
+        }
+
+        // Copy color on click
+        colorBox.addEventListener('click', () => {
+            navigator.clipboard.writeText(colorBox.innerText).then(() => {
+                if (window.RelAudio) window.RelAudio.chirp(1300);
+            });
+        });
+
+        // Event Listeners
+        startBtn.addEventListener('click', toggleApp);
+        modeSelect.addEventListener('change', updateLabels);
+    </script>
+</body>
+</html>

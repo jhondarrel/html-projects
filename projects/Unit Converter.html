@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dimensional Transmuter // Unit Converter</title>
+    
+    <link rel="stylesheet" href="css/rel-core.css">
+
+    <style>
+        :root {
+            --brass-gold: #f39c12;
+            --molten-orange: #e67e22;
+            --gauge-cyan: #0abde3;
+            --steam-glow: rgba(243, 156, 18, 0.4);
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 15%, #2a1806 0%, #150b02 50%, #070301 100%);
+            min-height: 100vh;
+            color: #fef5e7;
+        }
+
+        .transmuter-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - var(--rel-hud-height));
+            padding: 30px 20px;
+        }
+
+        .transmuter-card {
+            background: linear-gradient(160deg, #1c1006 0%, #100802 60%, #080301 100%);
+            padding: 38px 44px;
+            border-radius: 24px;
+            border: 2px solid #42250d;
+            box-shadow: 
+                0 0 0 1px rgba(243, 156, 18, 0.3),
+                0 0 45px rgba(243, 156, 18, 0.15),
+                0 25px 60px rgba(0, 0, 0, 0.9);
+            width: 100%;
+            max-width: 720px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            position: relative;
+        }
+
+        /* Top Molten Brass Accent Bar */
+        .transmuter-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 30px;
+            right: 30px;
+            height: 3px;
+            background: linear-gradient(90deg, #f39c12, #e67e22, #0abde3, #f39c12);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 0 16px rgba(243, 156, 18, 0.8);
+        }
+
+        /* Brand Header */
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-bottom: 1.5px solid rgba(243, 156, 18, 0.25);
+            padding-bottom: 20px;
+        }
+
+        .brand-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            border: 1.5px solid #f39c12;
+            box-shadow: 0 0 16px var(--steam-glow);
+            object-fit: cover;
+            background: #000;
+        }
+
+        .brand-text-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .transmute-badge {
+            display: inline-block;
+            align-self: flex-start;
+            font-family: var(--rel-font-mono);
+            font-size: 0.62rem;
+            color: #f39c12;
+            background: rgba(243, 156, 18, 0.15);
+            padding: 2px 7px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            border: 1px solid rgba(243, 156, 18, 0.35);
+        }
+
+        .brand-title {
+            color: #ffffff;
+            font-family: var(--rel-font-display);
+            font-size: 1.45rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0;
+            line-height: 1.1;
+        }
+
+        .brand-subtitle {
+            color: #0abde3;
+            font-family: var(--rel-font-mono);
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 3px;
+            letter-spacing: 0.6px;
+        }
+
+        /* Category Nav Ribbon */
+        .category-ribbon {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 6px;
+        }
+
+        .category-tab {
+            background: #0b0602;
+            border: 1.5px solid #281608;
+            color: #e58e26;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .category-tab:hover {
+            border-color: #f39c12;
+            color: #ffffff;
+            box-shadow: 0 0 12px var(--steam-glow);
+        }
+
+        .category-tab.active {
+            background: linear-gradient(180deg, #3d2008 0%, #1c0e03 100%);
+            border-color: #f39c12;
+            color: #ffffff;
+            box-shadow: 0 0 16px rgba(243, 156, 18, 0.4);
+        }
+
+        /* Dual Chamber Converter */
+        .transmuter-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .gauge-chamber {
+            background: radial-gradient(circle at 50% 30%, #150a03 0%, #070301 100%);
+            border: 2px solid #3d2008;
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        .gauge-chamber label {
+            font-family: var(--rel-font-mono);
+            font-size: 0.72rem;
+            color: #f39c12;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+        }
+
+        .gauge-input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1.5px solid #2e1705;
+            background: #040201;
+            color: #ffffff;
+            font-family: var(--rel-font-mono);
+            font-size: 1.5rem;
+            font-weight: 800;
+            text-align: center;
+            outline: none;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        .gauge-input:focus {
+            border-color: #f39c12;
+            box-shadow: 0 0 16px var(--steam-glow);
+        }
+
+        select.unit-select {
+            width: 100%;
+            padding: 11px 14px;
+            border-radius: 10px;
+            border: 1.5px solid #2e1705;
+            background: #0d0602;
+            color: #fef5e7;
+            font-family: var(--rel-font-mono);
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        select.unit-select:focus {
+            border-color: #f39c12;
+            box-shadow: 0 0 14px var(--steam-glow);
+        }
+
+        /* Swap Gear Button */
+        .btn-swap {
+            background: linear-gradient(180deg, #2b1404 0%, #140902 100%);
+            border: 1.5px solid #5a300a;
+            color: #f39c12;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            font-size: 1.4rem;
+            font-weight: 900;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+            outline: none;
+        }
+
+        .btn-swap:hover {
+            background: #f39c12;
+            color: #0b0502;
+            box-shadow: 0 0 20px var(--steam-glow);
+            transform: rotate(180deg) scale(1.1);
+        }
+
+        /* Conversion Formula Ribbon */
+        .formula-readout {
+            background: #0a0502;
+            border: 1.5px solid #281608;
+            padding: 14px 18px;
+            border-radius: 12px;
+            text-align: center;
+            font-family: var(--rel-font-mono);
+            font-size: 0.85rem;
+            color: #0abde3;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        /* Presets Chips */
+        .presets-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .presets-label {
+            font-family: var(--rel-font-mono);
+            font-size: 0.72rem;
+            color: #94a3b8;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .preset-chip {
+            background: rgba(243, 156, 18, 0.1);
+            border: 1px solid rgba(243, 156, 18, 0.3);
+            color: #fef5e7;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-family: var(--rel-font-mono);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .preset-chip:hover {
+            background: #f39c12;
+            color: #070301;
+            box-shadow: 0 0 12px var(--steam-glow);
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 650px) {
+            .transmuter-grid {
+                grid-template-columns: 1fr;
+            }
+            .btn-swap {
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="transmuter-wrapper">
+        <div class="transmuter-card rel-tactile-surface">
+            
+            <div class="brand-header">
+                <img src="logo.png" alt="The Rel Works Logo" class="brand-logo" onerror="this.style.display='none'">
+                <div class="brand-text-container">
+                    <span class="transmute-badge">DIMENSIONAL HARMONY RIG</span>
+                    <h1 class="brand-title">DIMENSIONAL TRANSMUTER</h1>
+                    <p class="brand-subtitle">THE REL WORKS // QUANTUM UNIT & FLUX CONVERTER</p>
+                </div>
+            </div>
+
+            <!-- Category Ribbon -->
+            <div class="category-ribbon" id="category-ribbon">
+                <button class="category-tab active" onclick="switchCategory('length')">📏 LENGTH</button>
+                <button class="category-tab" onclick="switchCategory('mass')">⚖️ MASS & WEIGHT</button>
+                <button class="category-tab" onclick="switchCategory('temperature')">🌡️ TEMPERATURE</button>
+                <button class="category-tab" onclick="switchCategory('data')">💾 DIGITAL DATA</button>
+                <button class="category-tab" onclick="switchCategory('speed')">⚡ VELOCITY</button>
+                <button class="category-tab" onclick="switchCategory('energy')">🔋 ENERGY</button>
+            </div>
+
+            <!-- Dual Chamber Converter -->
+            <div class="transmuter-grid">
+                
+                <div class="gauge-chamber">
+                    <label for="from-value">PRIMARY MATRIX SOURCE</label>
+                    <input type="number" id="from-value" class="gauge-input" value="1" step="any">
+                    <select id="from-unit" class="unit-select"></select>
+                </div>
+
+                <button class="btn-swap" id="btn-swap" title="Invert Dimensional Flow">⇄</button>
+
+                <div class="gauge-chamber">
+                    <label for="to-value">TRANSMUTED FLUX TARGET</label>
+                    <input type="number" id="to-value" class="gauge-input" value="0" step="any" readonly>
+                    <select id="to-unit" class="unit-select"></select>
+                </div>
+
+            </div>
+
+            <!-- Formula Readout -->
+            <div class="formula-readout" id="formula-readout">CALCULATING DIMENSIONAL MATRIX...</div>
+
+            <!-- Quick Presets -->
+            <div class="presets-row">
+                <span class="presets-label">QUICK PRESETS:</span>
+                <div id="presets-container" style="display: flex; gap: 8px; flex-wrap: wrap;"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/rel-audio.js"></script>
+    <script src="js/rel-hud.js"></script>
+    <script>
+        const UNIT_DATA = {
+            length: {
+                units: {
+                    m: { name: "Meters (m)", factor: 1 },
+                    km: { name: "Kilometers (km)", factor: 1000 },
+                    cm: { name: "Centimeters (cm)", factor: 0.01 },
+                    mm: { name: "Millimeters (mm)", factor: 0.001 },
+                    mi: { name: "Miles (mi)", factor: 1609.344 },
+                    yd: { name: "Yards (yd)", factor: 0.9144 },
+                    ft: { name: "Feet (ft)", factor: 0.3048 },
+                    in: { name: "Inches (in)", factor: 0.0254 },
+                    ly: { name: "Lightyears (ly)", factor: 9.461e15 }
+                },
+                defaultFrom: "m",
+                defaultTo: "ft",
+                presets: [
+                    { label: "1 km to mi", fromVal: 1, fromU: "km", toU: "mi" },
+                    { label: "100 m to ft", fromVal: 100, fromU: "m", toU: "ft" },
+                    { label: "6 ft to in", fromVal: 6, fromU: "ft", toU: "in" }
+                ]
+            },
+            mass: {
+                units: {
+                    kg: { name: "Kilograms (kg)", factor: 1 },
+                    g: { name: "Grams (g)", factor: 0.001 },
+                    mg: { name: "Milligrams (mg)", factor: 0.000001 },
+                    lb: { name: "Pounds (lb)", factor: 0.45359237 },
+                    oz: { name: "Ounces (oz)", factor: 0.02834952 },
+                    t: { name: "Metric Ton (t)", factor: 1000 }
+                },
+                defaultFrom: "kg",
+                defaultTo: "lb",
+                presets: [
+                    { label: "1 kg to lb", fromVal: 1, fromU: "kg", toU: "lb" },
+                    { label: "1 lb to oz", fromVal: 1, fromU: "lb", toU: "oz" },
+                    { label: "500 g to kg", fromVal: 500, fromU: "g", toU: "kg" }
+                ]
+            },
+            temperature: {
+                units: {
+                    c: { name: "Celsius (°C)" },
+                    f: { name: "Fahrenheit (°F)" },
+                    k: { name: "Kelvin (K)" }
+                },
+                defaultFrom: "c",
+                defaultTo: "f",
+                presets: [
+                    { label: "0 °C (Freezing)", fromVal: 0, fromU: "c", toU: "f" },
+                    { label: "100 °C (Boiling)", fromVal: 100, fromU: "c", toU: "f" },
+                    { label: "98.6 °F (Body)", fromVal: 98.6, fromU: "f", toU: "c" }
+                ]
+            },
+            data: {
+                units: {
+                    b: { name: "Bytes (B)", factor: 1 },
+                    kb: { name: "Kilobytes (KB)", factor: 1024 },
+                    mb: { name: "Megabytes (MB)", factor: 1024 * 1024 },
+                    gb: { name: "Gigabytes (GB)", factor: 1024 * 1024 * 1024 },
+                    tb: { name: "Terabytes (TB)", factor: Math.pow(1024, 4) },
+                    pb: { name: "Petabytes (PB)", factor: Math.pow(1024, 5) }
+                },
+                defaultFrom: "gb",
+                defaultTo: "mb",
+                presets: [
+                    { label: "1 GB to MB", fromVal: 1, fromU: "gb", toU: "mb" },
+                    { label: "1 TB to GB", fromVal: 1, fromU: "tb", toU: "gb" },
+                    { label: "500 MB to KB", fromVal: 500, fromU: "mb", toU: "kb" }
+                ]
+            },
+            speed: {
+                units: {
+                    mps: { name: "Meters/sec (m/s)", factor: 1 },
+                    kmh: { name: "Km/hour (km/h)", factor: 0.2777778 },
+                    mph: { name: "Miles/hour (mph)", factor: 0.44704 },
+                    knot: { name: "Knots (kn)", factor: 0.514444 },
+                    mach: { name: "Mach (Speed of Sound)", factor: 343 }
+                },
+                defaultFrom: "kmh",
+                defaultTo: "mph",
+                presets: [
+                    { label: "100 km/h to mph", fromVal: 100, fromU: "kmh", toU: "mph" },
+                    { label: "Mach 1 to km/h", fromVal: 1, fromU: "mach", toU: "kmh" },
+                    { label: "60 mph to km/h", fromVal: 60, fromU: "mph", toU: "kmh" }
+                ]
+            },
+            energy: {
+                units: {
+                    j: { name: "Joules (J)", factor: 1 },
+                    kj: { name: "Kilojoules (kJ)", factor: 1000 },
+                    cal: { name: "Calories (cal)", factor: 4.184 },
+                    kcal: { name: "Kilocalories (kcal)", factor: 4184 },
+                    wh: { name: "Watt-hours (Wh)", factor: 3600 },
+                    kwh: { name: "Kilowatt-hours (kWh)", factor: 3.6e6 }
+                },
+                defaultFrom: "kwh",
+                defaultTo: "kj",
+                presets: [
+                    { label: "1 kWh to kJ", fromVal: 1, fromU: "kwh", toU: "kj" },
+                    { label: "2000 kcal to kJ", fromVal: 2000, fromU: "kcal", toU: "kj" },
+                    { label: "1 Wh to J", fromVal: 1, fromU: "wh", toU: "j" }
+                ]
+            }
+        };
+
+        let currentCat = 'length';
+        const fromInput = document.getElementById('from-value');
+        const toInput = document.getElementById('to-value');
+        const fromUnitSelect = document.getElementById('from-unit');
+        const toUnitSelect = document.getElementById('to-unit');
+        const formulaReadout = document.getElementById('formula-readout');
+        const presetsContainer = document.getElementById('presets-container');
+        const btnSwap = document.getElementById('btn-swap');
+
+        function switchCategory(cat) {
+            currentCat = cat;
+            document.querySelectorAll('.category-tab').forEach((tab, idx) => {
+                tab.classList.toggle('active', tab.getAttribute('onclick').includes(cat));
+            });
+
+            populateUnits();
+            convert();
+            renderPresets();
+            if (window.RelAudio) window.RelAudio.click();
+        }
+
+        function populateUnits() {
+            const catData = UNIT_DATA[currentCat];
+            fromUnitSelect.innerHTML = '';
+            toUnitSelect.innerHTML = '';
+
+            for (const key in catData.units) {
+                const opt1 = new Option(catData.units[key].name, key);
+                const opt2 = new Option(catData.units[key].name, key);
+                fromUnitSelect.add(opt1);
+                toUnitSelect.add(opt2);
+            }
+
+            fromUnitSelect.value = catData.defaultFrom;
+            toUnitSelect.value = catData.defaultTo;
+        }
+
+        function convertTemp(val, fromU, toU) {
+            let celsius;
+            if (fromU === 'c') celsius = val;
+            else if (fromU === 'f') celsius = (val - 32) * (5 / 9);
+            else if (fromU === 'k') celsius = val - 273.15;
+
+            if (toU === 'c') return celsius;
+            else if (toU === 'f') return (celsius * (9 / 5)) + 32;
+            else if (toU === 'k') return celsius + 273.15;
+        }
+
+        function convert() {
+            const val = parseFloat(fromInput.value);
+            if (isNaN(val)) {
+                toInput.value = '';
+                formulaReadout.innerText = "AWAITING QUANTUM INPUT...";
+                return;
+            }
+
+            const fromU = fromUnitSelect.value;
+            const toU = toUnitSelect.value;
+            let result;
+
+            if (currentCat === 'temperature') {
+                result = convertTemp(val, fromU, toU);
+            } else {
+                const catData = UNIT_DATA[currentCat];
+                const baseVal = val * catData.units[fromU].factor;
+                result = baseVal / catData.units[toU].factor;
+            }
+
+            // Format nicely
+            let formatted;
+            if (Math.abs(result) >= 1e9 || (Math.abs(result) < 1e-4 && result !== 0)) {
+                formatted = result.toExponential(4);
+            } else {
+                formatted = Math.round(result * 100000) / 100000;
+            }
+
+            toInput.value = formatted;
+
+            const fromName = UNIT_DATA[currentCat].units[fromU].name;
+            const toName = UNIT_DATA[currentCat].units[toU].name;
+            formulaReadout.innerText = `1 ${fromName} ≈ ${(result / val).toFixed(6).replace(/\.?0+$/, '')} ${toName}`;
+        }
+
+        function renderPresets() {
+            presetsContainer.innerHTML = '';
+            const presets = UNIT_DATA[currentCat].presets || [];
+
+            presets.forEach(p => {
+                const chip = document.createElement('div');
+                chip.className = 'preset-chip';
+                chip.innerText = p.label;
+                chip.onclick = () => {
+                    fromInput.value = p.fromVal;
+                    fromUnitSelect.value = p.fromU;
+                    toUnitSelect.value = p.toU;
+                    convert();
+                    if (window.RelAudio) window.RelAudio.chirp(1200);
+                };
+                presetsContainer.appendChild(chip);
+            });
+        }
+
+        btnSwap.addEventListener('click', () => {
+            const tempUnit = fromUnitSelect.value;
+            fromUnitSelect.value = toUnitSelect.value;
+            toUnitSelect.value = tempUnit;
+
+            const tempVal = fromInput.value;
+            fromInput.value = toInput.value || 1;
+            convert();
+            if (window.RelAudio) window.RelAudio.snap();
+        });
+
+        fromInput.addEventListener('input', convert);
+        fromUnitSelect.addEventListener('change', () => { convert(); if (window.RelAudio) window.RelAudio.click(); });
+        toUnitSelect.addEventListener('change', () => { convert(); if (window.RelAudio) window.RelAudio.click(); });
+
+        // Initialize default category
+        populateUnits();
+        convert();
+        renderPresets();
+    </script>
+</body>
+</html>
